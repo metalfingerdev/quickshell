@@ -32,32 +32,20 @@ Singleton {
 
     // Move the logic here as a pure data property
     property var workspaceIds: {
-        // 1 and 2 are always present
-        let ids = [1, 2];
-        let activeWorkspaces = Hyprland.workspaces.values;
-        
-        for (let i = 0; i < activeWorkspaces.length; i++) {
-            let id = activeWorkspaces[i].id;
-            // Add other active workspaces (ignoring negative IDs for named workspaces)
-            if (id > 0 && !ids.includes(id)) {
-                ids.push(id);
-            }
-        }
-        
-        // Sort them numerically so the buttons appear in order
-        ids.sort((a, b) => {
-            return a - b;
-        });
+    if (Hyprland.workspaces.values.length === 0) return [1, 2]; // nothing yet, don't churn
 
-        // Get the highest workspace ID currently in the list
-        let lastId = ids[ids.length - 1];
-        
-        // Find if that specific workspace currently exists and has windows
-        let lastWs = activeWorkspaces.find(w => w.id === lastId);
-        if (lastWs && lastWs.toplevels.values.length > 0) {
-            ids.push(lastId + 1);
-        }
-
-        return ids;
+    let ids = [1, 2];
+    let activeWorkspaces = Hyprland.workspaces.values;
+    for (let i = 0; i < activeWorkspaces.length; i++) {
+        let id = activeWorkspaces[i].id;
+        if (id > 0 && !ids.includes(id)) ids.push(id);
     }
+    ids.sort((a, b) => a - b);
+
+    let lastId = ids[ids.length - 1];
+    let lastWs = activeWorkspaces.find(w => w.id === lastId);
+    if (lastWs && lastWs.toplevels.values.length > 0) ids.push(lastId + 1);
+
+    return ids;
+}
 }

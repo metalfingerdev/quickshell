@@ -81,7 +81,7 @@ Scope {
             anchors { top: true; left: true; right: true; bottom: true }
             color: "transparent"
             exclusionMode: ExclusionMode.Ignore
-            WlrLayershell.layer: WlrLayer.Overlay
+            WlrLayershell.layer: surfaceOpen ? WlrLayer.Overlay : WlrLayer.Top
             WlrLayershell.namespace: "quickshell:overlay"
             WlrLayershell.keyboardFocus: surfaceOpen ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
             onSurfaceOpenChanged: if (surfaceOpen) focusScope.forceActiveFocus()

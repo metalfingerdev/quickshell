@@ -4,8 +4,12 @@ import QtQuick.Layouts
 import qs.config
 import qs.services
 
-Item {
+FocusScope {
+    id: root
+
     property var close: function() {}
+
+    Component.onCompleted: deviceList.forceActiveFocus()
 
     // Dismiss on background click
     MouseArea {
@@ -73,6 +77,26 @@ Item {
             font.pixelSize: 12
         }
 
+        // ── Global error banner ─────────────────────────────────────
+        Text {
+            Layout.fillWidth: true
+            Layout.topMargin: 4
+            visible: BluetoothAdapter.lastError.length > 0
+            text: BluetoothAdapter.lastError
+            color: "#ff5555"
+            font.family: "Maple Mono"
+            font.pixelSize: 11
+            wrapMode: Text.Wrap
+            elide: Text.ElideRight
+            maximumLineCount: 2
+
+            MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: BluetoothAdapter.lastError = ""
+            }
+        }
+
         // ── Divider ───────────────────────────────────────────────────
         Rectangle {
             Layout.fillWidth: true
@@ -94,10 +118,35 @@ Item {
             clip: true
             model: BluetoothAdapter.devices
             spacing: 2
+            currentIndex: -1
+            focus: true
+            highlightFollowsCurrentItem: true
+
+            Keys.onUpPressed: (event) => {
+                if (count === 0) return
+                currentIndex = currentIndex <= 0 ? count - 1 : currentIndex - 1
+                event.accepted = true
+            }
+
+            Keys.onDownPressed: (event) => {
+                if (count === 0) return
+                currentIndex = currentIndex >= count - 1 ? 0 : currentIndex + 1
+                event.accepted = true
+            }
+
+            Keys.onReturnPressed: {
+                if (currentIndex >= 0 && currentItem && !currentItem.modelData.busy) {
+                    currentItem.modelData.connected
+                        ? currentItem.modelData.disconnect()
+                        : currentItem.modelData.connect()
+                }
+            }
 
             delegate: Item {
+                id: delegateRoot
                 width: deviceList.width
                 height: 32
+                property var modelData: model.modelData ?? modelData
 
                 // Hover highlight
                 Rectangle {
@@ -105,6 +154,21 @@ Item {
                     radius: Config.radius
                     color: Config.highlight
                     opacity: delegateArea.containsMouse ? 1 : 0
+
+                    Behavior on opacity {
+                        NumberAnimation { duration: 120 }
+                    }
+                }
+
+                // Keyboard-selection highlight (distinct border so it's visible
+                // even when hover highlight isn't active)
+                Rectangle {
+                    anchors.fill: parent
+                    radius: Config.radius
+                    color: "transparent"
+                    border.width: 1
+                    border.color: Config.accent
+                    opacity: deviceList.currentIndex === index ? 0.9 : 0
 
                     Behavior on opacity {
                         NumberAnimation { duration: 120 }
@@ -134,13 +198,76 @@ Item {
                         elide: Text.ElideRight
                     }
 
+                    // Battery level, when known
                     Text {
+                        visible: modelData.connected && modelData.battery >= 0
+                        text: modelData.battery + "%"
+                        color: Config.foreground
+                        opacity: 0.6
+                        font.family: "Maple Mono"
+                        font.pixelSize: 11
+                    }
+
+                    // Busy spinner (simple rotating glyph, no extra assets needed)
+                    Text {
+                        visible: modelData.busy
+                        text: "󰑮"
+                        color: Config.foreground
+                        opacity: 0.75
+                        font.family: "Maple Mono"
+                        font.pixelSize: 13
+
+                        RotationAnimation on rotation {
+                            running: modelData.busy
+                            loops: Animation.Infinite
+                            from: 0
+                            to: 360
+                            duration: 900
+                        }
+                    }
+
+                    Text {
+                        visible: !modelData.busy
                         text: modelData.connected ? "Disconnect" : "Connect"
                         color: modelData.connected ? Config.accent : Config.foreground
                         opacity: 0.75
                         font.family: "Maple Mono"
                         font.pixelSize: 11
                     }
+
+                    // Forget device
+                    Text {
+                        visible: !modelData.busy
+                        text: "Forget"
+                        color: forgetArea.containsMouse ? "#ff5555" : Config.foreground
+                        opacity: forgetArea.containsMouse ? 1 : 0.5
+                        font.family: "Maple Mono"
+                        font.pixelSize: 11
+
+                        Behavior on color { ColorAnimation { duration: 120 } }
+
+                        MouseArea {
+                            id: forgetArea
+
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: modelData.forget()
+                        }
+                    }
+                }
+
+                // Per-device error, shown briefly under the row
+                Text {
+                    visible: modelData.error.length > 0
+                    anchors.top: parent.bottom
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    text: modelData.error
+                    color: "#ff5555"
+                    font.family: "Maple Mono"
+                    font.pixelSize: 10
+                    elide: Text.ElideRight
                 }
 
                 MouseArea {
@@ -148,10 +275,14 @@ Item {
 
                     anchors.fill: parent
                     hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: modelData.connected
-                        ? modelData.disconnect()
-                        : modelData.connect()
+                    cursorShape: modelData.busy ? Qt.ArrowCursor : Qt.PointingHandCursor
+                    enabled: !modelData.busy
+                    onClicked: {
+                        deviceList.currentIndex = index
+                        modelData.connected
+                            ? modelData.disconnect()
+                            : modelData.connect()
+                    }
                 }
             }
 

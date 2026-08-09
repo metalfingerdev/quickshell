@@ -1,4 +1,4 @@
-// booo/Bluetooth.qml
+// config/quickshell/buttons/Bluetooth.qml
 import QtQuick
 import qs.config
 import qs.services
