@@ -193,6 +193,7 @@ Scope {
                         NetworkWidget {
                             anchors.fill: parent
                             focus: true
+                            close: root.close
                         }
                     }
 
@@ -201,6 +202,7 @@ Scope {
                         NotificationsWidget {
                             anchors.fill: parent
                             focus: true
+                            close: root.close
                         }
                     }
 
@@ -209,6 +211,7 @@ Scope {
                         LauncherWidget {
                             anchors.fill: parent
                             focus: true
+                            close: root.close
                         }
                     }
 
@@ -217,6 +220,7 @@ Scope {
                         BluetoothWidget {
                             anchors.fill: parent
                             focus: true
+                            close: root.close
                         }
                     }
 
@@ -225,6 +229,7 @@ Scope {
                         VolumeWidget {
                             anchors.fill: parent
                             focus: true
+                            close: root.close
                         }
                     }
 
@@ -233,6 +238,7 @@ Scope {
                         ClockWidget {
                             anchors.fill: parent
                             focus: true
+                            close: root.close
                         }
                     }
 
@@ -241,6 +247,7 @@ Scope {
                         PlayerWidget {
                             anchors.fill: parent
                             focus: true
+                            close: root.close
                         }
                     }
                     // new Component alongside the others:

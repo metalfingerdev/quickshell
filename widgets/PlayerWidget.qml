@@ -36,7 +36,7 @@ Item {
     width: parent.width - 2
     height: Math.max(2, parent.value * cavaRow.height)
     radius: 1
-    color: Config.accent
+    color: Config.foreground
     anchors.bottom: parent.bottom
     anchors.horizontalCenter: parent.horizontalCenter
     Behavior on height { NumberAnimation { duration: 80; easing.type: Easing.OutCubic } }

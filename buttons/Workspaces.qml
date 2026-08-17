@@ -1,4 +1,5 @@
 import QtQuick
+import Quickshell.Io
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Hyprland
@@ -6,81 +7,77 @@ import Quickshell.Wayland
 import qs.config
 import qs.services
 
-Repeater {
-    id: wsRepeater
+Row {
+    id: root
+    spacing: 4
 
-    property var switchView: function() { }
+    property var monitor: Hyprland.monitorFor(QsWindow.window?.screen)
 
-    model: Screens.workspaceIds
-
-    Rectangle {
-        id: wsButton
-
-        // 'modelData' holds the actual ID from the array (e.g., 1, 2, 4...)
-        property int wsId: modelData
-        property var ws: Hyprland.workspaces.values.find((w) => {
-            return w.id === wsId;
-        })
-        property bool isActive: Hyprland.focusedWorkspace !== null && Hyprland.focusedWorkspace.id === wsId
-        property bool hasWindows: wsButton.ws ? wsButton.ws.toplevels.values.length > 0 : false
-        property bool isUrgent: wsButton.ws ? (wsButton.ws.urgent && !Screens.acknowledgedUrgent[wsId]) : false
-
-        width: 28
-        height: 28
-        radius: Config.radius
-        color: area.containsMouse ? Config.accent : (isUrgent ? flashBgColor : Config.highlight)
-        
-        property color flashColor: Config.highlight
-        property color flashBgColor: Config.highlight
-        property color flashTextColor: Config.foreground
-        
-        // 2. Animate both in parallel
-        SequentialAnimation {
-            running: wsButton.isUrgent
-            loops: Animation.Infinite
-            
-            ParallelAnimation {
-                ColorAnimation { target: wsButton; property: "flashBgColor"; to: Config.accent; duration: 400 }
-                ColorAnimation { target: wsButton; property: "flashTextColor"; to: Config.bgDark; duration: 400 }
-            }
-            ParallelAnimation {
-                ColorAnimation { target: wsButton; property: "flashBgColor"; to: Config.highlight; duration: 400 }
-                ColorAnimation { target: wsButton; property: "flashTextColor"; to: Config.foreground; duration: 400 }
+    property var occupiedIds: {
+        var ids = []
+        for (var i = 0; i < Hyprland.workspaces.values.length; i++) {
+            var w = Hyprland.workspaces.values[i]
+            if (w.monitor === root.monitor && w.toplevels.values.length > 0) {
+                ids.push(w.id)
             }
         }
+        return ids
+    }
 
-        Text {
-            anchors.centerIn: parent
-            text: wsId
-            
-            // 4. Update the text color with a clean ternary chain that checks isUrgent first
-            color: area.containsMouse ? Config.bgDark : 
-                   (isActive ? Config.accent : 
-                   (isUrgent ? wsButton.flashTextColor : 
-                   (hasWindows ? Config.foreground : Config.muted)))
-                   
-            font.pixelSize: Config.fontSize
+    property int focusedId: root.monitor?.activeWorkspace?.id ?? 0
+
+    property int lowestEmptyId: {
+        var n = 1
+        while (root.occupiedIds.indexOf(n) !== -1) {
+            n++
         }
+        return n
+    }
 
-        MouseArea {
-            id: area
+    property var visibleIds: {
+        var set = {}
+        for (var i = 0; i < root.occupiedIds.length; i++) set[root.occupiedIds[i]] = true
+        if (root.focusedId > 0) set[root.focusedId] = true
+        if (root.lowestEmptyId <= 9) set[root.lowestEmptyId] = true
 
-            anchors.fill: parent
-            hoverEnabled: true
-            acceptedButtons: Qt.LeftButton | Qt.RightButton
-            onClicked: (mouse) => {
-                if (mouse.button === Qt.RightButton) {
-                    if (typeof wsRepeater.switchView === "function")
-                        wsRepeater.switchView("screen", 800, 400, 64, 8)
-                } else {
-                    // 1. Acknowledge the alert so it stops flashing
-                    Screens.acknowledgeWorkspace(wsId);
+        var ids = Object.keys(set).map(Number).filter(n => n >= 1 && n <= 9)
+        ids.sort((a, b) => a - b)
+        return ids.length > 0 ? ids : [1]
+    }
 
-                    // 2. Focus the workspace
-                    if (wsButton.ws)
-                        wsButton.ws.activate();
-                    else
-                        Hyprland.dispatch("hl.dsp.focus({workspace=" + wsId + "})")
+    Connections {
+        target: Hyprland
+        function onRawEvent(event) {
+            Hyprland.refreshWorkspaces()
+            Hyprland.refreshMonitors()
+            Hyprland.refreshToplevels()
+        }
+    }
+
+    Repeater {
+        model: root.visibleIds
+        Rectangle {
+            id: button
+            property var ws: Hyprland.workspaces.values.find(w => w.id === modelData)
+            property bool isActive: root.monitor?.activeWorkspace?.id === modelData
+
+            implicitWidth: 28
+            implicitHeight: 28
+            radius: Config.radius
+            color: Config.highlight
+
+            Text {
+                anchors.centerIn: button
+                text: modelData
+                color: button.isActive ? Config.accent : Config.foreground
+                font.pixelSize: 14
+            }
+
+            MouseArea {
+                anchors.fill: button
+                onClicked: {
+                    Hyprland.dispatch("hl.dsp.focus({monitor=\"" + root.monitor.name + "\"})")
+                    Hyprland.dispatch("hl.dsp.focus({workspace=" + modelData + "})")
                 }
             }
         }
