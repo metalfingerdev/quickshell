@@ -225,25 +225,44 @@ Item {
                     sourceSize: Qt.size(352, 220)
                 }
             }
+            // What the picture offers (Wallpaper.options), each circle the whole scheme it makes: accent,
+            // secondary and the tinted surface. Picking one (again, too) puts its surfaces in the Surface row.
             Flow {
                 anchors.verticalCenter: parent.verticalCenter
                 width: parent.width - 176 - parent.spacing
-                spacing: 10
+                spacing: 14
 
                 Repeater {
-                    model: Wallpaper.swatches
+                    model: Wallpaper.options
 
-                    Swatch {
-                        required property color modelData
-                        width: 44; height: 44
-                        tone: modelData
-                        chosen: Config.hex(Wallpaper.seed) === Config.hex(modelData)
-                        focus: chosen && root.wallpaper
-                        onPicked: Wallpaper.pick(modelData)
+                    Column {
+                        id: option
+                        required property var modelData
+                        required property int index
+                        spacing: 6
+
+                        PaletteDot {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            width: 48; height: 48
+                            palette: Config.wallpaperScheme(option.modelData)
+                            chosen: Wallpaper.optionIndex === option.index
+                            focus: chosen && root.wallpaper
+                            onPicked: {
+                                Wallpaper.pick(option.index)
+                                Config.takeSurface(Wallpaper.option, Wallpaper.optionKey, true)
+                                Engine.key()
+                            }
+                        }
+                        Label {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: option.modelData.name
+                            color: Wallpaper.optionIndex === option.index ? Config.text : Config.dim
+                            font.pixelSize: Config.small
+                        }
                     }
                 }
                 Label {
-                    visible: Wallpaper.swatches.length === 0
+                    visible: Wallpaper.options.length === 0
                     text: "No wallpaper colours yet"
                     color: Config.dim
                 }
@@ -253,14 +272,13 @@ Item {
         // the accent's saturation is the square's own; the wallpaper's colour gets sliders for it
         Row {
             id: levels
-            readonly property real each: (width - (root.wallpaper ? 2 : 0) * spacing) / (root.wallpaper ? 3 : 1)
+            readonly property real each: (width - spacing) / 2
 
-            visible: root.generated
+            visible: root.wallpaper
             width: parent.width
             spacing: 12
 
             Level {
-                visible: root.wallpaper
                 width: levels.each
                 title: "Saturation"
                 icon: "invert_colors"
@@ -268,16 +286,39 @@ Item {
                 onMoved: v => { Config.wallpaperSaturation = v; Engine.key() }
             }
             Level {
-                visible: root.wallpaper
                 width: levels.each
                 title: "Lightness"
                 icon: "brightness_6"
                 value: Config.wallpaperLightness
                 onMoved: v => { Config.setWallpaperLightness(v); Engine.key() }
             }
+        }
+
+        // The surfaces' own tint, not the accent's: a hue of their own, and how much of it they take
+        // (none: grey). The accent and the wallpaper never reach them.
+        Row {
+            id: surfaceRow
+            visible: root.generated
+            width: parent.width
+            spacing: 16
+
+            Label {
+                id: surfaceLabel
+                anchors.verticalCenter: parent.verticalCenter
+                text: "Surface"
+                color: Config.dim
+            }
+            HueStrip {
+                anchors.verticalCenter: parent.verticalCenter
+                width: parent.width - surfaceLabel.width - tintLevel.width - 2 * parent.spacing
+                hue: Config.surfaceHue
+                opacity: Config.tint > 0 ? 1 : 0.4              // no tint: the hue does nothing yet
+                onMoved: h => { Config.surfaceHue = h; Engine.key() }
+            }
             Level {
-                width: levels.each
-                title: "Surface tint"
+                id: tintLevel
+                width: 300
+                title: "Tint"
                 icon: "format_color_fill"
                 value: Config.tint
                 onMoved: v => { Config.tint = v; Engine.key() }

@@ -27,6 +27,14 @@ ShellRoot {
     // windows, moving as they do: Hyprland's window opacity and animation (Config is plain QtQuick
     // and can't ask)
     Binding { target: Config; property: "wallpaperSeed"; value: Wallpaper.seed }
+    // From the wallpaper the surfaces come too: its option's hue and tint go into Config's own when the
+    // image or the option changes, or the colours start coming from it (the Surface row moves them after)
+    function takeWallpaperSurface(force) {
+        if (Config.source === "wallpaper")
+            Config.takeSurface(Wallpaper.option, Wallpaper.optionKey, force)
+    }
+    Connections { target: Wallpaper; function onOptionChanged() { root.takeWallpaperSurface(false) } }
+    Connections { target: Config; function onSourceChanged() { root.takeWallpaperSurface(true) } }
     Binding { target: Config; property: "windowOpacity"; value: Desktops.windowOpacity }
     Binding { target: Config; property: "curve"; value: Desktops.windowCurve; when: Desktops.windowCurve !== null }
     Binding { target: Config; property: "motionMs"; value: Desktops.windowMs; when: Desktops.windowMs > 0 }

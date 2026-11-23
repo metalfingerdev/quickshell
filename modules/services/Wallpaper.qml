@@ -24,25 +24,22 @@ Singleton {
         rescaleSize: 96              // decode small: it only needs the colours
     }
     readonly property var swatches: Array.from(quantizer.colors ?? [])
-    // Material's "source colour": the most colourful swatch that isn't near black or white
-    readonly property color best: {
-        let best = null, score = -1
-        for (const c of swatches) {
-            const s = c.hslSaturation * (1 - Math.abs(c.hslLightness - 0.5) * 1.6)
-            if (s > score) { score = s; best = c }
-        }
-        return best ?? "#4f9d8f"
-    }
-    // the swatch picked in views/Colours.qml, if any, and the image it belongs to: another image
-    // goes back to its own best
-    property color picked: "#000000"
+    // The schemes this image offers (Config.wallpaperOptions: an accent, and the surfaces' hue and
+    // tint from the picture's cast), the first being Auto. The one picked in views/Colours.qml is kept
+    // for the image it was picked for; another image starts at its own Auto.
+    readonly property var options: Config.wallpaperOptions(swatches)
+    property int pickedIndex: 0
     property string pickedFor: ""
-    readonly property color seed: pickedFor !== "" && pickedFor === current ? picked : best
-    function pick(colour) { picked = colour; pickedFor = current }
+    readonly property int optionIndex: pickedFor !== "" && pickedFor === current
+        ? Math.max(0, Math.min(pickedIndex, options.length - 1)) : 0
+    readonly property var option: options.length > 0 ? options[optionIndex] : null
+    readonly property color seed: option ? option.accent : "#4f9d8f"
+    readonly property string optionKey: current + "|" + optionIndex       // which image, which option
+    function pick(index) { pickedIndex = index; pickedFor = current }
 
     property Store store: Store {
         category: "wallpaper"
-        property alias picked: root.picked
+        property alias pickedIndex: root.pickedIndex
         property alias pickedFor: root.pickedFor
     }
 

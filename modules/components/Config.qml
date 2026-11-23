@@ -55,6 +55,8 @@ QtObject {
     property color wallpaperSeed: "#4f9d8f"
     property real wallpaperSaturation: 0.8
     property real wallpaperTone: 0.72              // the primary's lightness in dark mode; light mode mirrors it
+    // The surfaces' own tint, apart from the accent: its hue (0..1), and how much of it they take (0 = grey).
+    property real surfaceHue: 0.47
     property real tint: 0.5
     property bool darkMode: true
     readonly property var current: source === "preset" ? (palettes[name] ?? palettes.teal) : generated(source)
@@ -68,6 +70,70 @@ QtObject {
         recent = [h].concat(recentAccents.filter(x => x !== h)).slice(0, 8).join(",")
     }
 
+    // What a wallpaper offers, as Android's wallpaper colours do: a scheme for each of its distinct
+    // colourful colours, with the surfaces in the picture's own cast (its overall hue, tinted as much as
+    // the picture is coloured), then the first colour two more ways: surfaces matching the accent, and
+    // grey. Each is { name, accent, surfaceHue, tint }; Wallpaper.qml keeps the one picked.
+    function colourfulness(c) { return c.hslSaturation * (1 - Math.abs(c.hslLightness - 0.5) * 1.6) }
+    function chroma(c) { return c.hslSaturation * (1 - Math.abs(2 * c.hslLightness - 1)) }
+    function hueGap(a, b) { const d = Math.abs(a - b) % 1; return Math.min(d, 1 - d) }
+    function hueName(h) {
+        const names = [[0.04, "Red"], [0.1, "Orange"], [0.18, "Yellow"], [0.43, "Green"], [0.53, "Teal"],
+                       [0.71, "Blue"], [0.8, "Purple"], [0.94, "Pink"], [1.01, "Red"]]
+        return names.find(n => h < n[0])[1]
+    }
+    function wallpaperOptions(swatches) {
+        const all = Array.from(swatches ?? []).filter(c => c.a > 0)
+        if (all.length === 0) return []
+        // The cast: median cut makes buckets of about as many pixels each, so a sum over the swatches
+        // weighs the whole picture, and opposite hues cancel: a picture of every colour has little cast.
+        let x = 0, y = 0
+        for (const c of all) {
+            if (c.hslHue < 0) continue
+            const w = chroma(c), a = 2 * Math.PI * c.hslHue
+            x += w * Math.cos(a)
+            y += w * Math.sin(a)
+        }
+        const cast = Math.hypot(x, y) / all.length              // 0 grey .. 1 one vivid hue all over
+        const castHue = (Math.atan2(y, x) / (2 * Math.PI) + 1) % 1
+        const castTint = cast < 0.03 ? 0 : Math.min(0.85, 0.25 + 1.5 * cast)
+
+        // the accents: the most colourful first, each a twelfth of the wheel away from those before
+        const ranked = all.slice().sort((a, b) => colourfulness(b) - colourfulness(a))
+        const accents = []
+        for (const c of ranked) {
+            if (accents.length === 4) break
+            if (c.hslHue >= 0 && colourfulness(c) > 0.1 && accents.every(a => hueGap(a.hslHue, c.hslHue) > 1 / 12))
+                accents.push(c)
+        }
+        if (accents.length === 0) accents.push(ranked[0])     // a grey picture: its least grey colour, a grey scheme
+
+        const options = accents.map((a, i) => ({ name: i === 0 ? "Auto" : hueName(Math.max(0, a.hslHue)),
+                                                 accent: a, surfaceHue: castHue, tint: castTint }))
+        const first = accents[0], firstHue = Math.max(0, first.hslHue)
+        if (first.hslHue >= 0 && !(castTint > 0.6 && hueGap(castHue, firstHue) < 1 / 24))
+            options.push({ name: "Matched", accent: first, surfaceHue: firstHue, tint: 0.85 })
+        if (castTint > 0.05)
+            options.push({ name: "Neutral", accent: first, surfaceHue: castHue, tint: 0 })
+        return options
+    }
+    // the scheme an option would make, for its circle in views/Colours.qml
+    function wallpaperScheme(option) {
+        const a = option.accent
+        return scheme(Qt.hsla(Math.max(0, a.hslHue), a.hslHue < 0 ? 0 : wallpaperSaturation, wallpaperLightness, 1),
+                      option.surfaceHue, option.tint, darkMode)
+    }
+    // The option whose surfaces were last put in surfaceHue / tint ("image|index"). Another image or
+    // option puts its own (`force`: the colours have just started coming from the wallpaper); the
+    // Surface row moves them after, and a restart keeps that.
+    property string surfaceFrom: ""
+    function takeSurface(option, key, force) {
+        if (!option || (key === surfaceFrom && !force)) return
+        surfaceFrom = key
+        surfaceHue = option.surfaceHue
+        tint = option.tint
+    }
+
     // the lightness the wallpaper's primary has right now, and setting it: the slider means what it says in either mode
     readonly property real wallpaperLightness: darkMode ? wallpaperTone : 1 - wallpaperTone
     function setWallpaperLightness(v) { wallpaperTone = darkMode ? v : 1 - v }
@@ -76,7 +142,7 @@ QtObject {
         const primary = from === "wallpaper"
             ? Qt.hsla(Math.max(0, wallpaperSeed.hslHue), wallpaperSeed.hslHue < 0 ? 0 : wallpaperSaturation, wallpaperLightness, 1)
             : accent
-        return scheme(primary, tint, darkMode)
+        return scheme(primary, surfaceHue, tint, darkMode)
     }
     // WCAG's relative luminance, and the contrast ratio between two colours (1 .. 21)
     function luminance(c) {
@@ -106,27 +172,29 @@ QtObject {
         }
         return Qt.hsla(h, s, passes, 1)
     }
-    // HSL, not Material's HCT, so tones are approximate.
-    function scheme(picked, tint, dark) {
+    // HSL, not Material's HCT, so tones are approximate. Two families that don't touch: the surfaces and
+    // the text on them in the surface's hue at `tint` (none of the accent in them), and the accent's own
+    // (the primary, and the secondary containers: selected tiles, chips), a greyer accent a greyer secondary.
+    function scheme(picked, surfaceHue, tint, dark) {
         const h = Math.max(0, picked.hslHue)
-        // a greyer primary tints less, so grey has truly neutral surfaces with no jump on the way there
-        const t = tint * Math.min(1, picked.hslSaturation * 4)
-        const s = 0.8 * t, n = 0.32 * t
-        const tone = (sat, light) => Qt.hsla(h, sat, light, 1)
-        const primary = readable(picked, tone(n, dark ? 0.065 : 0.975), dark)
+        const n = 0.32 * tint
+        const s = 0.4 * Math.min(1, picked.hslSaturation * 4)
+        const surf = light => Qt.hsla(surfaceHue, n, light, 1)
+        const acc = (sat, light) => Qt.hsla(h, sat, light, 1)
+        const primary = readable(picked, surf(dark ? 0.065 : 0.975), dark)
         return dark ? {
             label: "Generated", dark: true,
-            surface: tone(n, 0.065), container: tone(n, 0.105), high: tone(n, 0.145), highest: tone(n, 0.185),
+            surface: surf(0.065), container: surf(0.105), high: surf(0.145), highest: surf(0.185),
             primary: primary, onPrimary: inkOn(primary),
-            secondary: tone(s, 0.26), onSecondary: tone(s, 0.88),
-            text: tone(n, 0.91), dim: tone(n, 0.75), outline: tone(n, 0.52),
+            secondary: acc(s, 0.26), onSecondary: acc(s, 0.88),
+            text: surf(0.91), dim: surf(0.75), outline: surf(0.52),
             good: "#8bd5a0", warn: "#f2c36b", bad: "#ffb4ab"
         } : {
             label: "Generated", dark: false,
-            surface: tone(n, 0.975), container: tone(n, 0.935), high: tone(n, 0.895), highest: tone(n, 0.855),
+            surface: surf(0.975), container: surf(0.935), high: surf(0.895), highest: surf(0.855),
             primary: primary, onPrimary: inkOn(primary),
-            secondary: tone(s, 0.86), onSecondary: tone(s, 0.16),
-            text: tone(n, 0.10), dim: tone(n, 0.32), outline: tone(n, 0.50),
+            secondary: acc(s, 0.86), onSecondary: acc(s, 0.16),
+            text: surf(0.10), dim: surf(0.32), outline: surf(0.50),
             good: "#2e9b5f", warn: "#b7791f", bad: "#d64545"
         }
     }
@@ -238,6 +306,8 @@ QtObject {
         property alias name: root.name
         property alias accent: root.accent
         property alias recent: root.recent
+        property alias surfaceHue: root.surfaceHue
+        property alias surfaceFrom: root.surfaceFrom
         property alias tint: root.tint
         property alias wallpaperSaturation: root.wallpaperSaturation
         property alias wallpaperTone: root.wallpaperTone

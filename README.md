@@ -142,7 +142,7 @@ Bar: Loader shows Registry.get(view).url
 | | initial `autoHide` | `true` | second argument to `Machine.initial(...)` |
 | `Config.qml` | `source` | `preset` | where colours come from: `preset`, `accent` or `wallpaper`; IPC `colours` |
 | | `name` | `teal` | preset palette (teal blue graphite midnight nord rose forest paper); IPC `palette` |
-| | `accent` / `tint` / `darkMode` | / `0.5` / `true` | a generated scheme: its colour (made just lighter or darker if it wouldn't read on the surface, `Config.readable`), how much of it the surfaces take (0..1), dark or light; IPC `accent` `tint` `mode` |
+| | `accent` / `surfaceHue` / `tint` / `darkMode` | / 0.47 / `0.5` / `true` | a generated scheme: its colour (made just lighter or darker if it wouldn't read on the surface, `Config.readable`), the surfaces' own hue (not the accent's) and how much of it they take (0..1), dark or light; IPC `accent` `surface` `tint` `mode` |
 | | `wallpaperSaturation` / `wallpaperTone` | `0.8` / `0.72` | how the wallpaper colour's hue becomes a primary |
 | | `scale` | 1.0 | the whole island's size (0.8 .. 1.4); IPC `size` |
 | | `style` | `pill` | `pill` floats below the edge; `notch` is flush with it, with anti-corners; IPC `style` |

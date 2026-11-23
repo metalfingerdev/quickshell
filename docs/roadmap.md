@@ -14,6 +14,11 @@
 
 ## Done
 
+- [x] Colours, the surfaces (2026-11-24): a hue of their own and a tint, apart from the accent (the
+      Surface row; IPC `surface`). From the wallpaper, Android-style: an option per distinct colourful
+      colour, the surfaces in the picture's own cast and tinted as much as it is coloured, plus Matched
+      and Neutral; each circle shows its whole scheme (accent, secondary, tinted surface), and while the
+      colours come from the wallpaper each thumbnail shows the scheme it would make.
 - [x] Colours, the accent (2026-11-23): a picked colour that wouldn't read on the island (under 4.5:1) is
       drawn just lighter or darker, and the view says so; the map is the usual saturation/brightness
       square over a hue strip (HSV, every part of it usable), an eyedropper (hyprpicker, as Nihil's) picks

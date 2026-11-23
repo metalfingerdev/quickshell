@@ -1,4 +1,5 @@
 import QtQuick
+import Quickshell
 import Quickshell.Widgets
 import qs.modules.components
 import qs.modules.services
@@ -56,6 +57,35 @@ ClippingRectangle {
             name: "check"
             size: 16
             color: Config.primaryInk
+        }
+    }
+
+    // While the colours come from the wallpaper, picking one changes them too: each shows the scheme it
+    // would make (its Auto; the one in use, the option picked for it), as the Colours view's circles do.
+    Loader {
+        active: Config.source === "wallpaper" && root.path !== ""
+        anchors { left: parent.left; top: parent.top; margins: 8 }
+        width: 26
+        height: 26
+
+        sourceComponent: Item {
+            id: preview
+
+            // the one in use has its colours already (Wallpaper); the rest read their own, the same way
+            ColorQuantizer {
+                id: colours
+                source: root.applied ? "" : Wallpaper.fileUrl(root.path)
+                depth: 3
+                rescaleSize: 96
+            }
+            readonly property var option: root.applied ? Wallpaper.option : (Config.wallpaperOptions(colours.colors)[0] ?? null)
+
+            PaletteDot {
+                visible: preview.option !== null
+                anchors.fill: parent
+                activeFocusOnTab: false
+                palette: preview.option ? Config.wallpaperScheme(preview.option) : null
+            }
         }
     }
 
