@@ -114,6 +114,7 @@ Scope {
         exclusionMode: Engine.autoHide ? ExclusionMode.Ignore : ExclusionMode.Auto
         color: "transparent"
         mask: Region { item: Engine.autoHide ? edge : null }
+        WlrLayershell.layer: WlrLayer.Overlay       // or the hot zone is under a fullscreen window
 
         Item {
             id: edge
@@ -135,7 +136,7 @@ Scope {
         mask: Region { item: Engine.hidden ? null : Engine.pinned ? outside : proxy }
 
         WlrLayershell.namespace: "glass:island"     // Hyprland's glass (hypr/modules/look.lua)
-        WlrLayershell.layer: WlrLayer.Top
+        WlrLayershell.layer: WlrLayer.Overlay       // the top layer is drawn under fullscreen windows
         // Pinned views get the keyboard (the user is here). Rest, Peek and Toast never take it, so
         // neither the pointer passing over the island nor a toast can steal typing from an app.
         WlrLayershell.keyboardFocus: root.active && Engine.pinned ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None

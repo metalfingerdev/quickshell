@@ -49,8 +49,9 @@ Each `Bar` creates two layer-shell `PanelWindow`s:
    - With auto-hide on, it exists on **every** screen. It is `hotZone` px tall, reserves nothing, and its
      input mask is the strip. Hovering the strip sends `Engine.edge(true/false, screen)`
      (`Reach`/`Retreat`), which can also move the island to that screen.
-2. **overlay**: full-screen, on `WlrLayer.Top`, namespace `glass:island`, active screen only, reserves
-   nothing. Its input mask follows the phase:
+   - It is on `WlrLayer.Overlay` too, so the hot zone works over a fullscreen window.
+2. **overlay**: full-screen, on `WlrLayer.Overlay` (so it shows over fullscreen windows), namespace
+   `glass:island`, active screen only, reserves nothing. Its input mask follows the phase:
    - normally only the **proxy** rect, so the rest of the screen stays clickable;
    - the **whole screen** while a view is Pinned: a click anywhere outside the island closes it;
    - **nothing** while Hidden: the strip handle is only a hint, the spacer's hot zone reveals.
