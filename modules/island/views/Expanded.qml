@@ -31,11 +31,30 @@ Item {
             width: parent.width
             height: 52
 
-            DateStamp {
+            Rectangle {
                 id: when
-                x: 8
+                readonly property bool ring: activeFocus && Config.focusVisible
                 anchors.verticalCenter: parent.verticalCenter
-                date: clock.date
+                width: dateColumn.implicitWidth + 16
+                height: 52
+                radius: Config.innerRadius
+                color: Config.layer(whenArea.containsMouse, whenArea.pressed || ring)
+
+                activeFocusOnTab: true
+                function activate() { Engine.open(Engine.View.Clock) }
+
+                DateStamp {
+                    id: dateColumn
+                    anchors.centerIn: parent
+                    date: clock.date
+                }
+
+                ClickArea {
+                    id: whenArea
+                    onClicked: mouse => Engine.open(Engine.View.Clock, whenArea.sceneX(mouse))
+                }
+
+                FocusRing { on: when.ring }
             }
 
             StatusGroup {

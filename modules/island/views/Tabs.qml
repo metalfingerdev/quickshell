@@ -21,7 +21,7 @@ Item {
     // Sized to where the workspace buttons are going (finalWidth), not to where they are: they
     // ease there on the island's own motion, so the strip (centred) and the island's edges move
     // as one.
-    implicitWidth: 2 * margin + when.width + (hasBack ? back.width + row.spacing : 0)
+    implicitWidth: 2 * margin + (hasBack ? back.width + row.spacing : 0)
                  + (workspaces.finalWidth + spaces.spacing + control + 2 * pad) + row.spacing
                  + actions.width + row.spacing + status.implicitWidth + row.spacing
     implicitHeight: 76                              // Expanded's top row and its padding
@@ -70,31 +70,6 @@ Item {
         anchors.centerIn: parent
         spacing: 10
 
-        Rectangle {
-            id: when
-            readonly property bool ring: activeFocus && Config.focusVisible
-            anchors.verticalCenter: parent.verticalCenter
-            width: dateColumn.implicitWidth + 16
-            height: 52
-            radius: Config.innerRadius
-            color: Config.layer(whenArea.containsMouse, whenArea.pressed || ring)
-
-            activeFocusOnTab: true
-            function activate() { Engine.open(Engine.View.Clock) }
-
-            DateStamp {
-                id: dateColumn
-                anchors.centerIn: parent
-                date: clock.date
-            }
-
-            ClickArea {
-                id: whenArea
-                onClicked: mouse => Engine.open(Engine.View.Clock, whenArea.sceneX(mouse))
-            }
-
-            FocusRing { on: when.ring }
-        }
 
         BackButton {
             id: back
