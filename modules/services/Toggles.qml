@@ -17,7 +17,7 @@ Singleton {
 
     Process {
         running: true
-        command: ["sh", "-c", "for t in systemd-inhibit hyprsunset wf-recorder powerprofilesctl grimblast gsettings notify-send xdg-open uwsm pw-play hyprpicker; "
+        command: ["sh", "-c", "for t in systemd-inhibit hyprsunset wf-recorder powerprofilesctl grimblast gsettings notify-send xdg-open uwsm pw-play hyprpicker wtype pw-record; "
                             + "do command -v \"$t\" >/dev/null 2>&1 && echo \"$t\"; done"]
         stdout: StdioCollector {
             onStreamFinished: {
@@ -63,14 +63,17 @@ Singleton {
     property int recordSeconds: 0
     readonly property string recordTime: Math.floor(recordSeconds / 60) + ":" + String(recordSeconds % 60).padStart(2, "0")
 
-    function record(on) {
+    // `mic`: the microphone goes in too (wf-recorder --audio: the default source)
+    property bool recordingMic: false
+    function record(on, mic) {
         if (on && !recorder.running && has("wf-recorder")) {
             const dir = StandardPaths.writableLocation(StandardPaths.MoviesLocation).toString().replace("file://", "") + "/Recordings"
             const output = Hyprland.focusedMonitor?.name ?? ""
             recordFile = dir + "/" + Qt.formatDateTime(new Date(), "yyyy-MM-dd_HH-mm-ss") + ".mp4"
             recordSeconds = 0
+            recordingMic = !!mic
             recorder.command = ["sh", "-c", "mkdir -p \"$1\" && shift && exec wf-recorder -y \"$@\"", "sh", dir]
-                .concat(output ? ["-o", output] : []).concat(["-f", recordFile])
+                .concat(output ? ["-o", output] : []).concat(mic ? ["--audio"] : []).concat(["-f", recordFile])
             recorder.running = true
         } else if (!on && recorder.running) {
             recorder.signal(2)                              // SIGINT: wf-recorder finishes the file
@@ -89,6 +92,55 @@ Singleton {
         repeat: true
         running: root.recording
         onTriggered: root.recordSeconds++
+    }
+
+    // A voice memo: the microphone alone (pw-record), into Music/Voice memos as FLAC. Stopped with
+    // SIGINT, so the file is finished; a notification says where it went.
+    readonly property bool memoRecording: memo.running
+    property string memoFile: ""
+    property int memoSeconds: 0
+    readonly property string memoTime: Math.floor(memoSeconds / 60) + ":" + String(memoSeconds % 60).padStart(2, "0")
+    function voiceMemo(on) {
+        if (on && !memo.running && has("pw-record")) {
+            const dir = StandardPaths.writableLocation(StandardPaths.MusicLocation).toString().replace("file://", "") + "/Voice memos"
+            memoFile = dir + "/" + Qt.formatDateTime(new Date(), "yyyy-MM-dd_HH-mm-ss") + ".flac"
+            memoSeconds = 0
+            memo.command = ["sh", "-c", "mkdir -p \"$1\" && exec pw-record \"$2\"", "sh", dir, memoFile]
+            memo.running = true
+        } else if (!on && memo.running) {
+            memo.signal(2)
+        }
+    }
+    Process {
+        id: memo
+        onExited: {
+            if (root.memoFile !== "" && root.has("notify-send"))
+                Quickshell.execDetached(["notify-send", "-a", "Voice memo", "-i", "audio-input-microphone", "Voice memo saved", root.memoFile])
+            root.memoFile = ""
+        }
+    }
+    Timer {
+        interval: 1000
+        repeat: true
+        running: root.memoRecording
+        onTriggered: root.memoSeconds++
+    }
+
+    // Types `text` into the window that has the keyboard (wtype), as if from the keyboard: the
+    // launcher's emoji and its clipboard. After a moment, since the island has only just let go of it.
+    function typeText(text) {
+        if (text && has("wtype")) Quickshell.execDetached(["sh", "-c", "sleep 0.15; exec wtype -- \"$1\"", "sh", text])
+    }
+
+    IpcHandler {
+        target: "record"
+
+        function screen(mic: bool): void { root.record(!root.recording, mic) }
+        function memo(): void            { root.voiceMemo(!root.memoRecording) }
+        function status(): string {
+            return JSON.stringify({ screen: root.recording, mic: root.recording && root.recordingMic, memo: root.memoRecording,
+                                    time: root.recording ? root.recordTime : root.memoRecording ? root.memoTime : "" })
+        }
     }
 
     property string profile: ""

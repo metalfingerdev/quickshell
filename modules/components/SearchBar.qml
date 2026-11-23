@@ -2,7 +2,8 @@ import QtQuick
 
 // The field takes its own keys and reports them as signals, so the view decides what they do, and
 // ViewLoader never sees them: key() is for Engine.key(). up() / down() only with `takesArrows`, tab()
-// only with `takesTab`; otherwise those keys move focus out of the field as usual.
+// only with `takesTab`; otherwise those keys move focus out of the field as usual. left() / right()
+// only with `takesSides` (a grid of results), in place of moving the text cursor.
 FocusScope {
     id: root
 
@@ -13,6 +14,7 @@ FocusScope {
     property bool readOnly: false
     property bool takesTab: false
     property bool takesArrows: false
+    property bool takesSides: false
     property int fieldSize: 16
     default property alias trailing: side.data
 
@@ -20,6 +22,8 @@ FocusScope {
     signal accepted()
     signal up()
     signal down()
+    signal left()
+    signal right()
     signal tab(bool backward)
     signal escaped()
     signal backspaceEmpty()
@@ -83,6 +87,10 @@ FocusScope {
             case Qt.Key_Up: case Qt.Key_Down:
                 if (!root.takesArrows) { event.accepted = false; return }
                 if (event.key === Qt.Key_Up) root.up(); else root.down()
+                break
+            case Qt.Key_Left: case Qt.Key_Right:
+                if (!root.takesSides) { event.accepted = false; return }
+                if (event.key === Qt.Key_Left) root.left(); else root.right()
                 break
             case Qt.Key_Escape:  root.escaped(); break
             case Qt.Key_Tab: case Qt.Key_Backtab:

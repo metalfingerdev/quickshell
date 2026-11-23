@@ -4,9 +4,10 @@ import qs.modules.island
 import qs.modules.components
 import qs.modules.services
 
-// The clipboard history (ClipHistory), newest first. Enter or a click copies one again, Delete
-// forgets it. Held: Super+Shift+V again moves down the list, and letting go of Super copies the
-// one reached (Held). Paste it yourself after: only you know whether it's Ctrl+V or Ctrl+Shift+V.
+// The clipboard history (ClipHistory), newest first. Enter or a click pastes one into the window you
+// were in (ClipHistory.paste: one line is typed there, more lines and pictures are only copied), Delete
+// forgets it. Held: Super+Shift+V again moves down the list, and letting go of Super pastes the one
+// reached (Held). The launcher's Clipboard filter searches the same history.
 Item {
     id: root
 
@@ -19,8 +20,7 @@ Item {
     Component.onCompleted: ClipHistory.refresh()
 
     function copy(item) {
-        ClipHistory.copy(item)
-        Engine.close()
+        Engine.closeThen(() => ClipHistory.paste(item))
     }
 
     // Held: move the focus down the list (wrapping), or copy the one it's on
@@ -100,7 +100,7 @@ Item {
 
         KeyHints {
             width: parent.width
-            keys: [["Enter", "copy"], ["Del", "forget"]]
+            keys: [["Enter", "paste"], ["Del", "forget"]]
         }
     }
 }

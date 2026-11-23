@@ -63,6 +63,18 @@ Singleton {
         if (item) Toggles.launch(["sh", "-c", "printf '%s\\n' \"$1\" | cliphist -db-path \"$2\" decode | wl-copy", "sh", item.line, dir + "/db"])
     }
 
+    // Into the window you were in, after the island has let go of the keyboard: copied, and one line
+    // of text also typed there (wtype), which works the same in a terminal and anywhere else. More
+    // lines are only copied, as typing them would run each one in a terminal; a picture is only copied.
+    function paste(item) {
+        if (!item) return
+        copy(item)
+        if (item.picture !== "" || !Toggles.has("wtype")) return
+        Quickshell.execDetached(["sh", "-c", "t=$(printf '%s\\n' \"$1\" | cliphist -db-path \"$2\" decode) || exit 0; "
+                                         + "case $t in *\"\n\"*|'') exit 0;; esac; sleep 0.15; exec wtype -- \"$t\"",
+                                 "sh", item.line, dir + "/db"])
+    }
+
     function remove(item) {
         if (!item) return
         items = items.filter(i => i.id !== item.id)

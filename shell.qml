@@ -21,7 +21,7 @@ ShellRoot {
 
     // services that must exist from the start (their IPC targets, the downloads and clipboard
     // watchers, the Super key's state), not only once a view shows them
-    readonly property var services: [Wallpaper, Notifier, Sounds, Activities, ClipHistory, Held]
+    readonly property var services: [Wallpaper, Notifier, Sounds, Activities, ClipHistory, Emoji, Held]
 
     // a theme generated from the wallpaper follows it, and the island is the same glass as the
     // windows, moving as they do: Hyprland's window opacity and animation (Config is plain QtQuick

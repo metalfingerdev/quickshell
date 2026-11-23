@@ -17,9 +17,13 @@ Item {
         { key: "all",     label: "All" },
         { key: "apps",    label: "Apps" },
         { key: "files",   label: "Files" },
-        { key: "actions", label: "Actions" }
+        { key: "actions", label: "Actions" },
+        { key: "clipboard", label: "Clipboard" },
+        { key: "emoji",   label: "Emoji" }
     ]
-    property string filter: "all"
+    // the filter it opens on: IPC `launch <filter>` sets it just before (Super+. opens Emoji)
+    property string filter: Engine.launcherFilter
+    Component.onCompleted: { Engine.launcherFilter = "all"; ClipHistory.refresh() }
     property int selected: 0
     readonly property string query: bar.text.trim().toLowerCase()
 
@@ -82,6 +86,16 @@ Item {
         { name: "Random wallpaper", description: "From ~/Pictures/Wallpapers", icon: "wallpaper", keys: "background", run: () => Wallpaper.random() },
         { name: "Do not disturb", description: Notifier.dnd ? "On: turn it off" : "Off: turn it on", icon: Config.symbol.dnd, keys: "dnd quiet silence", run: quit(() => Notifier.dnd = !Notifier.dnd) },
         { name: "Screenshot", description: "Select an area; saved and copied", icon: Config.symbol.screenshot, keys: "capture grab", run: quit(() => Toggles.screenshot()) },
+        { name: Toggles.recording ? "Stop recording the screen" : "Record the screen",
+          description: Toggles.recording ? "Recording " + Toggles.recordTime + ": stop and save it" : "The screen you're on, into Videos/Recordings",
+          icon: Toggles.recording ? "stop_circle" : "screen_record", keys: "record video capture screencast", run: quit(() => Toggles.record(!Toggles.recording, false)) },
+        { name: "Record the screen with the microphone", description: "The screen you're on and your voice", icon: "mic",
+          keys: "record video capture screencast audio voice mic", hidden: Toggles.recording, run: quit(() => Toggles.record(true, true)) },
+        { name: Toggles.memoRecording ? "Stop the voice memo" : "Voice memo",
+          description: Toggles.memoRecording ? "Recording " + Toggles.memoTime + ": stop and save it" : "Record the microphone into Music/Voice memos",
+          icon: Toggles.memoRecording ? "stop_circle" : "mic", keys: "record audio voice memo note microphone dictaphone", run: quit(() => Toggles.voiceMemo(!Toggles.memoRecording)) },
+        { name: "Clipboard", description: "Everything copied this session", icon: "content_paste", keys: "history paste copied", run: () => { bar.text = ""; root.filter = "clipboard" } },
+        { name: "Emoji", description: "Emoji, symbols and kaomoji", icon: "mood", keys: "smiley symbols kaomoji characters", run: () => { bar.text = ""; root.filter = "emoji" } },
         { name: "Lock", description: "Lock the session", icon: "lock", run: quit(() => Session.run("lock")) },
         { name: "Suspend", description: "Sleep", icon: "bedtime", keys: "sleep", run: quit(() => Session.run("suspend")) },
         { name: "Power", description: "Log out, restart, shut down", icon: Config.symbol.power, keys: "logout reboot restart shutdown poweroff", run: view(Engine.View.Power) }
@@ -89,9 +103,29 @@ Item {
     readonly property var actionRows: {
         const q = query
         return actions
+            .filter(a => !a.hidden)
             .filter(a => q === "" || (a.name + " " + (a.keys ?? "")).toLowerCase().split(/\s+/).some(w => w.startsWith(q))
                                   || a.name.toLowerCase().includes(q))
             .map(a => ({ kind: "action", name: a.name, description: a.description, icon: a.icon, run: a.run }))
+    }
+
+    // Emoji, symbols and kaomoji (Emoji.qml), in a grid: the Emoji filter, or ":" before the words from
+    // any filter, as in a chat. Picked, one is typed into the window you were in, and copied.
+    readonly property bool emojiMode: filter === "emoji" || query.startsWith(":")
+    readonly property var emojiRows: emojiMode
+        ? Emoji.search(query.startsWith(":") ? query.slice(1) : query).map(e => ({ kind: "emoji", glyph: e.glyph, name: e.name, group: e.group }))
+        : []
+
+    // The clipboard history (ClipHistory): the Clipboard filter, and the few best in All once there are
+    // two letters. Picked, one is pasted into the window you were in (ClipHistory.paste).
+    readonly property var clipRows: {
+        if (filter !== "clipboard" && !(filter === "all" && query.length >= 2)) return []
+        const q = query
+        return ClipHistory.items
+            .filter(i => q === "" || (i.picture === "" ? i.text.toLowerCase().includes(q) : ("picture image " + i.info).toLowerCase().includes(q)))
+            .map(i => ({ kind: "clip", item: i, picture: i.picture, icon: "content_paste",
+                         name: i.picture !== "" ? "Picture" : i.text.replace(/\s+/g, " ").trim(),
+                         description: i.picture !== "" ? i.info : filter === "all" ? "Copied" : "" }))
     }
 
     readonly property var calc: {
@@ -117,6 +151,7 @@ Item {
     }
     onFilterChanged: {
         selected = 0
+        if (filter === "clipboard") ClipHistory.refresh()
         if (wantFiles && searched !== query) debounce.restart()
     }
 
@@ -163,17 +198,32 @@ Item {
     }
 
     readonly property var results: {
+        if (emojiMode) return emojiRows
+        if (filter === "clipboard") return clipRows
         const out = []
         if (calc) out.push(calc)
         if (filter === "all" || filter === "apps") out.push(...apps)
         if (filter === "actions" || (filter === "all" && query !== "")) out.push(...actionRows)
+        if (filter === "all" && query.length >= 2) out.push(...clipRows.slice(0, 3))
         if (filter === "all" || filter === "files") out.push(...files)
         return out
     }
     onResultsChanged: selected = Math.min(selected, Math.max(0, results.length - 1))
-    onSelectedChanged: list.positionViewAtIndex(selected, ListView.Contain)
+    onSelectedChanged: emojiMode ? grid.positionViewAtIndex(selected, GridView.Contain) : list.positionViewAtIndex(selected, ListView.Contain)
+
+    // the arrows: a list goes up and down, the grid by rows and, from the field, sideways too
+    function step(by) {
+        const n = results.length
+        if (n === 0) { selected = 0; return }
+        if (!emojiMode) { selected = (selected + Math.sign(by) + n) % n; return }
+        const next = selected + by
+        selected = Math.abs(by) === 1 ? (next + n) % n : Math.max(0, Math.min(n - 1, next))
+    }
 
     readonly property string hint: results.length > 0 ? ""
+        : emojiMode && !Emoji.ready ? "The emoji list needs unicode-emoji"
+        : filter === "clipboard" && !ClipHistory.enabled ? "The clipboard history needs cliphist and wl-clipboard"
+        : filter === "clipboard" && query === "" ? "What you copy shows here, until the session ends"
         : filter === "files" && query.length < 2 ? "Type at least two letters to search your files"
         : finder.running || debounce.running ? "Searching…"
         : query !== "" ? "Nothing matches “" + bar.text.trim() + "”" : "Nothing here"
@@ -195,6 +245,12 @@ Item {
         case "file":   Toggles.open(row.path); Engine.close(); break
         case "calc":   Quickshell.clipboardText = row.value; Engine.close(); break
         case "action": row.run(); break
+        case "clip":   Engine.closeThen(() => ClipHistory.paste(row.item)); break
+        case "emoji":
+            Emoji.remember(row.glyph)
+            Quickshell.clipboardText = row.glyph
+            Engine.closeThen(() => Toggles.typeText(row.glyph))
+            break
         }
     }
     function cycle(step) {
@@ -202,8 +258,8 @@ Item {
         filter = filters[(i + step + filters.length) % filters.length].key
     }
 
-    implicitWidth: 800
-    implicitHeight: 20 + bar.height + 12 + (results.length > 0 ? list.height : 56) + 18
+    implicitWidth: 880
+    implicitHeight: 20 + bar.height + 12 + (results.length === 0 ? 56 : emojiMode ? grid.height + 44 : list.height) + 18
 
     BackButton {
         id: back
@@ -221,11 +277,14 @@ Item {
         placeholder: "Search"
         takesTab: true
         takesArrows: true
+        takesSides: root.emojiMode
         focus: true
 
         onKey: Engine.key()
-        onDown: root.selected = root.results.length ? (root.selected + 1) % root.results.length : 0
-        onUp: root.selected = root.results.length ? (root.selected - 1 + root.results.length) % root.results.length : 0
+        onDown: root.step(root.emojiMode ? grid.columns : 1)
+        onUp: root.step(root.emojiMode ? -grid.columns : -1)
+        onLeft: root.step(-1)
+        onRight: root.step(1)
         onAccepted: root.run(root.results[root.selected])
         onTab: backward => root.cycle(backward ? -1 : 1)
         onEscaped: Engine.close()
@@ -253,8 +312,86 @@ Item {
         color: Config.dim
     }
 
+    GridView {
+        id: grid
+        readonly property int columns: 12
+        readonly property var current: root.emojiMode ? root.results[root.selected] ?? null : null
+
+        visible: root.emojiMode && root.results.length > 0
+        x: 20
+        y: bar.y + bar.height + 12
+        width: parent.width - 40
+        cellWidth: width / columns
+        cellHeight: cellWidth
+        height: Math.min(Math.ceil(root.results.length / columns), 5) * cellHeight
+        clip: true
+        boundsBehavior: Flickable.StopAtBounds
+        model: root.emojiMode ? root.results : []
+
+        delegate: Item {
+            id: cell
+            required property var modelData
+            required property int index
+            readonly property bool current: index === root.selected
+
+            width: grid.cellWidth
+            height: grid.cellHeight
+
+            Rectangle {
+                anchors { fill: parent; margins: 3 }
+                radius: Config.innerRadius
+                color: cell.current ? Config.secondary : cellArea.containsMouse ? Config.high : "transparent"
+                Behavior on color { ColorAnimation { duration: 100 } }
+            }
+            // a kaomoji is long: it shrinks to its cell, and the line below shows it whole
+            Text {
+                anchors.centerIn: parent
+                width: parent.width - 10
+                horizontalAlignment: Text.AlignHCenter
+                text: cell.modelData.glyph
+                color: cell.current ? Config.secondaryInk : Config.text
+                font.pixelSize: 30
+                fontSizeMode: Text.HorizontalFit
+                minimumPixelSize: 8
+            }
+            ClickArea {
+                id: cellArea
+                property point last: Qt.point(-1, -1)
+                onPositionChanged: mouse => {
+                    const p = mapToGlobal(mouse.x, mouse.y)
+                    if (Math.abs(p.x - last.x) > 0.5 || Math.abs(p.y - last.y) > 0.5) {
+                        if (last.x >= 0) root.selected = cell.index
+                        last = p
+                    }
+                }
+                onClicked: root.run(cell.modelData)
+            }
+        }
+    }
+
+    // the one chosen, whole and by name, and what Enter does with it
+    Row {
+        visible: grid.visible && grid.current !== null
+        x: 32
+        y: grid.y + grid.height + 10
+        spacing: 12
+
+        Text {
+            anchors.verticalCenter: parent.verticalCenter
+            text: grid.current?.glyph ?? ""
+            color: Config.text
+            font.pixelSize: 22
+        }
+        Label {
+            anchors.verticalCenter: parent.verticalCenter
+            text: (grid.current?.name ?? "") + "  ·  " + (grid.current?.group ?? "") + "  ·  Enter types it, and copies it"
+            color: Config.dim
+        }
+    }
+
     ListView {
         id: list
+        visible: !root.emojiMode
         x: 20
         y: bar.y + bar.height + 12
         width: parent.width - 40
@@ -262,7 +399,7 @@ Item {
         spacing: 2
         clip: true
         boundsBehavior: Flickable.StopAtBounds
-        model: root.results
+        model: root.emojiMode ? [] : root.results
 
         delegate: Rectangle {
             id: row
@@ -286,6 +423,18 @@ Item {
                 // "" when the theme has no such icon: then the glyph circle shows instead
                 readonly property string appIcon: row.modelData.kind === "app" ? Quickshell.iconPath(row.modelData.app.icon ?? "", true) : ""
 
+                // a picture from the clipboard shows itself
+                ClippingRectangle {
+                    visible: (row.modelData.picture ?? "") !== ""
+                    anchors.fill: parent
+                    radius: 22
+                    color: Config.high
+
+                    CoverImage {
+                        source: row.modelData.picture ?? ""
+                        sourceSize: Qt.size(88, 88)
+                    }
+                }
                 IconImage {
                     visible: lead.appIcon !== ""
                     anchors.centerIn: parent
@@ -294,7 +443,7 @@ Item {
                     source: lead.appIcon
                 }
                 Rectangle {
-                    visible: lead.appIcon === ""
+                    visible: lead.appIcon === "" && (row.modelData.picture ?? "") === ""
                     anchors.fill: parent
                     radius: 22
                     color: row.current ? Config.primary : Config.high

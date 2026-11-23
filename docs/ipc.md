@@ -6,6 +6,7 @@ default.
 | Command | Effect |
 |---|---|
 | `qs ipc call island open <name>` | pin a view, centred horizontally at the top gap. Opening the open view closes it |
+| `qs ipc call island launch <filter>` | the launcher on a filter: `all`, `apps`, `files`, `actions`, `clipboard`, `emoji` (Super+.) |
 | `qs ipc call island cycle <name> <1\|-1>` | as Alt+Tab, with Super held: the first call opens the view, the next ones move on (`-1`: back), and letting go of Super picks what was reached. `workspaces`, `wallpapers` and `clipboard` take part (`Held.qml`, which hears Super through Hyprland's global shortcut `quickshell:island-super`) |
 | `qs ipc call island alert <name>` | raise the view as a toast (priority and queue rules apply) |
 | `qs ipc call island peek <true\|false>` | show the rest view (Compact) until `peek false`, then hide it (auto-hide) |
@@ -139,7 +140,20 @@ nixos-rebuild switch ... && qs ipc call activity done rebuild || qs ipc call act
 
 `ClipHistory.qml` keeps every copy with cliphist in `$XDG_RUNTIME_DIR/island-clipboard` (memory only: it
 goes with the session), never what a password manager marks secret. `open clipboard` (Super+Shift+V)
-shows it; `qs ipc call clipboard wipe` forgets everything.
+shows it, and the launcher's Clipboard filter searches it. Enter pastes into the window you were in: one
+line of text is typed there (wtype), so it works in a terminal too; more lines and pictures are only
+copied. `qs ipc call clipboard wipe` forgets everything.
+
+## Recording
+
+`Toggles.qml` has its own target, `record` (also the launcher's actions: Record the screen, with the
+microphone, Voice memo). Compact shows each while it runs, with its time.
+
+| Command | Effect |
+|---|---|
+| `qs ipc call record screen <true\|false>` | start or stop a screen recording (wf-recorder, into Videos/Recordings); `true`: with the microphone |
+| `qs ipc call record memo` | start or stop a voice memo (pw-record, into Music/Voice memos, FLAC) |
+| `qs ipc call record status` | what's recording, as JSON |
 
 ## Sounds
 

@@ -8,12 +8,14 @@
       (`services.power-profiles-daemon.enable`); it is hidden until then.
 - [ ] The media view's "Playing next": MPRIS has no queue, so it lists outputs and other players instead.
 - [ ] Keyboard, next steps: give each view real keyboard rules as it gets real content.
-- [ ] Clipboard: paste into the window after choosing (Nihil does, on letting go of the key). It needs to
-      know the window's paste key: Ctrl+V, or Ctrl+Shift+V in a terminal.
 - [ ] `tst_keyboard.qml` in CI: it needs Qt and Quickshell on the runner (Nix).
 
 ## Done
 
+- [x] The launcher (2026-11-24): Clipboard and Emoji filters (and `:` before the words, from any filter);
+      emoji, symbols and kaomoji in a grid, typed into the window you were in and copied; the clipboard
+      pastes (one line typed, so a terminal works too); actions to record the screen (with the microphone
+      too) and voice memos, each shown in Compact while it runs; Super+. opens Emoji.
 - [x] Colours, the surfaces (2026-11-24): a hue of their own and a tint, apart from the accent (the
       Surface row; IPC `surface`). From the wallpaper, Android-style: an option per distinct colourful
       colour, the surfaces in the picture's own cast and tinted as much as it is coloured, plus Matched

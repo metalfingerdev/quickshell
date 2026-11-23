@@ -42,6 +42,8 @@ QtObject {
     property int hoverMs: 140
     property int hideMs: 700
     property bool debug: false
+    // the filter the launcher opens on (IPC `launch <filter>`); it reads it as it opens, and puts "all" back
+    property string launcherFilter: "all"
 
     property var snapshot: Machine.initial(restView, true)
 

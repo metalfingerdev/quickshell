@@ -74,9 +74,46 @@ Item {
                     NumberAnimation { to: 1; duration: 700 }
                 }
             }
+            // the microphone goes in too
+            Icon {
+                visible: Toggles.recordingMic
+                anchors.verticalCenter: parent.verticalCenter
+                name: "mic"
+                size: 14
+                filled: true
+                color: Config.recording
+            }
             Label {
                 anchors.verticalCenter: parent.verticalCenter
                 text: Toggles.recordTime
+                color: Config.recording
+                font.weight: Font.DemiBold
+                font.features: { "tnum": 1 }
+            }
+        }
+
+        // a voice memo: the microphone, beating, and how long so far
+        Row {
+            visible: Toggles.memoRecording
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: 4
+
+            Icon {
+                anchors.verticalCenter: parent.verticalCenter
+                name: "mic"
+                size: 16
+                filled: true
+                color: Config.recording
+                SequentialAnimation on opacity {
+                    running: Toggles.memoRecording
+                    loops: Animation.Infinite
+                    NumberAnimation { to: 0.4; duration: 700 }
+                    NumberAnimation { to: 1; duration: 700 }
+                }
+            }
+            Label {
+                anchors.verticalCenter: parent.verticalCenter
+                text: Toggles.memoTime
                 color: Config.recording
                 font.weight: Font.DemiBold
                 font.features: { "tnum": 1 }
