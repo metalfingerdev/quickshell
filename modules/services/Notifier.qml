@@ -16,6 +16,7 @@ Singleton {
     property int criticalMs: 0              // 0 = stays until closed
     property int maxPopups: 3               // the rest wait, shown as "+N more"
     property bool stackDuplicates: true
+    property int historySize: 50            // the center keeps this many; the oldest go (popups on screen stay)
 
     property bool dnd: false
     property Store store: Store {
@@ -25,13 +26,22 @@ Singleton {
 
     // true = popup countdowns are frozen. Set by whoever shows the popups (hovered, or not on screen).
     property bool held: false
+    // Let go, each popup on screen has at least this long, so one read under the pointer doesn't
+    // vanish the moment the pointer moves off it.
+    property int graceMs: 2000
+    onHeldChanged: {
+        if (held) return
+        for (const i of popups.slice(0, maxPopups))
+            if (left[i.id] !== undefined && left[i.id] < graceMs) left[i.id] = graceMs
+    }
 
     property var items: []
     readonly property int count: items.length
     readonly property var popups: items.filter(i => i.popup && i.critical)
                                        .concat(items.filter(i => i.popup && !i.critical))
 
-    signal received(bool critical)
+    // fresh: a new one, not an update of one already here (replaces_id, or the same stack tag)
+    signal received(bool critical, bool fresh)
 
     // id -> ms left on that popup's countdown; absent = sticky. Mutated in place on purpose:
     // ticking must not rebuild the views.
@@ -63,19 +73,40 @@ Singleton {
         n.bodyChanged.connect(() => root.add(n))
     }
 
+    // dunst's stack tag (and the older Ubuntu hint): a script's notices with the same tag, from the
+    // same app, take each other's place instead of piling up (a volume script, a progress, a timer)
+    function tagOf(n) {
+        const h = n.hints ?? {}
+        return String(h["x-dunst-stack-tag"] ?? h["x-canonical-private-synchronous"] ?? "")
+    }
+
     function add(n) {
         const prev = find(n.id)
-        const dup = stackDuplicates ? (items.find(i => i.id !== n.id && same(i.ref, n)) ?? null) : null
+        const tag = tagOf(n)
+        const replaced = tag === "" ? [] : items.filter(i => i.id !== n.id && i.ref.appName === n.appName && tagOf(i.ref) === tag)
+        const rest = items.filter(i => !replaced.includes(i))
+        const dup = stackDuplicates ? (rest.find(i => i.id !== n.id && same(i.ref, n)) ?? null) : null
+        const gone = dup ? replaced.concat([dup]) : replaced
         const quiet = dnd && n.urgency !== NotificationUrgency.Critical
         const ms = timeoutFor(n)
         if (ms > 0 && !quiet) left[n.id] = ms; else delete left[n.id]
-        if (dup) delete left[dup.id]
+        gone.forEach(i => delete left[i.id])
 
         const e = entry(n, !quiet, dup ? dup.count + 1 : (prev ? prev.count : 1))
-        items = [e].concat(items.filter(i => i.id !== n.id && i !== dup))
-        if (dup) dup.ref.dismiss()                      // dunst keeps one entry and counts the rest
+        items = [e].concat(rest.filter(i => i.id !== n.id && i !== dup))
+        gone.forEach(i => i.ref.dismiss())              // dunst keeps one entry and counts the rest
         if (!prev) watch(n)
-        if (!quiet) received(e.critical)
+        trim()
+        if (!quiet) received(e.critical, !prev && replaced.length === 0)
+    }
+
+    // Each item holds its Notification, so an unbounded history grows for the whole session.
+    function trim() {
+        const over = items.length - historySize
+        if (over <= 0) return
+        const gone = items.filter(i => !i.popup).slice(-over)          // items run newest first
+        items = items.filter(i => !gone.includes(i))
+        gone.forEach(i => { delete left[i.id]; i.ref.dismiss() })
     }
 
     function remove(id) { delete left[id]; items = items.filter(i => i.id !== id) }

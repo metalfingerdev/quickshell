@@ -8,8 +8,24 @@
       (`services.power-profiles-daemon.enable`); it is hidden until then.
 - [ ] The media view's "Playing next": MPRIS has no queue, so it lists outputs and other players instead.
 - [ ] Keyboard, next steps: give each view real keyboard rules as it gets real content.
+- [ ] Clipboard: paste into the window after choosing (Nihil does, on letting go of the key). It needs to
+      know the window's paste key: Ctrl+V, or Ctrl+Shift+V in a terminal.
+- [ ] `tst_keyboard.qml` in CI: it needs Qt and Quickshell on the runner (Nix).
 
 ## Done
+
+- [x] Colours, the accent (2026-11-23): a picked colour that wouldn't read on the island (under 4.5:1) is
+      drawn just lighter or darker, and the view says so; the map is the usual saturation/brightness
+      square over a hue strip (HSV, every part of it usable), an eyedropper (hyprpicker, as Nihil's) picks
+      the accent from anywhere on the screen, and the last eight accents are a click away (Recent).
+- [x] Lessons from Nihil-Shell (2026-11-23), easiest first: a crash while locked no longer strands the
+      session (Hyprland's `allow_session_lock_restore`, the shell locks again on start, Super+Z works
+      locked); the center keeps 50; caffeine survives a shell restart; a battery already low at login
+      warns, once per band; pictures sent as a path show; CI runs `machine.test.js`; a popup keeps 2 s
+      after the pointer leaves; apps start in their own scope (`uwsm app`); a mic toast; stack tags
+      replace; sounds; the shell is a systemd service that restarts; Activities (progress over IPC,
+      downloads); the island's curve comes from Hyprland; a clipboard history; Super+Tab, Super+P and
+      Super+Shift+V held as Alt+Tab.
 
 - [x] The audit (2026-10-30, see [audit.md](audit.md)): a queued alert can't show twice, a pinned toast keeps
       what it interrupted, the hover intent survives mode changes, and every key a control acts on restarts

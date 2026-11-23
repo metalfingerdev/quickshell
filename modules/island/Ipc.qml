@@ -14,6 +14,15 @@ IpcHandler {
         Engine.open(e.view)
     }
 
+    // Held, as Alt+Tab is: the first press opens the view, each one after moves on (1, or -1 for the
+    // one before), and letting go of Super picks what was reached (Held.qml)
+    function cycle(name: string, delta: int): void {
+        const e = Registry.byName(name)
+        if (!e) return
+        Config.focusVisible = true
+        Held.cycle(e.view, delta)
+    }
+
     function alert(name: string): void {
         const e = Registry.byName(name)
         if (e) Engine.alert(e.view)

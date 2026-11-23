@@ -13,3 +13,6 @@ singleton Privacy    1.0 Privacy.qml
 singleton Toplevels  1.0 Toplevels.qml
 singleton Wallpaper  1.0 Wallpaper.qml
 singleton Toggles    1.0 Toggles.qml
+singleton Sounds     1.0 Sounds.qml
+singleton Activities 1.0 Activities.qml
+singleton ClipHistory 1.0 ClipHistory.qml

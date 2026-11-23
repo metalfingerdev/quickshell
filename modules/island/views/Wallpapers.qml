@@ -19,6 +19,21 @@ Item {
     implicitWidth: contentW + 2 * pad
     implicitHeight: column.implicitHeight + 2 * pad
 
+    // Super+P held (Held): each P moves along the grid, letting go of Super sets the one reached
+    Connections {
+        target: Held
+        function onStepped(view, delta) {
+            if (view !== Engine.View.Wallpapers || grid.count === 0) return
+            grid.currentIndex = (grid.currentIndex + delta + grid.count) % grid.count
+            grid.positionViewAtIndex(grid.currentIndex, GridView.Contain)
+        }
+        function onChosen(view) {
+            if (view !== Engine.View.Wallpapers || grid.count === 0) return
+            Wallpaper.set(Wallpaper.files[grid.currentIndex])
+            Engine.close()
+        }
+    }
+
     Column {
         id: column
         x: root.pad

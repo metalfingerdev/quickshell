@@ -17,7 +17,7 @@ Singleton {
 
     Process {
         running: true
-        command: ["sh", "-c", "for t in systemd-inhibit hyprsunset wf-recorder powerprofilesctl grimblast gsettings notify-send xdg-open; "
+        command: ["sh", "-c", "for t in systemd-inhibit hyprsunset wf-recorder powerprofilesctl grimblast gsettings notify-send xdg-open uwsm pw-play hyprpicker; "
                             + "do command -v \"$t\" >/dev/null 2>&1 && echo \"$t\"; done"]
         stdout: StdioCollector {
             onStreamFinished: {
@@ -32,6 +32,15 @@ Singleton {
         running: root.caffeine && root.has("systemd-inhibit")
         command: ["systemd-inhibit", "--what=idle", "--who=Island", "--why=Caffeine", "--mode=block", "sleep", "infinity"]
     }
+    // Kept through a restart of the shell (a crash, Super+R), so the screen doesn't start to dim
+    // behind your back; in the runtime folder, so the next session starts without it.
+    FileView {
+        id: caffeineFile
+        path: (Quickshell.env("XDG_RUNTIME_DIR") ?? "") !== "" ? Quickshell.env("XDG_RUNTIME_DIR") + "/island-caffeine" : ""
+        printErrors: false
+        onLoaded: root.caffeine = text().trim() === "on"
+    }
+    onCaffeineChanged: if (caffeineFile.path !== "") caffeineFile.setText(caffeine ? "on\n" : "")
 
     property bool nightLight: false
     property int warmth: 4500
@@ -107,9 +116,33 @@ Singleton {
         Quickshell.execDetached(["sh", "-c", "sleep 0.4; d=\"$HOME/Pictures/Screenshots\"; mkdir -p \"$d\"; "
                                            + "exec grimblast --notify copysave area \"$d/$(date +%s).png\""])
     }
+    // A colour from anywhere on the screen (hyprpicker: the zoom lens, a click), as "#rrggbb", or ""
+    // if it was left with Escape. A signal, not a callback: whoever asked may be gone by then (a view).
+    // It starts after a moment, as the screenshot does, so the island has gone from what it freezes.
+    signal colourPicked(string colour)
+    function pickColour() { if (has("hyprpicker") && !picker.running) picker.running = true }
+    Process {
+        id: picker
+        command: ["sh", "-c", "sleep 0.4; exec hyprpicker --no-fancy --quiet --format=hex"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const found = text.match(/#[0-9a-fA-F]{6}/)
+                root.colourPicked(found ? found[0].toLowerCase() : "")
+            }
+        }
+    }
+
     function colorScheme(dark) {
         if (has("gsettings"))
             Quickshell.execDetached(["gsettings", "set", "org.gnome.desktop.interface", "color-scheme", dark ? "prefer-dark" : "prefer-light"])
     }
-    function open(path) { if (path) Quickshell.execDetached(["xdg-open", path]) }
+    function open(path) { if (path) launch(["xdg-open", path]) }
+
+    // An app the shell starts goes in a scope of its own (uwsm app), not in the shell's service:
+    // restarting the shell (a crash, Super+R) would otherwise close it, and the session ends it
+    // properly when it ends. A desktop entry goes by its id: launch(["firefox.desktop"]).
+    function launch(command, dir) {
+        const line = has("uwsm") ? ["uwsm", "app", "--"].concat(command) : command
+        Quickshell.execDetached(dir ? { command: line, workingDirectory: dir } : line)
+    }
 }

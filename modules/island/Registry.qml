@@ -17,12 +17,16 @@ QtObject {
           opens: Engine.View.Dashboard },
         { name: "brightness", priority: 1, timeout: 1500, view: Engine.View.Brightness, url: Qt.resolvedUrl("views/Brightness.qml"), queue: false,
           opens: Engine.View.Dashboard },
+        { name: "mic",        aliases: ["microphone"], priority: 1, timeout: 1500, view: Engine.View.Mic, url: Qt.resolvedUrl("views/Mic.qml"), queue: false,
+          opens: Engine.View.Mixer },
         // timeout 0: Notifier times each popup, and Triggers closes the view when the last one goes.
         // `critical`: the priority a critical one alerts with.
         { name: "notifications", priority: 2, critical: 3, timeout: 0, view: Engine.View.Notifications, url: Qt.resolvedUrl("views/Notification.qml"), queue: true },
         { name: "media",      priority: 2, timeout: 8000, view: Engine.View.Media,      url: Qt.resolvedUrl("views/Media.qml") },
         { name: "mixer",      priority: 2, timeout: 8000, view: Engine.View.Mixer,      url: Qt.resolvedUrl("views/Mixer.qml") },
         { name: "battery",    priority: 2, critical: 3, timeout: 4000, view: Engine.View.Battery, url: Qt.resolvedUrl("views/Battery.qml"), queue: true },
+        // an activity that ended (a toast), or, pinned, those still running (Activities)
+        { name: "activity",   aliases: ["activities"], priority: 2, timeout: 5000, view: Engine.View.Activity, url: Qt.resolvedUrl("views/Activity.qml"), queue: true },
         { name: "clock",      priority: 2, timeout: 8000, view: Engine.View.Clock,      url: Qt.resolvedUrl("views/Clock.qml") },
         { name: "power",      priority: 2, timeout: 8000, view: Engine.View.Power,      url: Qt.resolvedUrl("views/Power.qml") },
         { name: "theme",      priority: 2, timeout: 8000, view: Engine.View.Theme,      url: Qt.resolvedUrl("views/Theme.qml") },
@@ -30,6 +34,7 @@ QtObject {
         { name: "wallpapers", aliases: ["wallpaper"], priority: 2, timeout: 8000, view: Engine.View.Wallpapers, url: Qt.resolvedUrl("views/Wallpapers.qml") },
         { name: "settings",   priority: 2, timeout: 8000, view: Engine.View.Settings,   url: Qt.resolvedUrl("views/Settings.qml") },
         { name: "workspaces", priority: 2, timeout: 8000, view: Engine.View.Workspaces, url: Qt.resolvedUrl("views/Workspaces.qml") },
+        { name: "clipboard",  aliases: ["history"], priority: 2, timeout: 10000, view: Engine.View.Clipboard, url: Qt.resolvedUrl("views/Clipboard.qml") },
         // `opens`: a click on the toast opens this instead of pinning the toast
         { name: "switcher",   priority: 1, timeout: 1200, view: Engine.View.Switcher,   url: Qt.resolvedUrl("views/Switcher.qml"), queue: false,
           opens: Engine.View.Tabs }

@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Hyprland
 import qs.modules.services
+import qs.modules.components
 
 // System events -> alerts. Knows nothing about priority, timing or queueing: the machine decides.
 Scope {
@@ -20,6 +21,8 @@ Scope {
         target: Audio
         function onVolumeChanged() { root.alert(Engine.View.Volume) }
         function onMutedChanged()  { root.alert(Engine.View.Volume) }
+        // only muting: apps with automatic gain move the mic's level all the time
+        function onMicMutedChanged() { if (Audio.hasMic) root.alert(Engine.View.Mic) }
     }
 
     Connections {
@@ -49,10 +52,37 @@ Scope {
 
     Connections {
         target: Energy
-        function onPluggedChanged() { if (Energy.present) root.alert(Engine.View.Battery) }
+        function onPluggedChanged() {
+            if (!Energy.present) return
+            root.alert(Engine.View.Battery)
+            if (root.armed) Sounds.play(Energy.plugged ? "power-plug" : "power-unplug")
+        }
         function onWarn(critical) {
             const v = Engine.View.Battery
             Engine.alert(v, Registry.priority(v, critical))         // a warning skips the startup guard
+            Sounds.play("dialog-warning")
+        }
+    }
+
+    // The Colours view's eyedropper: the colour picked becomes the accent, and the view comes back
+    // (Escape, and it comes back as it was).
+    Connections {
+        target: Toggles
+        function onColourPicked(colour) {
+            if (colour !== "") {
+                Config.accent = colour
+                Config.source = "accent"
+                Config.remember(colour)
+            }
+            Engine.open(Engine.View.Colours)
+        }
+    }
+
+    Connections {
+        target: Activities
+        function onEnded(ok) {
+            root.alert(Engine.View.Activity)
+            Sounds.play(ok ? "complete" : "dialog-error")
         }
     }
 
@@ -74,9 +104,11 @@ Scope {
     // Notifications skip the startup guard: one arriving in the first 2 s should show.
     Connections {
         target: Notifier
-        function onReceived(critical) {
+        // Do not disturb: a quiet one never gets here, so it makes no sound either
+        function onReceived(critical, fresh) {
             const v = Engine.View.Notifications
             if (!root.centerShown) Engine.alert(v, Registry.priority(v, critical))
+            if (fresh) Sounds.play(critical ? "dialog-warning" : "message-new-instant")
         }
         function onPopupsChanged() { Qt.callLater(root.settle) }
     }

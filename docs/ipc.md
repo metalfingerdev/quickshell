@@ -6,6 +6,7 @@ default.
 | Command | Effect |
 |---|---|
 | `qs ipc call island open <name>` | pin a view, centred horizontally at the top gap. Opening the open view closes it |
+| `qs ipc call island cycle <name> <1\|-1>` | as Alt+Tab, with Super held: the first call opens the view, the next ones move on (`-1`: back), and letting go of Super picks what was reached. `workspaces`, `wallpapers` and `clipboard` take part (`Held.qml`, which hears Super through Hyprland's global shortcut `quickshell:island-super`) |
 | `qs ipc call island alert <name>` | raise the view as a toast (priority and queue rules apply) |
 | `qs ipc call island peek <true\|false>` | show the rest view (Compact) until `peek false`, then hide it (auto-hide) |
 | `qs ipc call island togglePeek` | `peek true` if the peek isn't on, else `peek false`: the peek key as one binding |
@@ -17,7 +18,7 @@ default.
 | `qs ipc call island toggleAutohide` | toggle auto-hide |
 | `qs ipc call island palette <name>` | a preset palette; `palettes` lists them |
 | `qs ipc call island colours <preset\|accent\|wallpaper>` | where colours come from |
-| `qs ipc call island accent <#rrggbb>` | a scheme generated around that colour, which is its primary |
+| `qs ipc call island accent <#rrggbb>` | a scheme generated around that colour, which is its primary (lighter on dark, darker on light, only if it wouldn't read at 4.5:1 on the surface) |
 | `qs ipc call island tint <0..100>` | how much of the colour goes into a generated scheme's surfaces, in percent |
 | `qs ipc call island mode <dark\|light>` | a generated scheme's dark or light version |
 | `qs ipc call island size <80..140>` | the whole island's size, in percent |
@@ -37,8 +38,8 @@ mode: focus rings and shortcut keycaps show until the pointer moves. Names: `tab
 what hovering shows), `dashboard` (everything), `launcher`, `network`, `bluetooth`, `media`, `mixer`,
 `notifications` (`open` = the center, `alert` = the popups), `workspaces` (the overview), `clock`,
 `battery`, `power`, `theme` (colours and the wallpaper), `settings` (the shell, idle and the lock screen),
-and the toast `switcher`
-(`alert switcher` shows the workspace dots).
+`clipboard` (the history), `activity` (what's running), and the toasts `switcher`
+(`alert switcher` shows the workspace dots) and `mic`.
 
 `peek` is meant for a key's press and release: `peek true` on press, `peek false` on release. When
 auto-hide has hidden the island, the press reveals the rest view (Compact) and the release hides it
@@ -109,6 +110,47 @@ stream open on silence looks like media too: mute it in the Mixer to let the ste
 Separately from the steps, the screen locks before any sleep (logind's `PrepareForSleep`, held back with
 a delay inhibitor until the lock is up) and on `loginctl lock-session`.
 
+If the shell goes while locked (a crash), systemd starts it again (the `quickshell` user service) and it
+locks again at once: `Lock.qml` keeps `$XDG_RUNTIME_DIR/island-locked` while locked, and Hyprland's
+`misc.allow_session_lock_restore` lets the new lock take the session over. Super+Z works while locked, as
+the last resort.
+
+## Activities
+
+`Activities.qml` has its own target, `activity`: work that takes a while, shown in Compact while it runs
+(a bar, or a stretch going back and forth when it doesn't say how far) and as a toast when it ends.
+Browser downloads (a growing `*.part` or `*.crdownload` in the downloads folder) are one on their own.
+
+| Command | Effect |
+|---|---|
+| `qs ipc call activity start <id> <label>` | begin one, with no idea yet how far it is |
+| `qs ipc call activity progress <id> <0..1>` | how far it has got (below 0: unknown again) |
+| `qs ipc call activity done <id>` / `failed <id>` | end it, with a toast and a sound |
+| `qs ipc call activity clear <id>` | end it quietly |
+| `qs ipc call activity list` | the running ones, as JSON |
+
+```sh
+qs ipc call activity start rebuild "Rebuilding NixOS"
+nixos-rebuild switch ... && qs ipc call activity done rebuild || qs ipc call activity failed rebuild
+```
+
+## Clipboard
+
+`ClipHistory.qml` keeps every copy with cliphist in `$XDG_RUNTIME_DIR/island-clipboard` (memory only: it
+goes with the session), never what a password manager marks secret. `open clipboard` (Super+Shift+V)
+shows it; `qs ipc call clipboard wipe` forgets everything.
+
+## Sounds
+
+`Sounds.qml` plays the freedesktop sound theme with `pw-play`: a notification, a critical one, the charger
+in and out, a battery warning, an activity done or failed. Its target is `sounds`; both settings are remembered.
+
+| Command | Effect |
+|---|---|
+| `qs ipc call sounds enable <true\|false>` / `toggle` | sounds on or off |
+| `qs ipc call sounds volume <0..100>` | how loud (50) |
+| `qs ipc call sounds play <name>` | play one from the theme, e.g. `message-new-instant` |
+
 ## Notifications
 
 `Notifier.qml` has its own target, `notifications`, modelled on `dunstctl`:
@@ -120,6 +162,10 @@ a delay inhibitor until the lock is up) and on `loginctl lock-session`.
 | `qs ipc call notifications action` | run the top popup's default action |
 | `qs ipc call notifications pop` | pop the newest closed notification up again |
 | `qs ipc call notifications clear` | dismiss everything |
+
+The center keeps the last 50 (`historySize`). Notifications with the same `x-dunst-stack-tag` (or
+`x-canonical-private-synchronous`) from the same app replace each other, and a picture sent as a bare
+path (`-h string:image-path:/a.png`) shows.
 
 ## Compositor binding examples
 

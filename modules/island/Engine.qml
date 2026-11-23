@@ -30,7 +30,10 @@ QtObject {
         Settings,
         Colours,
         Wallpapers,
-        Expanded
+        Expanded,
+        Mic,
+        Activity,
+        Clipboard
     }
 
     readonly property int restView: Engine.View.Compact

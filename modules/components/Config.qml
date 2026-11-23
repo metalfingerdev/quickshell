@@ -59,6 +59,15 @@ QtObject {
     property bool darkMode: true
     readonly property var current: source === "preset" ? (palettes[name] ?? palettes.teal) : generated(source)
 
+    // The last accents chosen (the eyedropper, the hex field, or what the map was left on), newest
+    // first, for the Colours view's Recent row. A string, so the state file keeps it as written.
+    property string recent: ""
+    readonly property var recentAccents: recent === "" ? [] : recent.split(",")
+    function remember(c) {
+        const h = hex(c)
+        recent = [h].concat(recentAccents.filter(x => x !== h)).slice(0, 8).join(",")
+    }
+
     // the lightness the wallpaper's primary has right now, and setting it: the slider means what it says in either mode
     readonly property real wallpaperLightness: darkMode ? wallpaperTone : 1 - wallpaperTone
     function setWallpaperLightness(v) { wallpaperTone = darkMode ? v : 1 - v }
@@ -69,19 +78,42 @@ QtObject {
             : accent
         return scheme(primary, tint, darkMode)
     }
-    // near-black or near-white in the colour's hue, whichever reads on it (WCAG's luminance)
-    function inkOn(c) {
+    // WCAG's relative luminance, and the contrast ratio between two colours (1 .. 21)
+    function luminance(c) {
         const linear = v => v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4)
-        const luminance = 0.2126 * linear(c.r) + 0.7152 * linear(c.g) + 0.0722 * linear(c.b)
-        return Qt.hsla(Math.max(0, c.hslHue), Math.min(0.5, c.hslSaturation), luminance > 0.179 ? 0.08 : 0.97, 1)
+        return 0.2126 * linear(c.r) + 0.7152 * linear(c.g) + 0.0722 * linear(c.b)
+    }
+    function contrast(a, b) {
+        const x = luminance(a), y = luminance(b)
+        return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05)
+    }
+    // near-black or near-white in the colour's hue, whichever reads on it
+    function inkOn(c) {
+        return Qt.hsla(Math.max(0, c.hslHue), Math.min(0.5, c.hslSaturation), luminance(c) > 0.179 ? 0.08 : 0.97, 1)
+    }
+    // The primary is drawn on the surface (icons, a slider's fill, focus rings), so it has to read there:
+    // the colour as picked when it does, otherwise lighter (dark) or darker (light), only as much as it
+    // takes. Pure blue on a dark island or yellow on a light one would all but vanish as they are.
+    readonly property real primaryContrast: 4.5          // WCAG AA for text
+    function readable(c, surface, dark) {
+        if (contrast(c, surface) >= primaryContrast) return c
+        const h = Math.max(0, c.hslHue), s = c.hslSaturation
+        let fails = c.hslLightness, passes = dark ? 1 : 0   // white on dark, black on light always do
+        for (let i = 0; i < 16; i++) {
+            const mid = (fails + passes) / 2
+            if (contrast(Qt.hsla(h, s, mid, 1), surface) >= primaryContrast) passes = mid
+            else fails = mid
+        }
+        return Qt.hsla(h, s, passes, 1)
     }
     // HSL, not Material's HCT, so tones are approximate.
-    function scheme(primary, tint, dark) {
-        const h = Math.max(0, primary.hslHue)
+    function scheme(picked, tint, dark) {
+        const h = Math.max(0, picked.hslHue)
         // a greyer primary tints less, so grey has truly neutral surfaces with no jump on the way there
-        const t = tint * Math.min(1, primary.hslSaturation * 4)
+        const t = tint * Math.min(1, picked.hslSaturation * 4)
         const s = 0.8 * t, n = 0.32 * t
         const tone = (sat, light) => Qt.hsla(h, sat, light, 1)
+        const primary = readable(picked, tone(n, dark ? 0.065 : 0.975), dark)
         return dark ? {
             label: "Generated", dark: true,
             surface: tone(n, 0.065), container: tone(n, 0.105), high: tone(n, 0.145), highest: tone(n, 0.185),
@@ -155,11 +187,13 @@ QtObject {
     property real windowOpacity: 1
     readonly property color island: Qt.rgba(surface.r, surface.g, surface.b, Math.max(0, Math.min(1, windowOpacity)))
 
-    // The same ease-out and length as Hyprland's windows (the "Glide" curve in hypr/modules/look.lua, speed
-    // 3.5 = 350 ms), so the shell and the desktop move alike. It never overshoots: a notch revealed from
-    // auto-hide stops flush with the top edge instead of dipping a pixel below it and settling back.
-    readonly property var curve: [0.22, 1, 0.36, 1, 1, 1]     // Easing.BezierSpline: x1, y1, x2, y2, end
-    readonly property int motionMs: 350
+    // Hyprland's windows animation (its curve, "Glide" in hypr/modules/look.lua, and its speed: 3.5 = 350 ms),
+    // read from Hyprland itself (services/Desktops.qml, kept in step by shell.qml), so the shell and the
+    // desktop move alike and look.lua is the one place to change it. These are only the fallback for
+    // before it answers. Keep the curve from overshooting: a notch revealed from auto-hide should stop
+    // flush with the top edge instead of dipping a pixel below it and settling back.
+    property var curve: [0.22, 1, 0.36, 1, 1, 1]     // Easing.BezierSpline: x1, y1, x2, y2, end
+    property int motionMs: 350
 
     // the "Dark theme" tile: the dark palette to come back to from a light one
     property string lastDark: "teal"
@@ -203,6 +237,7 @@ QtObject {
         property alias source: root.source
         property alias name: root.name
         property alias accent: root.accent
+        property alias recent: root.recent
         property alias tint: root.tint
         property alias wallpaperSaturation: root.wallpaperSaturation
         property alias wallpaperTone: root.wallpaperTone

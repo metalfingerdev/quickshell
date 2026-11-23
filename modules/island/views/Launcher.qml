@@ -183,8 +183,11 @@ Item {
         switch (row.kind) {
         case "app":
             count(row.app)
+            // in a scope of their own (Toggles.launch), so restarting the shell leaves them open
             if (row.app.runInTerminal)
-                Quickshell.execDetached({ command: [terminal, "-e"].concat(row.app.command), workingDirectory: row.app.workingDirectory })
+                Toggles.launch([terminal, "-e"].concat(row.app.command), row.app.workingDirectory)
+            else if (Toggles.has("uwsm"))
+                Toggles.launch([row.app.id + ".desktop"])
             else
                 row.app.execute()
             Engine.close()

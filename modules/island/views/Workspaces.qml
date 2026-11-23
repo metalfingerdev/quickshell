@@ -143,6 +143,13 @@ Item {
         selectedId = target
     }
 
+    // Super+Tab held (Held): each Tab moves the selection, letting go of Super goes there
+    Connections {
+        target: Held
+        function onStepped(view, delta) { if (view === Engine.View.Workspaces) root.step(delta) }
+        function onChosen(view) { if (view === Engine.View.Workspaces) root.selectWorkspace(root.selectedId) }
+    }
+
     QtObject {
         id: dragState
 

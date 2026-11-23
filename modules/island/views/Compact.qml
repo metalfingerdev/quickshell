@@ -22,6 +22,42 @@ Item {
         anchors.centerIn: parent
         spacing: 8
 
+        // an activity running (Activities): how far it has got, or a stretch going back and forth
+        // while it doesn't say, and what it is
+        Row {
+            visible: Activities.working
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: 6
+
+            Rectangle {
+                anchors.verticalCenter: parent.verticalCenter
+                width: 28; height: 4; radius: 2
+                color: Config.container
+                clip: true
+
+                Rectangle {
+                    property real sweep: 0
+                    height: parent.height
+                    radius: 2
+                    color: Config.primary
+                    width: Activities.level >= 0 ? Math.max(height, parent.width * Activities.level) : parent.width * 0.4
+                    x: Activities.level >= 0 ? 0 : sweep
+                    NumberAnimation on sweep {
+                        running: Activities.working && Activities.level < 0
+                        loops: Animation.Infinite
+                        from: -12; to: 28; duration: 1100
+                    }
+                }
+            }
+            Label {
+                anchors.verticalCenter: parent.verticalCenter
+                width: Math.min(implicitWidth, 160)
+                elide: Text.ElideRight
+                text: Activities.label
+                color: Config.dim
+            }
+        }
+
         Row {
             visible: Toggles.recording
             anchors.verticalCenter: parent.verticalCenter

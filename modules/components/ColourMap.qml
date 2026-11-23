@@ -1,73 +1,32 @@
 import QtQuick
 
-// Three gradients, and exact: an HSL colour is a straight line between those stops in each direction.
-Item {
+// The usual colour picker: a square of the hue's saturation (across) and brightness (up), over a strip
+// of every hue. HSV, so both are exact gradients: the hue, washed to white leftwards and darkened to
+// black downwards. Each is its own stop for the keyboard: arrows move in the square, Left/Right on the
+// strip; Tab goes from one to the other.
+FocusScope {
     id: root
 
     property real hue: 0
-    property real lightness: 0.5
     property real saturation: 1
-    property bool keyboardSelected: activeFocus && Config.focusVisible
+    property real value: 1
+    property int stripHeight: 22
 
-    signal moved(real hue, real lightness)
+    signal moved(real hue, real saturation, real value)
 
     function clamp(v) { return Math.max(0, Math.min(1, v)) }
-
-    activeFocusOnTab: true
-    Keys.onLeftPressed:  moved(clamp(hue - 1 / 120), lightness)
-    Keys.onRightPressed: moved(clamp(hue + 1 / 120), lightness)
-    Keys.onUpPressed:    moved(hue, clamp(lightness + 0.02))
-    Keys.onDownPressed:  moved(hue, clamp(lightness - 0.02))
 
     implicitWidth: 480
     implicitHeight: 240
 
-    Rectangle {
-        id: hues
-        anchors.fill: parent
-        radius: Config.innerRadius
-        gradient: Gradient {
-            orientation: Gradient.Horizontal
-            GradientStop { position: 0;     color: "#ff0000" }
-            GradientStop { position: 1 / 6; color: "#ffff00" }
-            GradientStop { position: 2 / 6; color: "#00ff00" }
-            GradientStop { position: 3 / 6; color: "#00ffff" }
-            GradientStop { position: 4 / 6; color: "#0000ff" }
-            GradientStop { position: 5 / 6; color: "#ff00ff" }
-            GradientStop { position: 1;     color: "#ff0000" }
-        }
-    }
-    Rectangle {
-        anchors.fill: parent
-        radius: hues.radius
-        gradient: Gradient {
-            GradientStop { position: 0;   color: Qt.rgba(1, 1, 1, 1) }
-            GradientStop { position: 0.5; color: Qt.rgba(1, 1, 1, 0) }
-            GradientStop { position: 0.5; color: Qt.rgba(0, 0, 0, 0) }
-            GradientStop { position: 1;   color: Qt.rgba(0, 0, 0, 1) }
-        }
-    }
-    Rectangle {
-        anchors.fill: parent
-        radius: hues.radius
-        opacity: 1 - root.saturation
-        gradient: Gradient {
-            GradientStop { position: 0; color: "#ffffff" }
-            GradientStop { position: 1; color: "#000000" }
-        }
-    }
-
-    Rectangle {
-        x: root.hue * root.width - width / 2
-        y: (1 - root.lightness) * root.height - height / 2
+    component Handle: Rectangle {
         width: 24
         height: 24
         radius: 12
-        color: Qt.hsla(root.hue, root.saturation, root.lightness, 1)
         border.width: 3
         border.color: "#ffffff"
 
-        // a dark hairline, so the white ring still has an edge on the map's white
+        // a dark hairline, so the white ring still has an edge on white
         Rectangle {
             anchors { fill: parent; margins: -1 }
             radius: width / 2
@@ -77,15 +36,102 @@ Item {
         }
     }
 
-    MouseArea {
-        anchors.fill: parent
-        cursorShape: Qt.CrossCursor
-        preventStealing: true
+    Item {
+        id: square
+        width: parent.width
+        height: parent.height - root.stripHeight - 12
+        focus: true
+        activeFocusOnTab: true
+        Keys.onLeftPressed:  root.moved(root.hue, root.clamp(root.saturation - 0.02), root.value)
+        Keys.onRightPressed: root.moved(root.hue, root.clamp(root.saturation + 0.02), root.value)
+        Keys.onUpPressed:    root.moved(root.hue, root.saturation, root.clamp(root.value + 0.02))
+        Keys.onDownPressed:  root.moved(root.hue, root.saturation, root.clamp(root.value - 0.02))
 
-        function set(mouse) { root.moved(root.clamp(mouse.x / width), root.clamp(1 - mouse.y / height)) }
-        onPressed: mouse => set(mouse)
-        onPositionChanged: mouse => { if (pressed) set(mouse) }
+        Rectangle {
+            id: field
+            anchors.fill: parent
+            radius: Config.innerRadius
+            color: Qt.hsva(root.hue, 1, 1, 1)
+        }
+        Rectangle {
+            anchors.fill: parent
+            radius: field.radius
+            gradient: Gradient {
+                orientation: Gradient.Horizontal
+                GradientStop { position: 0; color: "#ffffffff" }
+                GradientStop { position: 1; color: "#00ffffff" }
+            }
+        }
+        Rectangle {
+            anchors.fill: parent
+            radius: field.radius
+            gradient: Gradient {
+                GradientStop { position: 0; color: "#00000000" }
+                GradientStop { position: 1; color: "#ff000000" }
+            }
+        }
+
+        Handle {
+            x: root.saturation * square.width - width / 2
+            y: (1 - root.value) * square.height - height / 2
+            color: Qt.hsva(root.hue, root.saturation, root.value, 1)
+        }
+
+        MouseArea {
+            anchors.fill: parent
+            cursorShape: Qt.CrossCursor
+            preventStealing: true
+
+            function set(mouse) { root.moved(root.hue, root.clamp(mouse.x / width), root.clamp(1 - mouse.y / height)) }
+            onPressed: mouse => { square.forceActiveFocus(); set(mouse) }
+            onPositionChanged: mouse => { if (pressed) set(mouse) }
+        }
+
+        FocusRing { target: field; on: square.activeFocus && Config.focusVisible }
     }
 
-    FocusRing { target: hues; on: root.keyboardSelected }
+    Item {
+        id: strip
+        y: square.height + 12
+        width: parent.width
+        height: root.stripHeight
+        activeFocusOnTab: true
+        Keys.onLeftPressed:  root.moved(root.clamp(root.hue - 1 / 120), root.saturation, root.value)
+        Keys.onRightPressed: root.moved(root.clamp(root.hue + 1 / 120), root.saturation, root.value)
+
+        Rectangle {
+            id: hues
+            anchors.fill: parent
+            radius: height / 2
+            gradient: Gradient {
+                orientation: Gradient.Horizontal
+                GradientStop { position: 0;     color: "#ff0000" }
+                GradientStop { position: 1 / 6; color: "#ffff00" }
+                GradientStop { position: 2 / 6; color: "#00ff00" }
+                GradientStop { position: 3 / 6; color: "#00ffff" }
+                GradientStop { position: 4 / 6; color: "#0000ff" }
+                GradientStop { position: 5 / 6; color: "#ff00ff" }
+                GradientStop { position: 1;     color: "#ff0000" }
+            }
+        }
+
+        Handle {
+            // kept inside the rounded ends
+            x: strip.height / 2 + root.hue * (strip.width - strip.height) - width / 2
+            anchors.verticalCenter: parent.verticalCenter
+            color: Qt.hsva(root.hue, 1, 1, 1)
+        }
+
+        MouseArea {
+            anchors.fill: parent
+            cursorShape: Qt.PointingHandCursor
+            preventStealing: true
+
+            function set(mouse) { root.moved(root.clamp((mouse.x - strip.height / 2) / (width - strip.height)), root.saturation, root.value) }
+            onPressed: mouse => { strip.forceActiveFocus(); set(mouse) }
+            onPositionChanged: mouse => { if (pressed) set(mouse) }
+        }
+
+        FocusRing { target: hues; on: strip.activeFocus && Config.focusVisible }
+    }
 }

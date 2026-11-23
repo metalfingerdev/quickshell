@@ -24,6 +24,18 @@ Rectangle {
         if (name.includes("://")) return name
         return Quickshell.iconPath(name, true)
     }
+    // A picture given as a bare path (`notify-send -h string:image-path:/a.png`) reaches us as an
+    // icon's name, "image://icon//a.png", which draws the missing-icon squares: make it a file URL.
+    // A real icon name goes through the theme, and is nothing if the theme hasn't got it.
+    function picture(given) {
+        const prefix = "image://icon/"
+        if (!given.startsWith(prefix) || given.includes("?")) return given
+        let name = given.slice(prefix.length)
+        try { name = decodeURIComponent(name) } catch (e) {}
+        if (name.startsWith("file://")) return name
+        if (name.startsWith("/")) return "file://" + name.split("/").map(encodeURIComponent).join("/")
+        return Quickshell.iconPath(name, true)
+    }
     function ago(t) {
         const m = Math.floor((Date.now() - t) / 60000)
         return m < 1 ? "now" : m < 60 ? m + " min" : Qt.formatTime(new Date(t), "HH:mm")
@@ -62,7 +74,7 @@ Rectangle {
 
         CoverImage {
             id: picture
-            source: root.n?.image ?? ""
+            source: root.picture(root.n?.image ?? "")
             visible: source != "" && status === Image.Ready
         }
         IconImage {

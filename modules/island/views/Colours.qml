@@ -13,30 +13,41 @@ Item {
     readonly property bool accent: Config.source === "accent"
     readonly property bool wallpaper: Config.source === "wallpaper"
 
-    // The accent as the map and its slider hold it. Kept apart from Config.accent because a colour
-    // forgets: white has no hue, grey no saturation, and the handle mustn't jump when it gets there.
+    // The accent as the picker holds it (HSV). Kept apart from Config.accent because a colour forgets:
+    // grey has no hue, black no saturation either, and a handle mustn't jump when it gets there.
     property real hue: 0
     property real saturation: 1
-    property real lightness: 0.5
+    property real value: 1
 
     function loadAccent() {
         const c = Config.accent
-        if (c.hslHue >= 0) hue = c.hslHue
-        saturation = c.hslSaturation
-        lightness = c.hslLightness
+        if (c.hsvHue >= 0) hue = c.hsvHue
+        if (c.hsvValue > 0) saturation = c.hsvSaturation
+        value = c.hsvValue
     }
     function setAccent() {
-        Config.accent = Qt.hsla(hue, saturation, lightness, 1)
+        Config.accent = Qt.hsva(hue, saturation, value, 1)
         Engine.key()
     }
     Component.onCompleted: loadAccent()
-    // it changed elsewhere: the hex field, IPC
+    // what the map was left on goes in Recent, so it's one click away after trying others
+    Component.onDestruction: if (accent) Config.remember(Config.accent)
+    // it changed elsewhere: the hex field, the eyedropper, Recent, IPC
     Connections {
         target: Config
         function onAccentChanged() {
-            if (Config.hex(Config.accent) !== Config.hex(Qt.hsla(root.hue, root.saturation, root.lightness, 1))) root.loadAccent()
+            if (Config.hex(Config.accent) !== Config.hex(Qt.hsva(root.hue, root.saturation, root.value, 1))) root.loadAccent()
         }
     }
+
+    // What the scheme draws with: the accent, unless it had to be lighter or darker to read (Config.readable).
+    readonly property color used: Config.current.primary
+    readonly property bool adjusted: accent && Config.hex(used) !== Config.hex(Config.accent)
+
+    // The eyedropper, as Nihil's (hyprpicker): the island lets go of the screen first, since it takes
+    // every click while it's open. Triggers brings this view back with the colour picked (or as it
+    // was, on Escape): by then this one is gone.
+    function pick() { Engine.closeThen(() => Toggles.pickColour()) }
 
     implicitWidth: contentW + 2 * pad
     implicitHeight: column.implicitHeight + 2 * pad
@@ -126,12 +137,76 @@ Item {
         ColourMap {
             visible: root.accent
             width: parent.width
-            height: 260
+            height: 250
             focus: root.accent                       // the keyboard starts on the map
             hue: root.hue
-            lightness: root.lightness
             saturation: root.saturation
-            onMoved: (h, l) => { root.hue = h; root.lightness = l; root.setAccent() }
+            value: root.value
+            onMoved: (h, s, v) => { root.hue = h; root.saturation = s; root.value = v; root.setAccent() }
+        }
+
+        // Recent accents, and, when the one picked wouldn't read on the island, what it's drawn with instead
+        Item {
+            visible: root.accent && (Config.recentAccents.length > 0 || root.adjusted)
+            width: parent.width
+            height: 36
+
+            Row {
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: 8
+
+                Label {
+                    visible: Config.recentAccents.length > 0
+                    anchors.verticalCenter: parent.verticalCenter
+                    rightPadding: 4
+                    text: "Recent"
+                    color: Config.dim
+                }
+                Repeater {
+                    model: Config.recentAccents
+
+                    Swatch {
+                        required property string modelData
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 32; height: 32
+                        tone: modelData
+                        chosen: Config.hex(Config.accent) === modelData
+                        onPicked: { Config.accent = modelData; Engine.key() }
+                    }
+                }
+            }
+
+            Row {
+                visible: root.adjusted
+                anchors { right: parent.right; verticalCenter: parent.verticalCenter }
+                spacing: 8
+
+                Rectangle {
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 20; height: 20; radius: 10
+                    color: Config.accent
+                    border.width: 1
+                    border.color: Config.outline
+                }
+                Icon {
+                    anchors.verticalCenter: parent.verticalCenter
+                    name: "arrow_forward"
+                    size: 16
+                    color: Config.dim
+                }
+                Rectangle {
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 20; height: 20; radius: 10
+                    color: root.used
+                    border.width: 1
+                    border.color: Config.outline
+                }
+                Label {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: (Config.dark ? "Lighter" : "Darker") + ", to read on the island"
+                    color: Config.dim
+                }
+            }
         }
 
         Row {
@@ -175,23 +250,22 @@ Item {
             }
         }
 
+        // the accent's saturation is the square's own; the wallpaper's colour gets sliders for it
         Row {
             id: levels
-            readonly property real each: (width - (root.wallpaper ? 2 : 1) * spacing) / (root.wallpaper ? 3 : 2)
+            readonly property real each: (width - (root.wallpaper ? 2 : 0) * spacing) / (root.wallpaper ? 3 : 1)
 
             visible: root.generated
             width: parent.width
             spacing: 12
 
             Level {
+                visible: root.wallpaper
                 width: levels.each
                 title: "Saturation"
                 icon: "invert_colors"
-                value: root.accent ? root.saturation : Config.wallpaperSaturation
-                onMoved: v => {
-                    if (root.accent) { root.saturation = v; root.setAccent() }
-                    else { Config.wallpaperSaturation = v; Engine.key() }
-                }
+                value: Config.wallpaperSaturation
+                onMoved: v => { Config.wallpaperSaturation = v; Engine.key() }
             }
             Level {
                 visible: root.wallpaper
@@ -216,7 +290,7 @@ Item {
 
             Rectangle {
                 visible: root.accent
-                width: parent.width - mode.width - parent.spacing
+                width: parent.width - mode.width - parent.spacing - (eyedropper.visible ? eyedropper.width + parent.spacing : 0)
                 height: mode.height
                 radius: height / 2
                 color: Config.high
@@ -249,7 +323,10 @@ Item {
 
                     readonly property string digits: text.replace("#", "")
                     function apply() {
-                        if (digits.length === 6) { Config.accent = "#" + digits; text = "" }
+                        if (digits.length !== 6) return
+                        Config.accent = "#" + digits
+                        Config.remember(Config.accent)
+                        text = ""
                     }
                     // the field accepts its keys, so ViewLoader never sees them: report them here
                     Keys.onPressed: event => { Engine.key(); event.accepted = false }
@@ -265,6 +342,15 @@ Item {
                     }
                 }
             }
+            Pill {
+                id: eyedropper
+                visible: root.accent && Toggles.has("hyprpicker")
+                implicitHeight: mode.height
+                icon: "colorize"
+                text: "Pick"
+                shortcut: "e"
+                onClicked: root.pick()
+            }
             Segmented {
                 id: mode
                 width: root.accent ? 240 : parent.width
@@ -276,7 +362,7 @@ Item {
 
         KeyHints {
             width: parent.width
-            keys: root.accent ? [["← → ↑ ↓", "colour"], ["Tab", "next"], ["⌫", "back"], ["Esc", "close"]]
+            keys: root.accent ? [["← → ↑ ↓", "saturation, brightness"], ["Tab", "the hue, then on"], ["⌫", "back"], ["Esc", "close"]]
                               : [["⌫", "back"], ["Esc", "close"]]
         }
     }

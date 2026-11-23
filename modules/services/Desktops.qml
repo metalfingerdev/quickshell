@@ -118,11 +118,33 @@ Singleton {
             }
         }
     }
+    // And it moves like them: the windows animation's curve (as Easing.BezierSpline points) and
+    // length (speed is in tenths of a second). Null / 0 until Hyprland answers.
+    property var windowCurve: null
+    property int windowMs: 0
+    function readMotion() { motionProc.running = true }
+    Process {
+        id: motionProc
+        command: ["hyprctl", "animations", "-j"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    const [animations, curves] = JSON.parse(text)
+                    const own = animations.find(a => a.name === "windows")
+                    const a = own?.overridden ? own : animations.find(a => a.name === "global")
+                    const c = curves.find(c => c.name === a?.bezier)
+                    if (!c || !(a.speed > 0)) return
+                    root.windowCurve = [c.X0, c.Y0, c.X1, c.Y1, 1, 1]
+                    root.windowMs = Math.round(a.speed * 100)
+                } catch (e) {}
+            }
+        }
+    }
     Connections {
         target: Hyprland
-        function onRawEvent(event) { if (event?.name === "configreloaded") root.readOpacity() }
+        function onRawEvent(event) { if (event?.name === "configreloaded") { root.readOpacity(); root.readMotion() } }
     }
-    Component.onCompleted: readOpacity()
+    Component.onCompleted: { readOpacity(); readMotion() }
 
     function isSpecial(win) { return String(win?.workspace?.name ?? "").startsWith("special:") }
     function specialWorkspaceName(win) {

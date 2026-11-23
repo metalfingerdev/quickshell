@@ -45,8 +45,11 @@ qs -p lock-test.qml                                                        # the
 ```
 
 `machine.test.js` replays event sequences against `Machine.js`, with the view list and the Registry read
-from `Engine.qml` and `Registry.qml` themselves. `tst_keyboard.qml` sends real key events to `ViewLoader`
-and the controls.
+from `Engine.qml` and `Registry.qml` themselves; GitHub Actions runs it on every push
+(`.github/workflows/tests.yml`). `tst_keyboard.qml` sends real key events to `ViewLoader` and the controls.
+
+In the session the shell runs as the `quickshell` systemd user service (nixos-dotfiles,
+`modules/features/quickshell`), which starts it again if it crashes; Super+R restarts it.
 
 ## Layout
 
@@ -72,12 +75,14 @@ modules/
                               anti-corners, handle; the glass layer), outside-click close, privacy dots
     ViewLoader.qml            the view slot: a Loader plus the default keyboard
     Ipc.qml                   `qs ipc call island ...` commands
-    Triggers.qml              system events -> alerts (volume, brightness, battery, media, workspace switch)
+    Held.qml                  singleton: a view gone through with its key while Super is held (Super+Tab)
+    Triggers.qml              system events -> alerts and sounds (volume, mic, brightness, battery, media,
+                              workspace switch, notifications, activities)
     Debug.qml                 live snapshot overlay, toggled with `qs ipc call island debug true`
     views/                    one QML file per view: Compact Expanded Tabs Dashboard Launcher Network Bluetooth
                               Media Mixer Notification Workspaces Clock Battery Power Theme (with the
-                              full Colours and Wallpapers) Settings, and the toasts Volume Brightness
-                              Switcher
+                              full Colours and Wallpapers) Settings Clipboard Activity, and the toasts
+                              Volume Mic Brightness Switcher
   overview/                   the Workspaces overview's tiles, live previews, special strip, options
   parts/                      pieces several views share: WorkspaceDots (GNOME-style), StatusGroup (what's
                               on, as a button group), MediaCard, NotificationCard, WallpaperThumb,
@@ -85,7 +90,9 @@ modules/
   services/                   system state, no island logic: Audio, Backlight, Notifier, Net (Wi-Fi),
                               Bluez, Players (MPRIS), Energy (battery), Session (power), Desktops
                               (Hyprland), Toplevels, Privacy (mic/camera), Wallpaper (awww), Toggles
-                              (caffeine, night light, recording, airplane, power profiles, screenshots)
+                              (caffeine, night light, recording, airplane, power profiles, screenshots,
+                              app launches), Activities (progress over IPC, downloads), ClipHistory
+                              (cliphist, in memory), Sounds (the freedesktop theme)
   components/
     Config.qml                singleton: Material 3 palettes, shape, type; remembered across restarts
     Pill.qml                  button: tonal, filled or text; round when it's only an icon
@@ -135,13 +142,13 @@ Bar: Loader shows Registry.get(view).url
 | | initial `autoHide` | `true` | second argument to `Machine.initial(...)` |
 | `Config.qml` | `source` | `preset` | where colours come from: `preset`, `accent` or `wallpaper`; IPC `colours` |
 | | `name` | `teal` | preset palette (teal blue graphite midnight nord rose forest paper); IPC `palette` |
-| | `accent` / `tint` / `darkMode` | / `0.5` / `true` | a generated scheme: its colour, how much of it the surfaces take (0..1), dark or light; IPC `accent` `tint` `mode` |
+| | `accent` / `tint` / `darkMode` | / `0.5` / `true` | a generated scheme: its colour (made just lighter or darker if it wouldn't read on the surface, `Config.readable`), how much of it the surfaces take (0..1), dark or light; IPC `accent` `tint` `mode` |
 | | `wallpaperSaturation` / `wallpaperTone` | `0.8` / `0.72` | how the wallpaper colour's hue becomes a primary |
 | | `scale` | 1.0 | the whole island's size (0.8 .. 1.4); IPC `size` |
 | | `style` | `pill` | `pill` floats below the edge; `notch` is flush with it, with anti-corners; IPC `style` |
 | | `handle` | `strip` | auto-hide: a thin bar stays at the top edge while hidden (`none`: nothing); IPC `handle` |
 | | `radius` | 28 | the island's largest corner (Material's extra large); lower shapes are capsules |
-| | `curve` / `motionMs` | `[0.22, 1, 0.36, 1]` / 350 | the morph's ease-out (`Motion`), never overshooting; the same as Hyprland's windows (`Glide` in hypr/modules/look.lua, speed 3.5), so change both together. The workspace buttons in Tabs move with it, so they stay with the island's edge |
+| | `curve` / `motionMs` | `[0.22, 1, 0.36, 1]` / 350 | the morph's ease-out (`Motion`), never overshooting; read from Hyprland's `windows` animation (`Glide` in hypr/modules/look.lua, speed 3.5 = 350 ms; `Desktops.windowCurve`, re-read on `hyprctl reload`), so change it there. These are the fallback until Hyprland answers. The workspace buttons in Tabs move with it, so they stay with the island's edge |
 | `hypr/modules/look.lua` | `active_opacity` / `inactive_opacity`, `blur`, layer rule `glass` | 0.8 | the glass: every window at 80 % over a frosted blur; layers named `glass` or `glass:*` (the island is `glass:island`) get the blur, and the island takes `active_opacity` too (`Desktops.windowOpacity`, re-read on `hyprctl reload`) |
 | `Bar.qml` | `gap` / `edgePad` | 8 (notch: 0) / 8 | distance from the top edge / from the screen sides |
 | | `space` | `gap` + 36 | height reserved at the top when auto-hide is off |
@@ -151,6 +158,9 @@ Bar: Loader shows Registry.get(view).url
 | `Registry.qml` | per view | | `priority`, `critical`, `timeout` (ms, 0 = none), `queue` |
 | `Engine.qml` | `screenName` | `""` | screen that shows the island (`""` or an unplugged screen = the first) |
 | `Notifier.qml` | `lowMs` / `normalMs` / `criticalMs`, `maxPopups` | 10000 / 10000 / 0, 3 | dunst-style popup timing |
+| | `graceMs` / `historySize` | 2000 / 50 | a popup's least time left once the pointer leaves it / how many the center keeps |
+| `Sounds.qml` | `enabled` / `volume` | `true` / 0.5 | the freedesktop theme's cues, via pw-play; remembered; IPC `sounds` |
+| `ClipHistory.qml` | `size` | 50 | copies the clipboard history keeps (in `$XDG_RUNTIME_DIR`, memory only) |
 | `Triggers.qml` | `followFocus` | `true` | the idle island moves to the monitor Hyprland focuses |
 | | `switcherToasts` | `true` | switching workspace shows GNOME-style dots (`views/Switcher.qml`) |
 | `Notifier.qml` | `dnd` | `false` | Do not disturb: only critical notifications pop up; remembered |

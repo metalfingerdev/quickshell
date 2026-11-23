@@ -1,0 +1,17 @@
+name: tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  machine:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # Machine.js against the view list and the Registry, read from Engine.qml and Registry.qml.
+      # tst_keyboard.qml needs Qt and Quickshell, so it still runs by hand (README, Tests).
+      - run: node modules/tests/machine.test.js

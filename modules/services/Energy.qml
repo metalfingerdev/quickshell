@@ -5,7 +5,7 @@ import Quickshell
 import Quickshell.Io
 
 // sysfs has no change events, so this polls each device's `uevent` file (every value in one read).
-// No UPower needed. Each threshold warns once per discharge.
+// No UPower needed. Each threshold warns once per discharge (check()).
 Singleton {
     id: root
 
@@ -91,7 +91,21 @@ Singleton {
         return 0
     }
 
-    property int lastPercent: -1
+    // 0 above the warnings, 1 low, 2 critical. Each band warns once per discharge, also when the
+    // session starts already in it; charging only takes back the bands it climbs out of, so
+    // plugging in for a minute and out again at the same level doesn't warn twice.
+    readonly property int band: percent < 0 ? 0 : percent <= criticalAt ? 2 : percent <= lowAt ? 1 : 0
+    property int warned: 0
+    // the first reads come in any order: until both files have been read, `plugged` may still be false
+    property bool settled: false
+    Timer { interval: 3000; running: root.present; onTriggered: { root.settled = true; root.check() } }
+
+    function check() {
+        if (!settled) return
+        if (!discharging) { warned = Math.min(warned, band); return }
+        if (band > warned) { warned = band; warn(band === 2) }
+    }
+
     function update(u) {
         status = u.STATUS ?? ""
         energyWh = wh(u, "NOW")
@@ -104,15 +118,9 @@ Singleton {
         else watts = 0
         if (charger === "") plugged = status === "Charging" || status === "Full"
 
-        const p = u.CAPACITY !== undefined ? parseInt(u.CAPACITY)
+        percent = u.CAPACITY !== undefined ? parseInt(u.CAPACITY)
                 : fullWh > 0 ? Math.round(energyWh * 100 / fullWh) : -1
-        // crossing a threshold downwards, on battery: warn once
-        if (lastPercent >= 0 && discharging) {
-            if (p <= criticalAt && lastPercent > criticalAt) warn(true)
-            else if (p <= lowAt && lastPercent > lowAt) warn(false)
-        }
-        lastPercent = p
-        percent = p
+        check()
     }
 
     FileView {

@@ -26,6 +26,17 @@ Scope {
 
 	Binding { target: Idle; property: "secure"; value: session.secure }
 
+	// Locked, the shell went (a crash, a restart): the new one locks again as it starts, and
+	// Hyprland (misc.allow_session_lock_restore) hands it the session. In the runtime folder, so it
+	// goes with the session: the next login starts unlocked.
+	FileView {
+		id: marker
+		path: (Quickshell.env("XDG_RUNTIME_DIR") ?? "") !== "" ? Quickshell.env("XDG_RUNTIME_DIR") + "/island-locked" : ""
+		printErrors: false
+		onLoaded: if (text().trim() === "locked") root.lock();
+	}
+	onLockedChanged: if (marker.path !== "") marker.setText(locked ? "locked\n" : "");
+
 	WlSessionLock {
 		id: session
 

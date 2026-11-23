@@ -19,13 +19,17 @@ ShellRoot {
 
     ActivateLinux {}
 
-    // services that must exist from the start (their IPC targets), not only once a view shows them
-    readonly property var services: [Wallpaper, Notifier]
+    // services that must exist from the start (their IPC targets, the downloads and clipboard
+    // watchers, the Super key's state), not only once a view shows them
+    readonly property var services: [Wallpaper, Notifier, Sounds, Activities, ClipHistory, Held]
 
     // a theme generated from the wallpaper follows it, and the island is the same glass as the
-    // windows: Hyprland's window opacity (Config is plain QtQuick and can't ask)
+    // windows, moving as they do: Hyprland's window opacity and animation (Config is plain QtQuick
+    // and can't ask)
     Binding { target: Config; property: "wallpaperSeed"; value: Wallpaper.seed }
     Binding { target: Config; property: "windowOpacity"; value: Desktops.windowOpacity }
+    Binding { target: Config; property: "curve"; value: Desktops.windowCurve; when: Desktops.windowCurve !== null }
+    Binding { target: Config; property: "motionMs"; value: Desktops.windowMs; when: Desktops.windowMs > 0 }
 
     Variants {
         model: Quickshell.screens
