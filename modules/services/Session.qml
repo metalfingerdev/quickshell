@@ -11,6 +11,7 @@ Singleton {
     readonly property var actions: [
         { id: "lock",     label: "Lock",      icon: "lock",               confirm: false, key: "l" },
         { id: "suspend",  label: "Suspend",   icon: "bedtime",            confirm: false, key: "s" },
+        { id: "hibernate", label: "Hibernate", icon: "ac_unit",           confirm: false, key: "h" },
         { id: "logout",   label: "Log out",   icon: "logout",             confirm: true,  key: "o" },
         { id: "reboot",   label: "Restart",   icon: "restart_alt",        confirm: true,  key: "r" },
         { id: "poweroff", label: "Shut down", icon: "power_settings_new", confirm: true,  key: "p" }
@@ -22,6 +23,7 @@ Singleton {
     // the logind session.
     readonly property var commands: ({
         suspend:  ["systemctl", "suspend"],
+        hibernate: ["systemctl", "hibernate"],
         logout:   ["uwsm", "stop"],
         reboot:   ["systemctl", "reboot"],
         poweroff: ["systemctl", "poweroff"]
