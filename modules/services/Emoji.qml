@@ -66,9 +66,11 @@ Singleton {
         return out
     }
 
+    // Your own data folder first: a NixOS profile links only some of share/ (environment.pathsToLink),
+    // and unicode/ isn't one of them, so the dotfiles put the file in ~/.local/share/unicode/emoji.
     Process {
         running: true
-        command: ["sh", "-c", "IFS=:; for d in ${XDG_DATA_DIRS:-} /etc/profiles/per-user/$USER/share /run/current-system/sw/share; do "
+        command: ["sh", "-c", "IFS=:; for d in ${XDG_DATA_HOME:-$HOME/.local/share} ${XDG_DATA_DIRS:-} /etc/profiles/per-user/$USER/share /run/current-system/sw/share; do "
                             + "f=\"$d/unicode/emoji/emoji-test.txt\"; [ -f \"$f\" ] && { printf '%s' \"$f\"; exit 0; }; done"]
         stdout: StdioCollector { onStreamFinished: list.path = text.trim() }
     }

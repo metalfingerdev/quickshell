@@ -2,8 +2,10 @@ import QtQuick
 
 // The field takes its own keys and reports them as signals, so the view decides what they do, and
 // ViewLoader never sees them: key() is for Engine.key(). up() / down() only with `takesArrows`, tab()
-// only with `takesTab`; otherwise those keys move focus out of the field as usual. left() / right()
-// only with `takesSides` (a grid of results), in place of moving the text cursor.
+// only with `takesTab`; otherwise those keys move focus out of the field as usual. sideways(-1 | 1),
+// Left and Right, only with `takesSides` (a grid of results), in place of moving the text cursor. Not
+// left() / right(): every Item already has properties by those names (its anchor lines), and a signal
+// can't take their place, so `onRight` wouldn't exist and the view using it wouldn't load.
 FocusScope {
     id: root
 
@@ -22,8 +24,7 @@ FocusScope {
     signal accepted()
     signal up()
     signal down()
-    signal left()
-    signal right()
+    signal sideways(int step)
     signal tab(bool backward)
     signal escaped()
     signal backspaceEmpty()
@@ -90,7 +91,7 @@ FocusScope {
                 break
             case Qt.Key_Left: case Qt.Key_Right:
                 if (!root.takesSides) { event.accepted = false; return }
-                if (event.key === Qt.Key_Left) root.left(); else root.right()
+                root.sideways(event.key === Qt.Key_Left ? -1 : 1)
                 break
             case Qt.Key_Escape:  root.escaped(); break
             case Qt.Key_Tab: case Qt.Key_Backtab:
