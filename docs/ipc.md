@@ -147,8 +147,11 @@ copied. `qs ipc call clipboard wipe` forgets everything.
 ## Agent
 
 `Agent.qml` (shown by `views/Conversation.qml`, `open agent`, Super+/, or `?question` in the launcher)
-talks to the local model through Ollama, streamed; with Internet on it reads SearXNG's first results
-and cites them. The conversation stays in memory while the shell runs. Its target is `agent`:
+talks to the local model through Nihil-Shell's agent (`nilo-agent`, from nixos-dotfiles'
+features/nilo-agent), in JSON lines on its stdin and stdout. The model may search the web (SearXNG, with
+Internet on) and read pages, look up this computer and open apps; once it has read this computer, what
+goes out to the web waits for Allow. The conversation stays in the agent while the shell runs, and the
+switches in its own file (`~/.local/state/quickshell/agent.json`). Its target is `agent`:
 
 | Command | Effect |
 |---|---|

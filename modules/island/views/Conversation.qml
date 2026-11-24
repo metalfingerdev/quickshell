@@ -5,8 +5,10 @@ import qs.modules.island
 import qs.modules.components
 import qs.modules.services
 
-// The agent (services/Agent.qml; this file is Conversation, not Agent, so it doesn't hide that singleton), after Nihil-Shell's Nilo but light: a conversation with the local
-// model. Pinned: the conversation, its switches (the model, Internet, Think) and the field to ask in.
+// The agent (services/Agent.qml, run by Nihil-Shell's; this file is Conversation, not Agent, so it doesn't
+// hide that singleton): a conversation with the local model, which may search, read pages, look up this
+// computer and open apps. Pinned: the conversation, its switches (the model, Internet, Think), the card
+// for what waits for a yes, and the field to ask in.
 // Enter asks, Ctrl+C stops an answer, Ctrl+N starts over, Escape closes and the answer goes on: when it
 // ends, Triggers peeks it here as a toast (the question, how the answer starts), and a click opens it.
 Item {
@@ -29,11 +31,20 @@ Item {
     function host(url) { const m = String(url).match(/^\w+:\/\/([^/]+)/); return m ? m[1].replace(/^www\./, "") : url }
     // a peek reads as plain text: no Markdown marks
     function plain(text) { return String(text).replace(/```[\s\S]*?```/g, " … ").replace(/[*_`#>\[\]]/g, "").replace(/\s+/g, " ").trim() }
+    function question(a) {
+        if (!a) return ""
+        const what = ({ search: "Search the web for", fetch: "Read", open: "Open", launch: "Open" })[a.what] ?? "Allow"
+        const why = (a.why ?? []).map(w => ({ private: "this chat has read details of this computer",
+            sensitive: "it looks like a password, a key or a card number", runs: "it runs a program",
+            web: "this answer has read the web" })[w]).filter(w => w)
+        return what + " “" + (a.text ?? a.path ?? "") + "”?" + (why.length > 0 ? " Asked because " + why.join(", and ") + "." : "")
+    }
 
-    readonly property string status: !Agent.reachable ? "Ollama isn't running: systemctl status ollama"
-        : Agent.inUse === "" ? "No chat model yet: ollama pull qwen3.5:2b"
-        : Agent.busy ? ({ searching: "Searching the web", loading: "Loading " + Agent.inUse, thinking: "Thinking",
-                          answering: "Answering" })[Agent.phase] ?? "Working"
+    readonly property string status: Agent.trouble !== "" ? Agent.trouble
+        : !Agent.ready ? "Starting the agent"
+        : !Agent.reachable ? "Ollama isn't running: systemctl status ollama"
+        : Agent.inUse === "" ? "No chat model yet: add one to loadModels (features/ollama)"
+        : Agent.busy ? Agent.activity
         : Agent.warming ? "Loading " + Agent.inUse
         : Agent.loaded ? Agent.inUse + ", in memory" : Agent.inUse + ", asleep: it loads with the first question"
 
@@ -118,20 +129,20 @@ Item {
                     required property string modelData
                     text: modelData
                     selected: Agent.inUse === modelData
-                    onClicked: { Agent.model = modelData; Agent.loaded = false; Agent.warm() }
+                    onClicked: { Agent.set("model", modelData); Agent.warm() }
                 }
             }
             Chip {
                 icon: "travel_explore"
                 text: "Internet"
                 selected: Agent.web
-                onClicked: Agent.web = !Agent.web
+                onClicked: Agent.set("web", !Agent.web)
             }
             Chip {
                 icon: "psychology"
                 text: "Think"
                 selected: Agent.think
-                onClicked: Agent.think = !Agent.think
+                onClicked: Agent.set("think", !Agent.think)
             }
         }
 
@@ -142,7 +153,8 @@ Item {
             bottomPadding: 8
             wrapMode: Text.Wrap
             text: "Ask anything. The model runs on this computer: nothing leaves it unless Internet is on, "
-                + "and the conversation is kept only until the shell stops. Try “?” in the launcher too."
+                + "when it may search the web and read pages. It can also look up this computer and open apps. "
+                + "The conversation is kept only until the shell stops. Try “?” in the launcher too."
             color: Config.dim
         }
 
@@ -210,10 +222,9 @@ Item {
                         elide: Text.ElideRight
                         font.italic: true
                         color: Config.dim
-                        text: Agent.phase === "searching" ? "Searching the web…"
-                            : Agent.phase === "loading" ? "Loading " + msg.by + "…"
-                            : msg.thinking !== "" ? "Thinking: " + msg.thinking.slice(-120).replace(/\s+/g, " ")
-                            : "Thinking…"
+                        text: Agent.phase === "thinking" && msg.thinking !== ""
+                            ? "Thinking: " + msg.thinking.slice(-120).replace(/\s+/g, " ")
+                            : Agent.activity + "…"
                     }
                     Text {
                         visible: msg.content !== ""
@@ -257,6 +268,38 @@ Item {
                             onClicked: Quickshell.clipboardText = msg.content
                         }
                     }
+                }
+            }
+        }
+
+        // What waits for a yes. Once a chat has read this computer, anything on its way to the web asks,
+        // as does what looks like a password and a file that runs; five minutes unanswered is a no.
+        Rectangle {
+            visible: Agent.asking !== null
+            width: parent.width
+            height: ask.implicitHeight + 28
+            radius: Config.innerRadius + 4
+            color: Config.secondary
+
+            Column {
+                id: ask
+                x: 16
+                y: 14
+                width: parent.width - 32
+                spacing: 10
+
+                Label {
+                    width: parent.width
+                    wrapMode: Text.Wrap
+                    textFormat: Text.PlainText
+                    color: Config.secondaryInk
+                    text: root.question(Agent.asking)
+                }
+                Row {
+                    spacing: 8
+
+                    Chip { icon: "check"; text: "Allow"; onClicked: Agent.answer(true) }
+                    Chip { icon: "close"; text: "Don't"; onClicked: Agent.answer(false) }
                 }
             }
         }

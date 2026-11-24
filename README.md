@@ -93,8 +93,8 @@ modules/
                               (caffeine, night light, recording, airplane, power profiles, screenshots,
                               app launches), Activities (progress over IPC, downloads), ClipHistory
                               (cliphist, in memory), Sounds (the freedesktop theme), Emoji (Unicode's list,
-                              symbols, kaomoji: the launcher's Emoji filter), Agent (the local model
-                              through Ollama, streamed; views/Conversation.qml)
+                              symbols, kaomoji: the launcher's Emoji filter), Agent (the local model, run
+                              by Nihil-Shell's agent, nilo-agent; views/Conversation.qml)
   components/
     Config.qml                singleton: Material 3 palettes, shape, type; remembered across restarts
     Pill.qml                  button: tonal, filled or text; round when it's only an icon
