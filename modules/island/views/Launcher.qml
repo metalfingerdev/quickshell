@@ -71,7 +71,7 @@ Item {
     function quit(f) { return () => { Engine.close(); f() } }
     readonly property var actions: [
         { name: "Tabs", description: "Every view, and the workspaces", icon: Config.symbol.hub, keys: "hub all views", run: view(Engine.View.Tabs) },
-        { name: "Dashboard", description: "Quick settings, media and notifications", icon: Config.symbol.dashboard, run: view(Engine.View.Dashboard) },
+        { name: "Dashboard", description: "Quick settings, volume and brightness", icon: Config.symbol.dashboard, run: view(Engine.View.Dashboard) },
         { name: "Wi-Fi", description: "Networks and connections", icon: "wifi", keys: "network internet wlan ethernet", run: view(Engine.View.Network) },
         { name: "Bluetooth", description: "Devices", icon: "bluetooth", keys: "headphones pair", run: view(Engine.View.Bluetooth) },
         { name: "Notifications", description: "Everything that arrived", icon: Config.symbol.notifications, run: view(Engine.View.Notifications) },
