@@ -27,6 +27,12 @@ Item {
     implicitWidth: contentW + 2 * pad
     implicitHeight: column.implicitHeight + 2 * pad
 
+    property bool showActions: false
+    Store {
+        category: "dashboard"
+        property alias showActions: root.showActions
+    }
+
     SystemClock {
         id: clock
         precision: SystemClock.Minutes
@@ -314,7 +320,19 @@ Item {
             }
         }
 
+        // The actions fold away behind one row, and stay as they were left. Folded, their letters
+        // rest too: the launcher still has every one of them.
+        Pill {
+            width: parent.width
+            implicitHeight: 40
+            kind: "text"
+            icon: root.showActions ? "expand_less" : "expand_more"
+            text: root.showActions ? "Fewer actions" : "More actions"
+            onClicked: root.showActions = !root.showActions
+        }
+
         Grid {
+            visible: root.showActions
             columns: 5
             spacing: root.gap
 
