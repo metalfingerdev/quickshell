@@ -25,6 +25,7 @@ Singleton {
     property var asking: null     // the agent's confirm: { id, what, why: [...], text | path }
     property string lastQuestion: ""
     property string lastAnswer: ""
+    property bool fresh: false        // an answer not yet seen in the conversation (Expanded shows it)
     signal answered(string question, string answer, bool ok)
 
     // the agent's settings, as it last said them: change them with set()
@@ -82,6 +83,16 @@ Singleton {
         messages.clear()
         lastQuestion = ""
         lastAnswer = ""
+        fresh = false
+    }
+    // a confirm in words, for the conversation's card and Expanded
+    function describe(a) {
+        if (!a) return ""
+        const what = ({ search: "Search the web for", fetch: "Read", open: "Open", launch: "Open" })[a.what] ?? "Allow"
+        const why = (a.why ?? []).map(w => ({ private: "this chat has read details of this computer",
+            sensitive: "it looks like a password, a key or a card number", runs: "it runs a program",
+            web: "this answer has read the web" })[w]).filter(w => w)
+        return what + " “" + (a.text ?? a.path ?? "") + "”?" + (why.length > 0 ? " Asked because " + why.join(", and ") + "." : "")
     }
     function answer(ok) {
         if (asking) send({ op: "confirm", id: asking.id, ok: ok })
@@ -242,6 +253,7 @@ Singleton {
         afterTool = false
         Activities.finish("agent", "quiet")
         lastAnswer = last >= 0 ? messages.get(last).content : ""
+        fresh = ok && lastAnswer !== ""
         answered(lastQuestion, lastAnswer, ok)
     }
 

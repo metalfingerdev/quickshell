@@ -21,7 +21,7 @@ Item {
     implicitHeight: peek ? Math.max(84, peekText.implicitHeight + 36) : column.implicitHeight + 2 * pad
 
     // the model loads while you get to the question (as Nilo does while you type)
-    Component.onCompleted: { Agent.refresh(); if (!peek) Agent.warm() }
+    Component.onCompleted: { Agent.refresh(); if (!peek) { Agent.warm(); Agent.fresh = false } }
 
     // With a card waiting, the first Enter only arms it and the second allows (as Nilo's): a question
     // typed and sent the moment the card comes up can't say yes to it.
@@ -58,14 +58,7 @@ Item {
     }
     // a peek reads as plain text: no Markdown marks
     function plain(text) { return String(text).replace(/```[\s\S]*?```/g, " … ").replace(/[*_`#>\[\]]/g, "").replace(/\s+/g, " ").trim() }
-    function question(a) {
-        if (!a) return ""
-        const what = ({ search: "Search the web for", fetch: "Read", open: "Open", launch: "Open" })[a.what] ?? "Allow"
-        const why = (a.why ?? []).map(w => ({ private: "this chat has read details of this computer",
-            sensitive: "it looks like a password, a key or a card number", runs: "it runs a program",
-            web: "this answer has read the web" })[w]).filter(w => w)
-        return what + " “" + (a.text ?? a.path ?? "") + "”?" + (why.length > 0 ? " Asked because " + why.join(", and ") + "." : "")
-    }
+    function question(a) { return Agent.describe(a) }
 
     readonly property string status: Agent.trouble !== "" ? Agent.trouble
         : !Agent.ready ? "Starting the agent"

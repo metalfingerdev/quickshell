@@ -4,6 +4,9 @@ WorkspaceDots    1.0 WorkspaceDots.qml
 StatusGroup      1.0 StatusGroup.qml
 MediaCard        1.0 MediaCard.qml
 RecordingCard    1.0 RecordingCard.qml
+AgentCard        1.0 AgentCard.qml
+ActivityCard     1.0 ActivityCard.qml
+GlanceCard       1.0 GlanceCard.qml
 NotificationCard 1.0 NotificationCard.qml
 WorkspaceButtons 1.0 WorkspaceButtons.qml
 WallpaperThumb   1.0 WallpaperThumb.qml

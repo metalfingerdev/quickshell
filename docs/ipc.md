@@ -162,6 +162,29 @@ switches in its own file (`~/.local/state/quickshell/agent.json`). Its target is
 
 In the view: Enter asks, Ctrl+C stops, Ctrl+N starts over, Escape closes and the answer goes on.
 
+## Weather and calendar
+
+Expanded's glance card shows them once they're set up, over the processor, memory, temperature and
+the network's rates (`SysStats.qml`, read only while it's shown). `Weather.qml` reads Open-Meteo (no
+key) every half hour for one place; only its coordinates go out. Its target is `weather`:
+
+| Command | Effect |
+|---|---|
+| `qs ipc call weather place <name>` | find a place by name and keep it; an empty name forgets it |
+| `qs ipc call weather read` | read it again now |
+| `qs ipc call weather status` | the place and what was last read, as JSON |
+
+`Calendar.qml` shows what's next in calendars subscribed to by their secret iCal address, read by
+`island-calendar` (nixos-dotfiles, `modules/features/quickshell/calendars.py`) every quarter of an
+hour. An address is a secret, so it's added in a terminal, never through the shell: run
+`island-calendar add` and paste it (`island-calendar list` and `remove <id>` for the rest). Its
+target is `calendar`:
+
+| Command | Effect |
+|---|---|
+| `qs ipc call calendar sync` | read the calendars now (after adding one, say) |
+| `qs ipc call calendar next` | what's next, in a few words |
+
 ## Recording
 
 `Toggles.qml` has its own target, `record` (also the launcher's actions: Record the screen, with the

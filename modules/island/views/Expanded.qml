@@ -64,7 +64,16 @@ Item {
             }
         }
 
-        // what's being recorded, with Stop and Discard, above what plays
+        // Live activities, each only while it lasts: the agent, work under way, what's being
+        // recorded, the newest notification of the last hour, what plays. Then the glance, always.
+        AgentCard {
+            visible: active
+            width: parent.width
+        }
+        ActivityCard {
+            visible: Activities.working
+            width: parent.width
+        }
         RecordingCard {
             visible: Toggles.recording
             width: parent.width
@@ -74,11 +83,24 @@ Item {
             width: parent.width
             kind: "memo"
         }
+        // the time read when the hover begins: Expanded lives only as long as it
+        Loader {
+            readonly property var newest: Notifier.items[0] ?? null
+            active: newest !== null && Date.now() - newest.time < 60 * 60 * 1000
+            visible: active
+            width: parent.width
+            sourceComponent: NotificationCard {
+                modelData: Notifier.items[0]
+                center: true
+            }
+        }
 
         MediaCard {
             visible: Players.hasTrack
             width: parent.width
             compact: true
         }
+
+        GlanceCard { width: parent.width }
     }
 }

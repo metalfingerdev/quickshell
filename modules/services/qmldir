@@ -18,3 +18,6 @@ singleton Activities 1.0 Activities.qml
 singleton ClipHistory 1.0 ClipHistory.qml
 singleton Emoji      1.0 Emoji.qml
 singleton Agent      1.0 Agent.qml
+singleton SysStats   1.0 SysStats.qml
+singleton Weather    1.0 Weather.qml
+singleton Calendar   1.0 Calendar.qml
