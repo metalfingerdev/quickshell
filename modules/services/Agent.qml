@@ -188,6 +188,20 @@ Singleton {
         chat.running = true
     }
 
+    // Tokens come ~50 a second, and each write re-lays the whole Markdown answer and rebuilds its scene
+    // graph nodes: that churn crashed Qt 6.12's renderer mid-answer (QSGBatchRenderer::Element::
+    // computeBounds). So they're held, and written at most every 80 ms.
+    property string heldThinking: ""
+    property string heldContent: ""
+    function flush() {
+        const last = messages.count - 1
+        if (last >= 0 && heldThinking !== "") messages.setProperty(last, "thinking", messages.get(last).thinking + heldThinking)
+        if (last >= 0 && heldContent !== "") messages.setProperty(last, "content", messages.get(last).content + heldContent)
+        heldThinking = ""
+        heldContent = ""
+    }
+    Timer { id: flusher; interval: 80; onTriggered: root.flush() }
+
     Process {
         id: chat
         stdout: SplitParser {
@@ -195,11 +209,10 @@ Singleton {
                 if (!root.busy) return
                 let d
                 try { d = JSON.parse(line) } catch (e) { return }
-                const last = root.messages.count - 1
                 if (d.error) { root.streaming = false; root.finish(false, String(d.error)); return }
                 const m = d.message ?? {}
-                if (m.thinking) { root.phase = "thinking"; root.messages.setProperty(last, "thinking", root.messages.get(last).thinking + m.thinking) }
-                if (m.content) { root.phase = "answering"; root.messages.setProperty(last, "content", root.messages.get(last).content + m.content) }
+                if (m.thinking) { root.phase = "thinking"; root.heldThinking += m.thinking; flusher.start() }
+                if (m.content) { root.phase = "answering"; root.heldContent += m.content; flusher.start() }
                 if (d.done) { root.streaming = false; root.finish(true, "") }
             }
         }
@@ -213,6 +226,7 @@ Singleton {
     }
 
     function finish(ok, error) {
+        flush()
         const last = messages.count - 1
         if (last >= 0) {
             messages.setProperty(last, "streaming", false)
