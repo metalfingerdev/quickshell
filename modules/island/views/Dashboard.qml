@@ -294,12 +294,24 @@ Item {
             }
         }
 
-        Segmented {
+        // the power profile in thirds, lit as the tiles are (not the outlined Segmented of other views)
+        Row {
             visible: Toggles.profile !== ""
-            width: parent.width
-            options: Toggles.profiles
-            current: Toggles.profile
-            onPicked: key => Toggles.setProfile(key)
+            spacing: root.gap
+
+            Repeater {
+                model: Toggles.profiles
+
+                Pill {
+                    required property var modelData
+                    width: root.third
+                    implicitHeight: 48
+                    icon: modelData.icon
+                    text: modelData.label
+                    active: Toggles.profile === modelData.key
+                    onClicked: Toggles.setProfile(modelData.key)
+                }
+            }
         }
 
         Grid {
