@@ -13,7 +13,7 @@ Item {
     readonly property int maxResults: 24     // per source
     readonly property int rowH: 64
     readonly property string terminal: "kitty"
-    readonly property string agent: "crush"      // the terminal coding agent; "?question" and the Agent action start it
+    readonly property string agent: "crush"      // the terminal coding agent: the Coding agent action starts it
     readonly property var filters: [
         { key: "all",     label: "All" },
         { key: "apps",    label: "Apps" },
@@ -97,7 +97,8 @@ Item {
           icon: Toggles.memoRecording ? "stop_circle" : "mic", keys: "record audio voice memo note microphone dictaphone", run: quit(() => Toggles.voiceMemo(!Toggles.memoRecording)) },
         { name: "Clipboard", description: "Everything copied this session", icon: "content_paste", keys: "history paste copied", run: () => { bar.text = ""; root.filter = "clipboard" } },
         { name: "Emoji", description: "Emoji, symbols and kaomoji", icon: "mood", keys: "smiley symbols kaomoji characters", run: () => { bar.text = ""; root.filter = "emoji" } },
-        { name: "Agent", description: "The coding agent, in a terminal", icon: "smart_toy", keys: "ai assistant llm chat crush ollama", run: quit(() => Toggles.launch([terminal, "-e", agent])) },
+        { name: "Agent", description: "Ask the local model; ? before a question does it from here", icon: "smart_toy", keys: "ai assistant llm chat ask ollama", run: view(Engine.View.Agent) },
+        { name: "Coding agent", description: "Crush, in a terminal, for work in a repository", icon: "terminal", keys: "ai crush code agent repository", run: quit(() => Toggles.launch([terminal, "-e", agent])) },
         { name: "Lock", description: "Lock the session", icon: "lock", run: quit(() => Session.run("lock")) },
         { name: "Suspend", description: "Sleep", icon: "bedtime", keys: "sleep", run: quit(() => Session.run("suspend")) },
         { name: "Hibernate", description: "Save the session to disk and power off", icon: "ac_unit", keys: "sleep disk", run: quit(() => Session.run("hibernate")) },
@@ -143,13 +144,14 @@ Item {
         } catch (e) { return null }
     }
 
-    // "?why is the sky blue" asks the agent: one answer, in a terminal that stays open (`crush run`).
+    // "?why is the sky blue" asks the agent (views/Conversation.qml), which loads its model while you type.
+    onAskChanged: if (ask) Agent.warm()
     readonly property var ask: {
         const q = bar.text.trim()
         if (!q.startsWith("?")) return null
         const prompt = q.slice(1).trim()
         if (prompt === "") return null
-        return { kind: "ask", name: "Ask: " + prompt, prompt: prompt, description: "Enter asks the agent in a terminal", icon: "smart_toy" }
+        return { kind: "ask", name: "Ask: " + prompt, prompt: prompt, description: "Enter asks the agent", icon: "smart_toy" }
     }
 
     property var files: []
@@ -257,7 +259,7 @@ Item {
             break
         case "file":   Toggles.open(row.path); Engine.close(); break
         case "calc":   Quickshell.clipboardText = row.value; Engine.close(); break
-        case "ask":    Toggles.launch([terminal, "--hold", "-e", agent, "run", row.prompt]); Engine.close(); break
+        case "ask":    Agent.ask(row.prompt); Engine.open(Engine.View.Agent); break
         case "action": row.run(); break
         case "clip":   Engine.closeThen(() => ClipHistory.paste(row.item)); break
         case "emoji":

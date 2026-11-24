@@ -35,6 +35,9 @@ QtObject {
         { name: "settings",   priority: 2, timeout: 8000, view: Engine.View.Settings,   url: Qt.resolvedUrl("views/Settings.qml") },
         { name: "workspaces", priority: 2, timeout: 8000, view: Engine.View.Workspaces, url: Qt.resolvedUrl("views/Workspaces.qml") },
         { name: "clipboard",  aliases: ["history"], priority: 2, timeout: 10000, view: Engine.View.Clipboard, url: Qt.resolvedUrl("views/Clipboard.qml") },
+        // timeout 0: a conversation stays until Escape or a click outside; as a toast (an answer that
+        // ended with the view closed) Triggers times it, longer for a longer answer
+        { name: "agent",      aliases: ["ai", "ask", "chat"], priority: 2, timeout: 0, view: Engine.View.Agent, url: Qt.resolvedUrl("views/Conversation.qml"), queue: true },
         // `opens`: a click on the toast opens this instead of pinning the toast
         { name: "switcher",   priority: 1, timeout: 1200, view: Engine.View.Switcher,   url: Qt.resolvedUrl("views/Switcher.qml"), queue: false,
           opens: Engine.View.Tabs }

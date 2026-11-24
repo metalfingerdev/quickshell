@@ -12,6 +12,10 @@
 
 ## Done
 
+- [x] The agent (2026-11-24), after Nihil-Shell's Nilo but light: a view of its own (Conversation) with
+      the local model through Ollama, streamed, Markdown, Internet (SearXNG, cited) and Think switches,
+      the model loaded while you type, and a peek toast when an answer ends with the view closed. `?` in
+      the launcher asks it; Crush stays the Coding agent action.
 - [x] The launcher (2026-11-24): Clipboard and Emoji filters (and `:` before the words, from any filter);
       emoji, symbols and kaomoji in a grid, typed into the window you were in and copied; the clipboard
       pastes (one line typed, so a terminal works too); actions to record the screen (with the microphone

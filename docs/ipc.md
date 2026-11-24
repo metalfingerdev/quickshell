@@ -144,6 +144,21 @@ shows it, and the launcher's Clipboard filter searches it. Enter pastes into the
 line of text is typed there (wtype), so it works in a terminal too; more lines and pictures are only
 copied. `qs ipc call clipboard wipe` forgets everything.
 
+## Agent
+
+`Agent.qml` (shown by `views/Conversation.qml`, `open agent`, Super+/, or `?question` in the launcher)
+talks to the local model through Ollama, streamed; with Internet on it reads SearXNG's first results
+and cites them. The conversation stays in memory while the shell runs. Its target is `agent`:
+
+| Command | Effect |
+|---|---|
+| `qs ipc call agent ask <text>` | ask (an answer that ends with the view closed peeks as a toast) |
+| `qs ipc call agent stop` | stop the answer |
+| `qs ipc call agent reset` | a new conversation |
+| `qs ipc call agent last` | the latest answer, as Markdown |
+
+In the view: Enter asks, Ctrl+C stops, Ctrl+N starts over, Escape closes and the answer goes on.
+
 ## Recording
 
 `Toggles.qml` has its own target, `record` (also the launcher's actions: Record the screen, with the

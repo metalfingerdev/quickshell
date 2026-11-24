@@ -17,6 +17,9 @@ FocusScope {
     property bool takesTab: false
     property bool takesArrows: false
     property bool takesSides: false
+    // Ctrl with these keys (Qt.Key_C, ...) goes to control(key) instead of the field: Ctrl+C would
+    // copy otherwise, and the field keeps it, so it never reaches the view
+    property var controlKeys: []
     property int fieldSize: 16
     default property alias trailing: side.data
 
@@ -25,6 +28,7 @@ FocusScope {
     signal up()
     signal down()
     signal sideways(int step)
+    signal control(int key)
     signal tab(bool backward)
     signal escaped()
     signal backspaceEmpty()
@@ -83,6 +87,11 @@ FocusScope {
 
         Keys.onPressed: event => {
             root.key()
+            if ((event.modifiers & Qt.ControlModifier) && root.controlKeys.includes(event.key)) {
+                root.control(event.key)
+                event.accepted = true
+                return
+            }
             switch (event.key) {
             case Qt.Key_Return: case Qt.Key_Enter: root.accepted(); break
             case Qt.Key_Up: case Qt.Key_Down:

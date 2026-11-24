@@ -86,6 +86,25 @@ Scope {
         }
     }
 
+    // The agent's answer, when it ends with the conversation closed (Escape while it answered): a peek
+    // with the question and how the answer starts; a click opens the conversation. As Nilo's: longer
+    // for a longer answer (7 to 20 s), held while the pointer is on it; Do not disturb leaves it in the
+    // conversation alone.
+    Connections {
+        target: Agent
+        function onAnswered(question, answer, ok) {
+            if (!ok || answer === "" || Notifier.dnd || (Engine.pinned && Engine.view === Engine.View.Agent)) return
+            root.alert(Engine.View.Agent)
+            Sounds.play("message-new-instant")
+        }
+    }
+    readonly property bool agentPeek: Engine.toast && Engine.view === Engine.View.Agent
+    Timer {
+        interval: Math.min(20000, 7000 + Math.ceil(Agent.lastAnswer.length / 45) * 1000)
+        running: root.agentPeek && !Engine.hovered
+        onTriggered: Engine.close()
+    }
+
     // As a toast the view lives exactly as long as there are popups; pinned it is the center.
     readonly property bool notifications: Engine.view === Engine.View.Notifications
     readonly property bool popupShown: notifications && Engine.toast

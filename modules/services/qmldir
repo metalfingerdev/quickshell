@@ -17,3 +17,4 @@ singleton Sounds     1.0 Sounds.qml
 singleton Activities 1.0 Activities.qml
 singleton ClipHistory 1.0 ClipHistory.qml
 singleton Emoji      1.0 Emoji.qml
+singleton Agent      1.0 Agent.qml
