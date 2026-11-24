@@ -23,12 +23,39 @@ Item {
     // the model loads while you get to the question (as Nilo does while you type)
     Component.onCompleted: { Agent.refresh(); if (!peek) Agent.warm() }
 
+    // With a card waiting, the first Enter only arms it and the second allows (as Nilo's): a question
+    // typed and sent the moment the card comes up can't say yes to it.
+    property string armed: ""
+    Connections {
+        target: Agent
+        function onAskingChanged() { root.armed = "" }
+    }
     function send() {
+        if (Agent.asking) {
+            if (field.text.trim() !== "") return
+            if (armed === Agent.asking.id) Agent.answer(true)
+            else armed = Agent.asking.id
+            return
+        }
         if (Agent.busy) return
         Agent.ask(field.text)
         field.text = ""
     }
     function host(url) { const m = String(url).match(/^\w+:\/\/([^/]+)/); return m ? m[1].replace(/^www\./, "") : url }
+    // Only the web: the model reads pages now, and a page could have it write a file:// link to a script.
+    function follow(link) { if (/^https?:\/\//i.test(link)) Toggles.open(link) }
+    property string pointing: ""      // the link under the pointer: where it goes, whatever its words say
+    function step(s) {
+        const verbs = ({ web_search: ["Searching", "Searched", "search"], open_url: ["Reading", "Read", "read"],
+                         system_info: ["Looking at", "Looked at", "look at"], open_app: ["Opening", "Opened", "open"] })[s.name]
+            ?? [s.name, s.name, "run " + s.name]
+        const what = s.name === "system_info" ? "this computer" : s.name === "web_search" ? "“" + s.arg + "”"
+            : s.name === "open_url" ? (s.title || host(s.arg)) : (s.opened || s.arg)
+        return s.status === "running" ? verbs[0] + " " + what + "…"
+            : s.status === "failed" ? "Couldn't " + verbs[2] + " " + what + (s.error ? ": " + s.error : "")
+            : s.status === "declined" ? "Didn't " + verbs[2] + " " + what
+            : verbs[1] + " " + what + (s.count !== undefined ? " · " + s.count + " results" : "")
+    }
     // a peek reads as plain text: no Markdown marks
     function plain(text) { return String(text).replace(/```[\s\S]*?```/g, " … ").replace(/[*_`#>\[\]]/g, "").replace(/\s+/g, " ").trim() }
     function question(a) {
@@ -75,14 +102,14 @@ Item {
 
             Label {
                 width: parent.width
-                text: Agent.lastQuestion
+                text: Agent.asking ? "The agent asks, in the conversation" : Agent.lastQuestion
                 elide: Text.ElideRight
                 color: Config.dim
                 font.pixelSize: Config.small + 1
             }
             Label {
                 width: parent.width
-                text: root.plain(Agent.lastAnswer)
+                text: Agent.asking ? root.question(Agent.asking) : root.plain(Agent.lastAnswer)
                 wrapMode: Text.Wrap
                 maximumLineCount: 3
                 elide: Text.ElideRight
@@ -104,7 +131,7 @@ Item {
             width: parent.width
             icon: "smart_toy"
             title: "Agent"
-            subtitle: root.status
+            subtitle: root.pointing !== "" ? "Goes to " + root.pointing : root.status
             onBack: Engine.back()
 
             Pill {
@@ -177,12 +204,17 @@ Item {
                 required property string role
                 required property string content
                 required property string thinking
+                required property int thought
+                required property bool open
+                required property string steps
                 required property string sources
                 required property string by
                 required property bool streaming
                 required property string error
                 readonly property bool mine: role === "user"
+                readonly property bool thinkingNow: streaming && Agent.phase === "thinking"
                 readonly property var links: { try { return JSON.parse(sources) } catch (e) { return [] } }
+                readonly property var tools: { try { return JSON.parse(steps) } catch (e) { return [] } }
 
                 width: list.width
                 height: mine ? bubble.height : answer.implicitHeight
@@ -209,22 +241,120 @@ Item {
                     }
                 }
 
-                // the answer, as Markdown, with what it's doing before the words come
+                // the answer: what it thought, the tools it used, then the words, as Markdown
                 Column {
                     id: answer
                     visible: !msg.mine
                     width: parent.width
                     spacing: 8
 
+                    // The thinking as the model wrote it, folded to its latest words while it goes on; a
+                    // click opens all of it. Laid out only when open: it can run to thousands of words.
+                    Column {
+                        visible: msg.thinking !== ""
+                        width: parent.width
+                        spacing: 6
+
+                        Item {
+                            width: parent.width
+                            height: 24
+
+                            Row {
+                                anchors.verticalCenter: parent.verticalCenter
+                                spacing: 4
+
+                                Icon {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    name: "chevron_right"
+                                    size: 18
+                                    color: Config.dim
+                                    rotation: msg.open ? 90 : 0
+                                    Behavior on rotation { Motion {} }
+                                }
+                                Label {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    text: (msg.thinkingNow ? "Thinking" : "Thought") + (msg.thought > 0 ? " for " + msg.thought + " s" : "")
+                                    color: Config.dim
+                                }
+                            }
+                            ClickArea { onClicked: Agent.messages.setProperty(msg.index, "open", !msg.open) }
+                        }
+                        Label {
+                            visible: !msg.open && msg.thinkingNow
+                            width: parent.width
+                            leftPadding: 22
+                            text: msg.thinking.slice(-160).replace(/\s+/g, " ")
+                            elide: Text.ElideLeft
+                            font.italic: true
+                            color: Config.dim
+                        }
+                        Loader {
+                            active: msg.open
+                            visible: active
+                            sourceComponent: Rectangle {
+                                width: answer.width
+                                height: thoughts.implicitHeight + 24
+                                radius: Config.innerRadius
+                                color: Config.container
+
+                                Text {
+                                    id: thoughts
+                                    x: 14
+                                    y: 12
+                                    width: parent.width - 28
+                                    text: msg.thinking
+                                    textFormat: Text.PlainText
+                                    wrapMode: Text.Wrap
+                                    color: Config.dim
+                                    font.family: Config.font
+                                    font.pixelSize: Config.small + 1
+                                }
+                            }
+                        }
+                    }
+
+                    // a row for each tool, its dot beating while it works
+                    Repeater {
+                        model: msg.tools
+
+                        Row {
+                            id: tool
+                            required property var modelData
+                            spacing: 10
+
+                            Rectangle {
+                                id: dot
+                                anchors.verticalCenter: parent.verticalCenter
+                                width: 6
+                                height: 6
+                                radius: 3
+                                color: tool.modelData.status === "failed" ? Config.bad : tool.modelData.status === "running" ? Config.text : Config.dim
+                                SequentialAnimation on opacity {
+                                    running: tool.modelData.status === "running"
+                                    loops: Animation.Infinite
+                                    onRunningChanged: if (!running) dot.opacity = 1
+                                    NumberAnimation { to: 0.2; duration: 420 }
+                                    NumberAnimation { to: 1; duration: 420 }
+                                }
+                            }
+                            Label {
+                                width: answer.width - 16
+                                text: root.step(tool.modelData)
+                                elide: Text.ElideRight
+                                color: Config.dim
+                                font.family: Config.mono
+                                font.pixelSize: Config.small
+                            }
+                        }
+                    }
+
                     Label {
-                        visible: msg.streaming && msg.content === ""
+                        visible: msg.streaming && msg.content === "" && !Agent.toolAtWork && !(msg.thinkingNow && msg.thinking !== "")
                         width: parent.width
                         elide: Text.ElideRight
                         font.italic: true
                         color: Config.dim
-                        text: Agent.phase === "thinking" && msg.thinking !== ""
-                            ? "Thinking: " + msg.thinking.slice(-120).replace(/\s+/g, " ")
-                            : Agent.activity + "…"
+                        text: Agent.activity + "…"
                     }
                     Text {
                         visible: msg.content !== ""
@@ -236,7 +366,8 @@ Item {
                         linkColor: Config.primary
                         font.family: Config.font
                         font.pixelSize: Config.body + 1
-                        onLinkActivated: link => Toggles.open(link)
+                        onLinkActivated: link => root.follow(link)
+                        onHoveredLinkChanged: root.pointing = hoveredLink
                     }
                     Label {
                         visible: msg.error !== ""
@@ -298,7 +429,12 @@ Item {
                 Row {
                     spacing: 8
 
-                    Chip { icon: "check"; text: "Allow"; onClicked: Agent.answer(true) }
+                    Chip {
+                        icon: "check"
+                        text: root.armed !== "" ? "Enter again to allow" : "Allow"
+                        selected: root.armed !== ""
+                        onClicked: Agent.answer(true)
+                    }
                     Chip { icon: "close"; text: "Don't"; onClicked: Agent.answer(false) }
                 }
             }
@@ -313,12 +449,13 @@ Item {
                 width: parent.width - sendButton.width - parent.spacing
                 implicitHeight: 56
                 icon: "smart_toy"
-                placeholder: Agent.busy ? "Answering… Ctrl+C stops it" : "Ask anything"
+                placeholder: Agent.asking ? "Enter twice allows it, Escape doesn't"
+                    : Agent.busy ? "Answering… Ctrl+C stops it" : "Ask anything"
                 focus: true
                 controlKeys: [Qt.Key_C, Qt.Key_N]
                 onKey: Engine.key()
                 onAccepted: root.send()
-                onEscaped: Engine.close()
+                onEscaped: Agent.asking ? Agent.answer(false) : Engine.close()
                 onBackspaceEmpty: Engine.back()
                 // Ctrl+C stops an answer (with nothing being answered it copies, as usual); Ctrl+N starts over
                 onControl: key => {
@@ -339,7 +476,8 @@ Item {
 
         KeyHints {
             width: parent.width
-            keys: [["↵", "ask"], ["Ctrl C", "stop"], ["Ctrl N", "new"], ["Esc", "close: the answer goes on"]]
+            keys: Agent.asking ? [["↵ ↵", "allow"], ["Esc", "don't"], ["Ctrl C", "stop"]]
+                : [["↵", "ask"], ["Ctrl C", "stop"], ["Ctrl N", "new"], ["Esc", "close: the answer goes on"]]
         }
     }
 }

@@ -89,18 +89,24 @@ Scope {
     // The agent's answer, when it ends with the conversation closed (Escape while it answered): a peek
     // with the question and how the answer starts; a click opens the conversation. As Nilo's: longer
     // for a longer answer (7 to 20 s), held while the pointer is on it; Do not disturb leaves it in the
-    // conversation alone.
+    // conversation alone. A question the agent waits on peeks the same way, for half a minute: without
+    // it, the answer would sit unasked for the five minutes the agent gives it.
     Connections {
         target: Agent
         function onAnswered(question, answer, ok) {
-            if (!ok || answer === "" || Notifier.dnd || (Engine.pinned && Engine.view === Engine.View.Agent)) return
-            root.alert(Engine.View.Agent)
-            Sounds.play("message-new-instant")
+            if (!ok || answer === "") return
+            root.agentAlert()
         }
+        function onAskingChanged() { if (Agent.asking) root.agentAlert() }
+    }
+    function agentAlert() {
+        if (Notifier.dnd || (Engine.pinned && Engine.view === Engine.View.Agent)) return
+        root.alert(Engine.View.Agent)
+        Sounds.play("message-new-instant")
     }
     readonly property bool agentPeek: Engine.toast && Engine.view === Engine.View.Agent
     Timer {
-        interval: Math.min(20000, 7000 + Math.ceil(Agent.lastAnswer.length / 45) * 1000)
+        interval: Agent.asking ? 30000 : Math.min(20000, 7000 + Math.ceil(Agent.lastAnswer.length / 45) * 1000)
         running: root.agentPeek && !Engine.hovered
         onTriggered: Engine.close()
     }

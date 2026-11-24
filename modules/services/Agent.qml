@@ -13,11 +13,14 @@ import Quickshell.Io
 Singleton {
     id: root
 
-    // { role: "user" | "assistant", content, thinking, sources (JSON: the pages it read), by (the model),
-    // streaming, error }. Not "model": a delegate has its own `model`, which would hide it.
+    // { role: "user" | "assistant", content, thinking, thought (seconds of it), open (the thinking shown),
+    // steps (JSON: its tools, { id, name, arg, status: running | done | failed | declined, and the agent's
+    // facts }), sources (JSON: the pages it read), by (the model), streaming, error }.
+    // Not "model": a delegate has its own `model`, which would hide it.
     readonly property ListModel messages: ListModel {}
     property bool busy: false
     property string phase: ""     // loading, thinking, answering, searching, reading, looking, opening, asking, stopping
+    readonly property bool toolAtWork: Object.values(phases).includes(phase)
     property string detail: ""    // what the tool at work was given: the query, the page, the app
     property var asking: null     // the agent's confirm: { id, what, why: [...], text | path }
     property string lastQuestion: ""
@@ -56,11 +59,14 @@ Singleton {
         if (q === "" || busy) return
         if (!ready || inUse === "") { refresh(); return }
         lastQuestion = q
-        messages.append({ role: "user", content: q, thinking: "", sources: "[]", by: "", streaming: false, error: "" })
-        messages.append({ role: "assistant", content: "", thinking: "", sources: "[]", by: inUse, streaming: true, error: "" })
+        const blank = { content: "", thinking: "", thought: 0, open: false, steps: "[]", sources: "[]", error: "" }
+        messages.append(Object.assign({}, blank, { role: "user", content: q, by: "", streaming: false }))
+        messages.append(Object.assign({}, blank, { role: "assistant", by: inUse, streaming: true }))
         busy = true
         phase = loaded ? "thinking" : "loading"
         failure = ""
+        thinkFrom = 0
+        thoughtMs = 0
         send({ op: "ask", text: q })
         Activities.start("agent", "Agent")
     }
@@ -88,12 +94,35 @@ Singleton {
     property string heldContent: ""
     function flush() {
         const last = messages.count - 1
-        if (last >= 0 && heldThinking !== "") messages.setProperty(last, "thinking", messages.get(last).thinking + heldThinking)
+        if (last >= 0 && heldThinking !== "") {
+            messages.setProperty(last, "thinking", messages.get(last).thinking + heldThinking)
+            messages.setProperty(last, "thought", Math.round((thoughtMs + (thinkFrom > 0 ? Date.now() - thinkFrom : 0)) / 1000))
+        }
         if (last >= 0 && heldContent !== "") messages.setProperty(last, "content", messages.get(last).content + heldContent)
         heldThinking = ""
         heldContent = ""
     }
     Timer { id: flusher; interval: 80; onTriggered: root.flush() }
+
+    // How long it thought: each stretch of thinking (one a round), without the tools and the words between.
+    property real thinkFrom: 0
+    property real thoughtMs: 0
+    function thinkingEnds() {
+        if (thinkFrom === 0) return
+        flush()
+        thoughtMs += Date.now() - thinkFrom
+        thinkFrom = 0
+        if (messages.count > 0) messages.setProperty(messages.count - 1, "thought", Math.round(thoughtMs / 1000))
+    }
+    function step(id, changes) {
+        const last = messages.count - 1
+        if (last < 0) return
+        const steps = JSON.parse(messages.get(last).steps)
+        const i = steps.findIndex(s => s.id === id)
+        if (i >= 0) Object.assign(steps[i], changes)
+        else steps.push(Object.assign({ id: id }, changes))
+        messages.setProperty(last, "steps", JSON.stringify(steps))
+    }
 
     property string failure: ""     // the agent's error, said before its done
     property bool afterTool: false  // the next words start a new paragraph
@@ -119,10 +148,15 @@ Singleton {
             break
         case "thinking":
             if (phase !== "stopping") phase = "thinking"
+            if (thinkFrom === 0) {
+                thinkFrom = Date.now()
+                if (last >= 0 && messages.get(last).thinking + heldThinking !== "") heldThinking += "\n\n"
+            }
             heldThinking += e.text
             flusher.start()
             break
         case "token":
+            thinkingEnds()
             if (afterTool && last >= 0 && messages.get(last).content + heldContent !== "") heldContent += "\n\n"
             afterTool = false
             if (phase !== "stopping") phase = "answering"
@@ -131,10 +165,14 @@ Singleton {
             break
         case "tool":
             if (e.status === "running") {
+                thinkingEnds()
                 flush()
                 phase = phases[e.name] ?? "thinking"
                 detail = String(e.args?.query ?? e.args?.url ?? e.args?.target ?? "")
+                step(e.id, { name: e.name, arg: detail, status: "running" })
             } else {
+                // a no leaves the result without an error: that's how a declined search or page reads
+                step(e.id, Object.assign({}, e, { status: e.ok ? "done" : e.error ? "failed" : "declined", ev: undefined }))
                 if (e.name === "open_url" && e.ok && last >= 0)
                     messages.setProperty(last, "sources", JSON.stringify(JSON.parse(messages.get(last).sources).concat([{ url: detail }])))
                 afterTool = true
@@ -143,6 +181,7 @@ Singleton {
             }
             break
         case "confirm":
+            thinkingEnds()
             flush()
             asking = e
             phase = "asking"
@@ -189,6 +228,7 @@ Singleton {
     }
 
     function finish(ok, error) {
+        thinkingEnds()
         flush()
         const last = messages.count - 1
         if (last >= 0) {
