@@ -44,7 +44,7 @@ Singleton {
         repeat: true
         running: root.path !== ""
         triggeredOnStart: true
-        onTriggered: { maxFile.reload(); curFile.reload() }
+        onTriggered: curFile.reload()     // max_brightness never changes: FileView read it once
     }
 
     property int wanted: -1
