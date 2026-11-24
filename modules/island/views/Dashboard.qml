@@ -90,7 +90,7 @@ Item {
         { title: "Calendar", icon: Config.symbol.calendar, run: root.open(Engine.View.Clock) },
         { letter: "g", title: "Workspaces", icon: Config.symbol.overview, run: root.open(Engine.View.Workspaces) },
         { letter: "h", title: "Tabs", icon: Config.symbol.hub, status: "Every view", run: root.open(Engine.View.Tabs) },
-        { title: "Notifications", icon: Config.symbol.notifications,
+        { title: "Notifications", icon: Config.symbol.notifications, count: () => Notifier.count,
           status: () => Notifier.count > 0 ? Notifier.count + " waiting" : "None", run: root.open(Engine.View.Notifications) },
         { title: "Media", icon: Config.symbol.media, status: "What's playing", run: root.open(Engine.View.Media) },
         { title: "Battery", icon: () => Energy.glyph, usable: () => Energy.present, run: root.open(Engine.View.Battery) },
@@ -140,6 +140,7 @@ Item {
         property string icon: ""
         property string caption: ""
         property bool on: false
+        property int count: 0
         property string shortcut: ""
         property bool keyboardSelected: activeFocus && Config.focusVisible
         readonly property bool lit: area.containsMouse || keyboardSelected
@@ -172,6 +173,7 @@ Item {
         }
         FocusRing { on: tile.keyboardSelected }
         KeyBadge { key: tile.shortcut }
+        CountBadge { count: tile.count }
     }
 
     // One button of a connected group: its outer corners round, its inner ones nearly square, and
@@ -384,6 +386,7 @@ Item {
                             required property var modelData
                             icon: root.val(modelData.icon)
                             on: modelData.isOn?.() ?? false
+                            count: modelData.count?.() ?? 0
                             caption: root.caption(modelData)
                             shortcut: modelData.letter ?? ""
                             enabled: root.usable(modelData)

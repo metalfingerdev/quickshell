@@ -95,32 +95,15 @@ Item {
         Capsule {
             id: actions
 
-            Tab { icon: Config.symbol.launcher; shortcut: "d"; view: Engine.View.Launcher; focus: true }
-            Tab { icon: Config.symbol.mixer;    shortcut: "v"; view: Engine.View.Mixer }
-            Tab { icon: Config.symbol.settings; shortcut: "i"; view: Engine.View.Settings }
-            Tab { icon: Config.symbol.power;    shortcut: "x"; view: Engine.View.Power }
             Tab {
                 icon: Config.symbol.notifications; shortcut: "n"; view: Engine.View.Notifications
 
-                Rectangle {
-                    visible: Notifier.count > 0
-                    x: parent.width - width + 2
-                    y: parent.height - height - 2           // the corner above is the keycap's
-                    width: Math.max(16, unread.implicitWidth + 8)
-                    height: 16
-                    radius: 8
-                    color: Config.primary
-
-                    Label {
-                        id: unread
-                        anchors.centerIn: parent
-                        text: Notifier.count > 99 ? "99+" : Notifier.count
-                        color: Config.primaryInk
-                        font.pixelSize: 10
-                        font.weight: Font.Bold
-                    }
-                }
+                CountBadge { count: Notifier.count }
             }
+            Tab { icon: Config.symbol.mixer;    shortcut: "v"; view: Engine.View.Mixer }
+            Tab { icon: Config.symbol.launcher; shortcut: "d"; view: Engine.View.Launcher; focus: true }
+            Tab { icon: Config.symbol.settings; shortcut: "i"; view: Engine.View.Settings }
+            Tab { icon: Config.symbol.power;    shortcut: "x"; view: Engine.View.Power }
         }
 
         StatusGroup {
