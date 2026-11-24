@@ -5,12 +5,11 @@ import qs.modules.parts
 import qs.modules.components
 import qs.modules.services
 
-// The Control Center, on one grid: everything is a half, a third, a quarter or a fifth of the same
-// width with the same gap, so the columns line up from top to bottom. Large tiles two a row
-// (connections, then sound and power), toggles three a row, the levels side by side, the launcher's
-// actions five a row, and the session along the foot. What lacks its tool stays, dimmed, so no row
-// comes up short. No media card or notification list: Audio opens Media, Do not disturb the
-// notification center.
+// The Control Center, after Android 16's quick settings (Material 3 Expressive): the time large, the
+// levels first, four large tiles, then small tiles, icon only, that morph from a rounded square to a
+// pill when on and give a little when pressed; the line under them names the one you point at, or
+// says what's on. The power profile and the session are connected button groups: the chosen one
+// rounds right out. Everything sits on one width split in halves, thirds or sixths with one gap.
 Item {
     id: root
 
@@ -18,19 +17,16 @@ Item {
     readonly property int contentW: 600
     readonly property int gap: 10
     readonly property real half: (contentW - gap) / 2
-    readonly property real third: (contentW - 2 * gap) / 3
-    readonly property real quarter: (contentW - 3 * gap) / 4
-    readonly property real fifth: (contentW - 4 * gap) / 5
-    readonly property int tileH: 62
-    readonly property int tileRadius: 24
+    readonly property real sixth: (contentW - 5 * gap) / 6
+    readonly property int joint: 4                    // between a connected group's buttons
 
     implicitWidth: contentW + 2 * pad
     implicitHeight: column.implicitHeight + 2 * pad
 
-    property bool showActions: false
+    property bool showMore: false
     Store {
         category: "dashboard"
-        property alias showActions: root.showActions
+        property alias showMore: root.showMore
     }
 
     SystemClock {
@@ -41,70 +37,89 @@ Item {
     function val(x) { return typeof x === "function" ? x() : x }
     function usable(item) { return (item.usable?.() ?? true) && (!item.tool || Toggles.has(item.tool)) }
     function open(view) { return x => Engine.open(view, x) }
+    function caption(item) {
+        const status = val(item.status) ?? (item.isOn ? (item.isOn() ? "On" : "Off") : "")
+        return item.title + (status ? "  ·  " + status : "")
+    }
 
-    // Functions, not values: the list itself stays put when a setting flips, so the tile with the
-    // keyboard focus isn't rebuilt under it. `opens` makes it an Android large tile.
-    readonly property var toggles: [
-        { letter: "d", title: "Do not disturb", opens: Engine.View.Notifications,
-          isOn: () => Notifier.dnd, icon: () => Notifier.dnd ? Config.symbol.dnd : "do_not_disturb_off",
-          status: () => Notifier.dnd ? "On" : Notifier.count > 0 ? Notifier.count + " notifications" : "Off",
-          flip: () => Notifier.dnd = !Notifier.dnd },
-        { letter: "m", title: "Microphone",
-          isOn: () => Audio.hasMic && !Audio.micMuted, icon: () => Audio.hasMic && !Audio.micMuted ? "mic" : "mic_off",
-          status: () => !Audio.hasMic ? "No microphone" : Audio.micMuted ? "Muted" : "On", flip: () => Audio.toggleMic() },
-        { letter: "a", title: "Airplane mode",
-          isOn: () => Toggles.airplane, icon: () => "flight", flip: () => Toggles.setAirplane(!Toggles.airplane) },
-        { letter: "l", title: "Night light", tool: "hyprsunset",
-          isOn: () => Toggles.nightLight, icon: () => "nightlight", status: () => Toggles.nightLight ? Toggles.warmth + " K" : "Off",
-          flip: () => Toggles.nightLight = !Toggles.nightLight },
-        { letter: "c", title: "Caffeine", tool: "systemd-inhibit",
-          isOn: () => Toggles.caffeine, icon: () => "coffee", flip: () => Toggles.caffeine = !Toggles.caffeine },
-        { letter: "k", title: "Dark theme", opens: Engine.View.Colours,
-          isOn: () => Config.dark, icon: () => "dark_mode", flip: () => { Config.setDark(!Config.dark); Toggles.colorScheme(Config.dark) } }
-    ]
+    // the small tile under the pointer or the keyboard, for the line under them
+    property Item pointed: null
+    function point(item, on) {
+        if (on) pointed = item
+        else if (pointed === item) pointed = null
+    }
 
-    // The launcher's actions that have no tile above, in rows of a kind: capture and sound, asking and
-    // typing, the desktop and its look. Either recording button stops whichever recording is on.
-    readonly property var actions: [
-        { letter: "s", title: "Screenshot", tool: "grimblast", icon: Config.symbol.screenshot,
+    // Functions, not values: the lists stay put when a setting flips, so the tile with the keyboard
+    // focus isn't rebuilt under it. The first row switches, the second captures and asks.
+    readonly property var quick: [
+        { letter: "m", title: "Microphone", usable: () => Audio.hasMic,
+          icon: () => Audio.hasMic && !Audio.micMuted ? "mic" : "mic_off", isOn: () => Audio.hasMic && !Audio.micMuted,
+          status: () => !Audio.hasMic ? "No microphone" : Audio.micMuted ? "Muted" : "On", run: () => Audio.toggleMic() },
+        { letter: "a", title: "Airplane mode", icon: "flight", isOn: () => Toggles.airplane,
+          run: () => Toggles.setAirplane(!Toggles.airplane) },
+        { letter: "l", title: "Night light", tool: "hyprsunset", icon: "nightlight", isOn: () => Toggles.nightLight,
+          status: () => Toggles.nightLight ? Toggles.warmth + " K" : "Off", run: () => Toggles.nightLight = !Toggles.nightLight },
+        { letter: "c", title: "Caffeine", tool: "systemd-inhibit", icon: "coffee", isOn: () => Toggles.caffeine,
+          run: () => Toggles.caffeine = !Toggles.caffeine },
+        { letter: "k", title: "Dark theme", icon: "dark_mode", isOn: () => Config.dark,
+          run: () => { Config.setDark(!Config.dark); Toggles.colorScheme(Config.dark) } },
+        { letter: "s", title: "Screenshot", tool: "grimblast", icon: Config.symbol.screenshot, status: "Select an area",
           run: () => { Engine.close(); Toggles.screenshot() } },
-        { letter: "r", title: () => Toggles.recording && !Toggles.recordingMic ? Toggles.recordTime : "Record", tool: "wf-recorder",
+
+        { letter: "r", title: "Record the screen", tool: "wf-recorder",
           icon: () => Toggles.recording && !Toggles.recordingMic ? "stop_circle" : Config.symbol.record,
-          isOn: () => Toggles.recording && !Toggles.recordingMic, run: () => root.record(false) },
-        { title: () => Toggles.recording && Toggles.recordingMic ? Toggles.recordTime : "With mic", tool: "wf-recorder",
+          isOn: () => Toggles.recording && !Toggles.recordingMic,
+          status: () => Toggles.recording && !Toggles.recordingMic ? Toggles.recordTime : "", run: () => root.record(false) },
+        { title: "Record with the microphone", tool: "wf-recorder",
           icon: () => Toggles.recording && Toggles.recordingMic ? "stop_circle" : "record_voice_over",
-          isOn: () => Toggles.recording && Toggles.recordingMic, run: () => root.record(true) },
-        { letter: "n", title: () => Toggles.memoRecording ? Toggles.memoTime : "Voice memo",
-          icon: () => Toggles.memoRecording ? "stop_circle" : "graphic_eq",
-          isOn: () => Toggles.memoRecording, run: () => Toggles.voiceMemo(!Toggles.memoRecording) },
-        { letter: "x", title: "Mixer", icon: Config.symbol.mixer, run: root.open(Engine.View.Mixer) },
-
-        { letter: "/", title: "Agent", icon: "smart_toy", run: root.open(Engine.View.Agent) },
-        // as the launcher's Coding agent: Crush in kitty
-        { title: "Coding agent", icon: "terminal", run: () => { Engine.close(); Toggles.launch(["kitty", "-e", "crush"]) } },
-        { letter: "v", title: "Clipboard", icon: "content_paste", run: root.open(Engine.View.Clipboard) },
-        { letter: ".", title: "Emoji", icon: "mood", run: () => { Engine.launcherFilter = "emoji"; Engine.open(Engine.View.Launcher) } },
+          isOn: () => Toggles.recording && Toggles.recordingMic,
+          status: () => Toggles.recording && Toggles.recordingMic ? Toggles.recordTime : "", run: () => root.record(true) },
+        { letter: "n", title: "Voice memo", icon: () => Toggles.memoRecording ? "stop_circle" : "graphic_eq",
+          isOn: () => Toggles.memoRecording, status: () => Toggles.memoRecording ? Toggles.memoTime : "",
+          run: () => Toggles.voiceMemo(!Toggles.memoRecording) },
+        { letter: "v", title: "Clipboard", icon: "content_paste", status: "Everything copied", run: root.open(Engine.View.Clipboard) },
+        { letter: ".", title: "Emoji", icon: "mood", status: "And symbols, kaomoji",
+          run: () => { Engine.launcherFilter = "emoji"; Engine.open(Engine.View.Launcher) } },
+        { letter: "/", title: "Agent", icon: "smart_toy", status: "Ask the local model", run: root.open(Engine.View.Agent) }
+    ]
+    // Folded under More: the rest of the launcher's actions and views.
+    readonly property var more: [
+        { title: "Coding agent", icon: "terminal", status: "Crush, in kitty",
+          run: () => { Engine.close(); Toggles.launch(["kitty", "-e", "crush"]) } },
+        { letter: "x", title: "Mixer", icon: Config.symbol.mixer, status: "Volume for each app", run: root.open(Engine.View.Mixer) },
         { title: "Calendar", icon: Config.symbol.calendar, run: root.open(Engine.View.Clock) },
-
         { letter: "g", title: "Workspaces", icon: Config.symbol.overview, run: root.open(Engine.View.Workspaces) },
-        { letter: "h", title: "Tabs", icon: Config.symbol.hub, run: root.open(Engine.View.Tabs) },
+        { letter: "h", title: "Tabs", icon: Config.symbol.hub, status: "Every view", run: root.open(Engine.View.Tabs) },
+        { title: "Notifications", icon: Config.symbol.notifications,
+          status: () => Notifier.count > 0 ? Notifier.count + " waiting" : "None", run: root.open(Engine.View.Notifications) },
+        { title: "Media", icon: Config.symbol.media, status: "What's playing", run: root.open(Engine.View.Media) },
+        { title: "Battery", icon: () => Energy.glyph, usable: () => Energy.present, run: root.open(Engine.View.Battery) },
+        { title: "Colours", icon: Config.symbol.colours, run: root.open(Engine.View.Colours) },
         { title: "Theme", icon: Config.symbol.theme, run: root.open(Engine.View.Theme) },
         { title: "Wallpaper", icon: Config.symbol.wallpaper, run: root.open(Engine.View.Wallpapers) },
-        { title: "Shuffle", icon: "shuffle", run: () => Wallpaper.random() }
+        { title: "Shuffle the wallpaper", icon: "shuffle", run: () => Wallpaper.random() }
     ]
-    // record the screen, not the Control Center
+    // record the screen, not the Control Center; either button stops whichever recording is on
     function record(mic) {
         if (Toggles.recording) return Toggles.record(false, false)
         Engine.close()
         Toggles.record(true, mic)
     }
 
+    // Restart asks for a second press, as in the Power view: "Again?" for three seconds.
     readonly property var session: [
         { title: "Lock", icon: "lock", run: () => { Engine.close(); Session.run("lock") } },
         { title: "Suspend", icon: "bedtime", run: () => { Engine.close(); Session.run("suspend") } },
-        { title: "Hibernate", icon: "ac_unit", run: () => { Engine.close(); Session.run("hibernate") } },
+        { title: "Restart", icon: "restart_alt", confirm: true, run: () => { Engine.close(); Session.run("reboot") } },
         { letter: "p", title: "Power", icon: Config.symbol.power, run: root.open(Engine.View.Power) }
     ]
+    property string armed: ""
+    Timer { id: disarm; interval: 3000; onTriggered: root.armed = "" }
+    function press(s, x) {
+        if (s.confirm && armed !== s.title) { armed = s.title; disarm.restart(); return }
+        armed = ""
+        s.run(x)
+    }
 
     Component.onCompleted: Toggles.readProfile()
 
@@ -119,62 +134,102 @@ Item {
         Engine.key()
     }
 
-    // An action: its icon over its name, in a circle as the tiles' are.
-    component Action: Rectangle {
-        id: action
+    // A small tile: its icon alone, a rounded square that rounds out to a pill when on.
+    component Small: Rectangle {
+        id: tile
         property string icon: ""
-        property string title: ""
+        property string caption: ""
         property bool on: false
         property string shortcut: ""
         property bool keyboardSelected: activeFocus && Config.focusVisible
+        readonly property bool lit: area.containsMouse || keyboardSelected
         readonly property color ink: on ? Config.primaryInk : Config.text
+        signal clicked(real sceneX)
+        function activate() { clicked(-1) }
+        onLitChanged: root.point(tile, lit)
+
+        activeFocusOnTab: true
+        width: root.sixth
+        height: 60
+        radius: on ? height / 2 : 18
+        Behavior on radius { NumberAnimation { duration: 340; easing.type: Easing.OutBack } }
+        scale: area.pressed ? 0.92 : 1
+        Behavior on scale { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
+        color: Config.state(on ? Config.primary : Config.container, ink, area.containsMouse, area.pressed || keyboardSelected)
+        Behavior on color { ColorAnimation { duration: 160 } }
+        opacity: enabled ? 1 : 0.38
+
+        Icon {
+            anchors.centerIn: parent
+            name: tile.icon
+            size: 24
+            filled: tile.on
+            color: tile.ink
+        }
+        ClickArea {
+            id: area
+            onClicked: mouse => tile.clicked(area.sceneX(mouse))
+        }
+        FocusRing { on: tile.keyboardSelected }
+        KeyBadge { key: tile.shortcut }
+    }
+
+    // One button of a connected group: its outer corners round, its inner ones nearly square, and
+    // all of them round once it's the chosen one.
+    component Segment: Rectangle {
+        id: seg
+        property string icon: ""
+        property string text: ""
+        property bool selected: false
+        property bool first: false
+        property bool last: false
+        property string shortcut: ""
+        property bool keyboardSelected: activeFocus && Config.focusVisible
+        readonly property color ink: selected ? Config.primaryInk : Config.text
+        readonly property real round: height / 2
         signal clicked(real sceneX)
         function activate() { clicked(-1) }
 
         activeFocusOnTab: true
-        width: root.fifth
-        height: 76
-        radius: root.tileRadius
-        color: Config.state(on ? Config.primary : Config.container, ink, area.containsMouse, area.pressed || keyboardSelected)
-        opacity: enabled ? 1 : 0.38
+        height: 48
+        radius: round
+        topLeftRadius: first || selected ? round : 8
+        bottomLeftRadius: first || selected ? round : 8
+        topRightRadius: last || selected ? round : 8
+        bottomRightRadius: last || selected ? round : 8
+        Behavior on topLeftRadius { Motion {} }
+        Behavior on bottomLeftRadius { Motion {} }
+        Behavior on topRightRadius { Motion {} }
+        Behavior on bottomRightRadius { Motion {} }
+        scale: area.pressed ? 0.96 : 1
+        Behavior on scale { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
+        color: Config.state(selected ? Config.primary : Config.container, ink, area.containsMouse, area.pressed || keyboardSelected)
         Behavior on color { ColorAnimation { duration: 160 } }
 
-        Column {
+        Row {
             anchors.centerIn: parent
-            width: parent.width - 16
-            spacing: 6
+            spacing: 8
 
-            Rectangle {
-                anchors.horizontalCenter: parent.horizontalCenter
-                width: 36
-                height: 36
-                radius: 18
-                color: action.on ? Config.primaryDeep : Config.high
-
-                Icon {
-                    anchors.centerIn: parent
-                    name: action.icon
-                    size: 20
-                    filled: action.on
-                    color: action.ink
-                }
+            Icon {
+                anchors.verticalCenter: parent.verticalCenter
+                name: seg.icon
+                size: 20
+                filled: seg.selected
+                color: seg.ink
             }
             Label {
-                width: parent.width
-                horizontalAlignment: Text.AlignHCenter
-                text: action.title
-                elide: Text.ElideRight
-                color: action.ink
-                font.pixelSize: Config.small + 1
+                anchors.verticalCenter: parent.verticalCenter
+                text: seg.text
+                color: seg.ink
                 font.weight: Font.Medium
             }
         }
         ClickArea {
             id: area
-            onClicked: mouse => action.clicked(area.sceneX(mouse))
+            onClicked: mouse => seg.clicked(area.sceneX(mouse))
         }
-        FocusRing { on: action.keyboardSelected }
-        KeyBadge { key: action.shortcut }
+        FocusRing { on: seg.keyboardSelected }
+        KeyBadge { key: seg.shortcut }
     }
 
     Column {
@@ -184,23 +239,72 @@ Item {
         width: root.contentW
         spacing: 14
 
-        Header {
+        // the time large, as Android's shade opens with it
+        Item {
             width: parent.width
-            title: "Control Center"
-            subtitle: Qt.formatDateTime(clock.date, "dddd, d MMMM  ·  HH:mm")
-            onBack: Engine.back()
+            height: 72
 
-            Pill { kind: "text"; icon: Config.symbol.settings; iconSize: 22; shortcut: "i"; onClicked: Engine.open(Engine.View.Settings) }
+            BackButton {
+                id: back
+                anchors.verticalCenter: parent.verticalCenter
+                onClicked: Engine.back()
+            }
+            Column {
+                anchors { left: back.right; leftMargin: 14; verticalCenter: parent.verticalCenter }
+
+                Text {
+                    text: Qt.formatDateTime(clock.date, "HH:mm")
+                    color: Config.text
+                    font.family: Config.font
+                    font.pixelSize: 42
+                    font.weight: Font.Normal
+                }
+                Label {
+                    text: Qt.formatDateTime(clock.date, "dddd, d MMMM")
+                    color: Config.dim
+                }
+            }
+            Row {
+                anchors { right: parent.right; verticalCenter: parent.verticalCenter }
+                spacing: 6
+
+                Pill {
+                    visible: Energy.present
+                    icon: Energy.glyph
+                    text: Energy.percent >= 0 ? Energy.percent + "%" : "…"
+                    active: Energy.charging
+                    shortcut: "e"
+                    onClicked: x => Engine.open(Engine.View.Battery, x)
+                }
+                Pill { kind: "text"; icon: Config.symbol.settings; iconSize: 22; shortcut: "i"; onClicked: Engine.open(Engine.View.Settings) }
+            }
         }
 
+        Row {
+            spacing: root.gap
+
+            BrightnessSlider {
+                visible: Backlight.available
+                width: root.half
+                implicitHeight: 52
+            }
+            VolumeSlider {
+                width: Backlight.available ? root.half : root.contentW
+                implicitHeight: 52
+                enabled: Audio.sink !== null
+            }
+        }
+
+        // large tiles: a pill when on, squarer when off, as the small ones
         Grid {
             columns: 2
             spacing: root.gap
 
             QuickTile {
                 width: root.half
-                implicitHeight: root.tileH
-                radius: root.tileRadius
+                implicitHeight: 64
+                radius: on ? height / 2 : 22
+                Behavior on radius { NumberAnimation { duration: 340; easing.type: Easing.OutBack } }
                 focus: true                              // the keyboard starts here
                 icon: Net.icon
                 title: Net.ethernet && !Net.current ? "Ethernet" : "Wi-Fi"
@@ -215,8 +319,9 @@ Item {
             }
             QuickTile {
                 width: root.half
-                implicitHeight: root.tileH
-                radius: root.tileRadius
+                implicitHeight: 64
+                radius: on ? height / 2 : 22
+                Behavior on radius { NumberAnimation { duration: 340; easing.type: Easing.OutBack } }
                 icon: Bluez.icon
                 title: "Bluetooth"
                 subtitle: Bluez.summary
@@ -229,8 +334,9 @@ Item {
             }
             QuickTile {
                 width: root.half
-                implicitHeight: root.tileH
-                radius: root.tileRadius
+                implicitHeight: 64
+                radius: on ? height / 2 : 22
+                Behavior on radius { NumberAnimation { duration: 340; easing.type: Easing.OutBack } }
                 icon: Audio.muted ? Config.symbol.muted : Config.symbol.sound
                 title: "Audio"
                 subtitle: Audio.muted ? "Muted  ·  " + Audio.label(Audio.sink) : Audio.label(Audio.sink)
@@ -241,130 +347,116 @@ Item {
                 onToggled: Audio.toggleMute()
                 onClicked: x => Engine.open(Engine.View.Media, x)
             }
-            // nothing to switch: lit while the charger is in, and both halves open Battery
             QuickTile {
                 width: root.half
-                implicitHeight: root.tileH
-                radius: root.tileRadius
-                icon: Energy.glyph
-                title: "Battery"
-                subtitle: !Energy.present ? "No battery" : Energy.percent < 0 ? "…"
-                    : Energy.percent + "%" + (Energy.charging ? "  ·  Charging" : Energy.plugged ? "  ·  Plugged in"
-                    : Energy.minutesLeft >= 0 ? "  ·  " + Energy.duration(Energy.minutesLeft) + " left" : "")
-                on: Energy.plugged
+                implicitHeight: 64
+                radius: on ? height / 2 : 22
+                Behavior on radius { NumberAnimation { duration: 340; easing.type: Easing.OutBack } }
+                icon: Notifier.dnd ? Config.symbol.dnd : "do_not_disturb_off"
+                title: "Do not disturb"
+                subtitle: Notifier.dnd ? "On" : Notifier.count > 0 ? Notifier.count + " notifications" : "Off"
+                on: Notifier.dnd
                 split: true
-                shortcut: "e"
-                enabled: Energy.present
-                onToggled: Engine.open(Engine.View.Battery)
-                onClicked: x => Engine.open(Engine.View.Battery, x)
+                shortcut: "d"
+                onToggled: Notifier.dnd = !Notifier.dnd
+                onClicked: x => Engine.open(Engine.View.Notifications, x)
             }
         }
 
-        Grid {
-            columns: 3
+        // the small tiles, and the rest of them unfolded right under, as one grid
+        Column {
             spacing: root.gap
 
             Repeater {
-                model: root.toggles
+                model: [root.quick, root.more]
 
-                QuickTile {
+                Grid {
                     required property var modelData
-                    width: root.third
-                    implicitHeight: root.tileH
-                    radius: root.tileRadius
-                    icon: modelData.icon()
-                    title: modelData.title
-                    on: modelData.isOn()
-                    subtitle: modelData.status?.() ?? (on ? "On" : "Off")
-                    split: modelData.opens !== undefined
-                    shortcut: modelData.letter
-                    enabled: root.usable(modelData)
-                    onToggled: modelData.flip()
-                    onClicked: x => Engine.open(modelData.opens, x)
+                    required property int index
+                    visible: index === 0 || root.showMore
+                    columns: 6
+                    spacing: root.gap
+
+                    Repeater {
+                        model: parent.modelData
+
+                        Small {
+                            required property var modelData
+                            icon: root.val(modelData.icon)
+                            on: modelData.isOn?.() ?? false
+                            caption: root.caption(modelData)
+                            shortcut: modelData.letter ?? ""
+                            enabled: root.usable(modelData)
+                            onClicked: x => modelData.run(x)
+                        }
+                    }
                 }
             }
         }
 
-        Row {
-            spacing: root.gap
+        // what the pointer is on, or what's on; and More, which unfolds the rest above
+        Item {
+            width: parent.width
+            height: 32
 
-            VolumeSlider {
-                width: Backlight.available ? root.half : root.contentW
-                implicitHeight: 48
-                enabled: Audio.sink !== null
+            Label {
+                anchors { left: parent.left; leftMargin: 4; right: more.left; rightMargin: 12; verticalCenter: parent.verticalCenter }
+                elide: Text.ElideRight
+                color: root.pointed ? Config.text : Config.dim
+                text: root.pointed ? root.pointed.caption : (() => {
+                    const lit = root.quick.filter(q => q.isOn?.()).map(q => q.title)
+                    return lit.length > 0 ? "On: " + lit.join(", ") : "Point at a tile for its name"
+                })()
             }
-            BrightnessSlider {
-                visible: Backlight.available
-                width: root.half
-                implicitHeight: 48
+            Pill {
+                id: more
+                anchors { right: parent.right; verticalCenter: parent.verticalCenter }
+                implicitHeight: 32
+                kind: "text"
+                icon: root.showMore ? "expand_less" : "expand_more"
+                text: root.showMore ? "Less" : "More"
+                onClicked: root.showMore = !root.showMore
             }
         }
 
-        // the power profile in thirds, lit as the tiles are (not the outlined Segmented of other views)
         Row {
             visible: Toggles.profile !== ""
-            spacing: root.gap
+            spacing: root.joint
 
             Repeater {
                 model: Toggles.profiles
 
-                Pill {
+                Segment {
                     required property var modelData
-                    width: root.third
-                    implicitHeight: 48
+                    required property int index
+                    width: (root.contentW - 2 * root.joint) / 3
+                    first: index === 0
+                    last: index === 2
                     icon: modelData.icon
                     text: modelData.label
-                    active: Toggles.profile === modelData.key
+                    selected: Toggles.profile === modelData.key
                     onClicked: Toggles.setProfile(modelData.key)
                 }
             }
         }
 
-        // The actions fold away behind one row, and stay as they were left. Folded, their letters
-        // rest too: the launcher still has every one of them.
-        Pill {
-            width: parent.width
-            implicitHeight: 40
-            kind: "text"
-            icon: root.showActions ? "expand_less" : "expand_more"
-            text: root.showActions ? "Fewer actions" : "More actions"
-            onClicked: root.showActions = !root.showActions
-        }
-
-        Grid {
-            visible: root.showActions
-            columns: 5
-            spacing: root.gap
-
-            Repeater {
-                model: root.actions
-
-                Action {
-                    required property var modelData
-                    icon: root.val(modelData.icon)
-                    title: root.val(modelData.title)
-                    on: modelData.isOn?.() ?? false
-                    shortcut: modelData.letter ?? ""
-                    enabled: root.usable(modelData)
-                    onClicked: x => modelData.run(x)
-                }
-            }
-        }
-
         Row {
-            spacing: root.gap
+            spacing: root.joint
 
             Repeater {
                 model: root.session
 
-                Pill {
+                Segment {
                     required property var modelData
-                    width: root.quarter
-                    implicitHeight: 48
+                    required property int index
+                    width: (root.contentW - 3 * root.joint) / 4
+                    first: index === 0
+                    last: index === 3
                     icon: modelData.icon
-                    text: modelData.title
+                    text: root.armed === modelData.title ? "Again?" : modelData.title
+                    selected: root.armed === modelData.title
                     shortcut: modelData.letter ?? ""
-                    onClicked: x => modelData.run(x)
+                    onClicked: x => root.press(modelData, x)
                 }
             }
         }
