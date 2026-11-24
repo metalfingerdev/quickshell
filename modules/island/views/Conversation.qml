@@ -111,7 +111,8 @@ Item {
             spacing: 8
 
             Repeater {
-                model: Agent.models
+                // one model is no choice: its chip would look like a button that does nothing
+                model: Agent.models.length > 1 ? Agent.models : []
 
                 Chip {
                     required property string modelData
