@@ -64,6 +64,17 @@ Item {
             }
         }
 
+        // what's being recorded, with Stop and Discard, above what plays
+        RecordingCard {
+            visible: Toggles.recording
+            width: parent.width
+        }
+        RecordingCard {
+            visible: Toggles.memoRecording
+            width: parent.width
+            kind: "memo"
+        }
+
         MediaCard {
             visible: Players.hasTrack
             width: parent.width

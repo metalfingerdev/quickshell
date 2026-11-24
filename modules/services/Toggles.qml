@@ -79,12 +79,22 @@ Singleton {
             recorder.signal(2)                              // SIGINT: wf-recorder finishes the file
         }
     }
+    // Stopped the same way, and the finished file deleted once wf-recorder lets go of it.
+    property bool recordDiscard: false
+    function discardRecording() {
+        if (!recorder.running) return
+        recordDiscard = true
+        recorder.signal(2)
+    }
     Process {
         id: recorder
         onExited: (code, status) => {
-            if (root.recordFile !== "" && root.has("notify-send"))
+            if (root.recordDiscard && root.recordFile !== "")
+                Quickshell.execDetached(["rm", "-f", "--", root.recordFile])
+            else if (root.recordFile !== "" && root.has("notify-send"))
                 Quickshell.execDetached(["notify-send", "-a", "Screen recorder", "-i", "media-record", "Recording saved", root.recordFile])
             root.recordFile = ""
+            root.recordDiscard = false
         }
     }
     Timer {
@@ -111,11 +121,20 @@ Singleton {
             memo.signal(2)
         }
     }
+    property bool memoDiscard: false
+    function discardMemo() {
+        if (!memo.running) return
+        memoDiscard = true
+        memo.signal(2)
+    }
     Process {
         id: memo
         onExited: {
-            if (root.memoFile !== "" && root.has("notify-send"))
+            if (root.memoDiscard && root.memoFile !== "")
+                Quickshell.execDetached(["rm", "-f", "--", root.memoFile])
+            else if (root.memoFile !== "" && root.has("notify-send"))
                 Quickshell.execDetached(["notify-send", "-a", "Voice memo", "-i", "audio-input-microphone", "Voice memo saved", root.memoFile])
+            root.memoDiscard = false
             root.memoFile = ""
         }
     }
