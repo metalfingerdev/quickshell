@@ -95,7 +95,7 @@ Scope {
     // A notch's top strip over the island is the island's own, unless auto-hide is on: then it is the edge
     // that reveals it.
     readonly property bool atEdge: !covering && (edgeHover.hovered
-        || (pointer.hovered && pointer.point.position.y < hotZone && (Engine.autoHide || !overlay.inNotch(pointer.point.position.x))))
+        || (pointer.hovered && pointer.point.position.y < hotZone && (Engine.autoHide || !root.notch || !overlay.overX(pointer.point.position.x))))
     onAtEdgeChanged: Engine.edge(atEdge, screen.name)
 
     function pinShown() {
@@ -234,13 +234,15 @@ Scope {
             }
         }
         // not while covering: the whole screen is the island then, and a hover would start the peek under the lock
-        // Whether x is over the notch: the island and its two corners (FINAL rect, as the mask).
-        function inNotch(x) { return root.notch && x >= proxy.x - cornerL.width && x < proxy.x + proxy.width + cornerR.width }
+        // Whether x is over the island: its final rect, and in a notch the two corners beside it.
+        function overX(x) {
+            return x >= proxy.x - (root.notch ? cornerL.width : 0) && x < proxy.x + proxy.width + (root.notch ? cornerR.width : 0)
+        }
+        // not while covering: the whole screen is the island then, and a hover would start the peek under the lock
         readonly property bool onIsland: !root.covering && pointer.hovered
-            && inNotch(pointer.point.position.x)
+            && overX(pointer.point.position.x)
             && pointer.point.position.y >= (Engine.autoHide || !root.notch ? Math.max(proxy.y, root.hotZone) : proxy.y)
             && pointer.point.position.y < proxy.y + proxy.height
-            && (root.notch || (pointer.point.position.x >= proxy.x && pointer.point.position.x < proxy.x + proxy.width))
         onOnIslandChanged: Engine.hover(onIsland)
 
         // the final rects of the anti-corners (AntiCorner draws them from the animated one)
