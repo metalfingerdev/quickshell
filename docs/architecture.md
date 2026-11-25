@@ -104,6 +104,11 @@ Loader item ──implicit size──► proxy (invisible, snaps instantly, the 
   `glass` layer rule's `ignore_alpha` and hyprglass's `mask_threshold` are 0.01 for that.
   `services/Glass.qml` sets Hyprland's blur level, the windows' opacity and hyprglass at runtime, and again
   after a config reload.
+- **Settings**: `services/Prefs.qml` owns `~/.config/island/settings.json`, from the table in
+  `PrefsSchema.js` (key, target object, property, kind). shell.qml names the target objects, so Prefs imports
+  none of the island or lock modules. Numbers the shell derives (radii, the notch's gap, the shadow) live in
+  `Config.tuning`, and colour roles in `Config.roles`: a key there wins, a missing one is derived. A derived value
+  is never assigned over. `Config.keepReadable` off stops every adjustment of a colour.
 - **Shadow**: a `RectangularShadow` from the same animated rect, close and light at Rest, wider and deeper
   once the island opens. Bar draws it because Hyprland only shadows windows, not layers, in a window of its
   own on the top layer (namespace `quickshell:shadow`, no input), under the island's overlay: in the overlay

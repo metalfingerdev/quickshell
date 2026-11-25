@@ -23,6 +23,13 @@
 
 ## Done
 
+- [x] Settings as code (2026-11-26): every setting in `settings.json` (migrated from island.ini), live-reloaded,
+      sparse, with `prefs reset`; Advanced shows each of them (a number takes any value, a colour any colour),
+      the colour roles and the scheme's own numbers, the island's geometry and shadow, hyprglass's 38 settings
+      and Hyprland's own options, each shared or for dark or light only; opacity runs 0 to 100% with no floor;
+      `Keep colours readable` off adjusts nothing. Not yet: Registry timeouts, notification rules, the other
+      exposed items of the plan's 2g.
+
 - [x] Colours and settings (2026-11-26): Theme is every colour choice in one place (light or dark,
       standard or high contrast, the colours from the wallpaper, a custom colour or a preset, then that
       source's bars, each drawn in the colours it gives, and the surfaces: matching the colour, a hue of

@@ -24,15 +24,15 @@ Scope {
     readonly property bool active: Engine.activeScreen === screen.name
 
     readonly property bool notch: Config.style === "notch"
-    readonly property real gap: notch ? 0 : 8
-    readonly property real edgePad: 8
-    readonly property real hotZone: 4
+    readonly property real gap: Config.tv("gap", notch ? 0 : 8)
+    readonly property real edgePad: Config.tv("edgePad", 8)
+    readonly property real hotZone: Config.tv("hotZone", 4)
     readonly property bool debug: Engine.debug
     readonly property int space: gap + Math.ceil(36 * Config.scale)
 
     readonly property bool strip: Engine.hidden && Config.handle === "strip"
-    readonly property real stripW: 96
-    readonly property real stripH: 5
+    readonly property real stripW: Config.tv("stripW", 96)
+    readonly property real stripH: Config.tv("stripH", 5)
 
     // true: the view sits at its final screen position and the surface slides over it, instead of riding inside it
     readonly property bool pinView: false
@@ -151,7 +151,7 @@ Scope {
 
         RectangularShadow {
             readonly property bool open: !Engine.atRest
-            property real lift: open ? 16 : 5
+            property real lift: open ? Config.tv("shadowLiftOpen", 16) : Config.tv("shadowLift", 5)
 
             // in a notch it carries on above the screen, so it doesn't thin out toward the top edge
             x: root.sx
@@ -160,8 +160,8 @@ Scope {
             height: root.sh + (root.notch ? radius : 0)
             radius: surface.r
             offset: Qt.vector2d(0, lift)
-            blur: open ? 56 : 22
-            color: Qt.rgba(0, 0, 0, open ? 0.5 : 0.42)
+            blur: open ? Config.tv("shadowBlurOpen", 56) : Config.tv("shadowBlur", 22)
+            color: Qt.rgba(0, 0, 0, open ? Config.tv("shadowAlphaOpen", 0.5) : Config.tv("shadowAlpha", 0.42))
             opacity: Engine.hidden || root.covering ? 0 : Math.max(0, Math.min(1, (Config.islandAlpha - 0.3) / 0.5))
 
             Behavior on lift    { Motion {} }

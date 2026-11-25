@@ -24,7 +24,6 @@ Singleton {
     property Store store: Store {
         category: "notifications"
         property alias dnd: root.dnd
-        property alias popupLength: root.popupLength
     }
 
     // true = popup countdowns are frozen. Set by whoever shows the popups (hovered, or not on screen).

@@ -31,7 +31,7 @@ const ALLOW = {
 // Panels that show a list, which can be empty or unavailable
 const LISTS = ["Activity", "Battery", "Board", "Clipboard", "Dock", "Forecast", "History", "Schedule", "TrayMenu", "Wallpapers"]
 const PANELS = ["Activity", "Battery", "Bluetooth", "Board", "Clipboard", "Dock", "History", "TrayMenu", "Clock", "Colours", "Conversation", "Media", "Mixer",
-                "Network", "Notification", "Power", "Schedule", "Settings", "System", "Theme", "Forecast", "Wallpapers", "Workspaces"]
+                "Network", "Notification", "Power", "Schedule", "Settings", "System", "Theme", "Forecast", "Wallpapers", "Workspaces", "Advanced"]
 
 const strip = src => src.replace(/\/\*[\s\S]*?\*\//g, m => m.replace(/[^\n]/g, " "))
                         .replace(/(^|[^:"'])\/\/.*$/gm, "$1")

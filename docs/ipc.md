@@ -69,6 +69,20 @@ clears the peek (a hover peek, a view opening), the next press shows it again.
 | `qs ipc call wallpaper reload` | re-read the folder |
 | `qs ipc call wallpaper current` | print the path showing now |
 
+## Settings
+
+Every setting is in `~/.config/island/settings.json`, nested as the code is (`colours.roles.text`,
+`island.tuning.gap`, ...). Hand edits apply at once. Only what differs from its default is written, so deleting a key
+resets it and deleting the file resets everything. Nothing is clamped. Settings, Advanced shows them all
+(`qs ipc call island open advanced`).
+
+| Command | Effect |
+|---|---|
+| `qs ipc call prefs reset [section]` | back to defaults: everything, or a section (`colours`, `island.tuning`, ...) |
+| `qs ipc call prefs get <key>` | one setting's value in use |
+| `qs ipc call prefs list` | every key |
+| `qs ipc call prefs path` | the file |
+
 ## Tasks and generations
 
 | Command | Effect |

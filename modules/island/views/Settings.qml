@@ -242,6 +242,14 @@ Item {
                 onPicked: key => Config.firstDay = Number(key)
             }
 
+            Pill {
+                icon: "tune"
+                text: "Advanced: every setting"
+                implicitHeight: 52
+                shortcut: "v"
+                onClicked: Engine.open(Engine.View.Advanced)
+            }
+
             SectionLabel { text: "Desktop"; topPadding: Config.spaceXs }
             Switch {
                 text: "\"Activate Linux\""
@@ -310,11 +318,11 @@ Item {
             }
             Level {
                 text: "Windows"
-                valueText: Math.round(value * 50 + 50) + "%"
-                value: ((Glass.windows > 0 ? Glass.windows : Config.windowOpacity) - 0.5) / 0.5
+                valueText: Math.round(value * 100) + "%"
+                value: Glass.windows >= 0 ? Glass.windows : Config.windowOpacity
                 checker: true
-                colourAt: t => root.seeThrough(0.5 + t / 2)
-                onMoved: v => Glass.windows = Math.round((0.5 + v / 2) * 100) / 100
+                colourAt: t => root.seeThrough(t)
+                onMoved: v => Glass.windows = Math.round(v * 100) / 100
             }
 
             // hidden while Hyprland runs without the plugin (left out for another version): the blur above

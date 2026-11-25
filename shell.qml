@@ -21,11 +21,13 @@ ShellRoot {
 
     // services that must exist from the start (their IPC targets, the downloads and clipboard
     // watchers, the Super key's state), not only once a view shows them
-    readonly property var services: [Wallpaper, Glass, Notifier, Sounds, Activities, ClipHistory, Emoji, Held, Weather, Calendar]
+    readonly property var services: [Prefs, Wallpaper, Glass, Notifier, Sounds, Activities, ClipHistory, Emoji, Held, Weather, Calendar]
 
     // a theme generated from the wallpaper follows it, and the island is the same glass as the
     // windows, moving as they do: Hyprland's window opacity and animation (Config is plain QtQuick
     // and can't ask)
+    // every setting lives in ~/.config/island/settings.json (Prefs); the objects it reaches are named here
+    Component.onCompleted: Prefs.targets = { Config: Config, Engine: Engine, Glass: Glass, Notifier: Notifier, Sounds: Sounds }
     Binding { target: Config; property: "wallpaperSeed"; value: Wallpaper.seed }
     // From the wallpaper the surfaces come too: its option's hue and tint go into Config's own when the
     // image or the option changes, or the colours start coming from it (the Surface row moves them after)

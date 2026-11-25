@@ -41,7 +41,8 @@ QtObject {
         Tray,
         Generations,
         Tasks,
-        Dock
+        Dock,
+        Advanced
     }
 
     readonly property int restView: Engine.View.Compact

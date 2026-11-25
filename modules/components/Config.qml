@@ -64,7 +64,28 @@ QtObject {
     property bool surfaceFollows: false
     // "standard" or "high": every source, presets too, so it's applied after the palette is picked
     property string contrastLevel: "standard"
-    readonly property var current: withContrast(source === "preset" ? (palettes[name] ?? palettes.teal) : generated(source))
+    // Off: nothing is adjusted for you. A picked colour is drawn as picked, light on light or not.
+    property bool keepReadable: true
+    // A role set here is exactly that colour, over whatever the scheme made: { surface: "#101010", text: ... }
+    // (the names of the palette roles). Applied last, so the contrast option doesn't touch them either.
+    property var roles: ({})
+    // The scheme's own numbers, for tinkering: a key missing here is its default (levelDefaults).
+    readonly property var levelDefaults: ({
+        surfDark: 0.065, surfLight: 0.975, surfStep: 0.04, tintMax: 0.32,
+        textDark: 0.91, dimDark: 0.75, outlineDark: 0.52, textLight: 0.10, dimLight: 0.32, outlineLight: 0.50,
+        secSat: 0.4, secDark: 0.26, secLight: 0.86,
+        label2: 0.6, label3: 0.3, label4: 0.18, fill1: 0.2, fill2: 0.16, fill3: 0.12, fill4: 0.08
+    })
+    property var levels: ({})
+    function lv(k) { return levels[k] ?? levelDefaults[k] }
+    readonly property var current: withRoles(withContrast(source === "preset" ? (palettes[name] ?? palettes.teal) : generated(source)))
+    function withRoles(p) {
+        const keys = Object.keys(roles).filter(k => roles[k] !== "" && roles[k] !== undefined)
+        if (keys.length === 0) return p
+        const out = Object.assign({}, p)
+        keys.forEach(k => { out[k] = roles[k] })
+        return out
+    }
 
     // The last accents chosen (the eyedropper, the hex field, or what the map was left on), newest
     // first, for the Colours view's Recent row. A string, so the state file keeps it as written.
@@ -183,7 +204,7 @@ QtObject {
     readonly property real primaryContrast: 4.5          // WCAG AA for text
     function readable(c, surface, dark, ratio) {
         const need = ratio ?? primaryContrast
-        if (contrast(c, surface) >= need) return c
+        if (!keepReadable || contrast(c, surface) >= need) return c
         const h = Math.max(0, c.hslHue), s = c.hslSaturation
         let fails = c.hslLightness, passes = dark ? 1 : 0   // white on dark, black on light always do
         for (let i = 0; i < 16; i++) {
@@ -198,24 +219,25 @@ QtObject {
     // (the primary, and the secondary containers: selected tiles, chips), a greyer accent a greyer secondary.
     function scheme(picked, surfaceHue, tint, dark) {
         const h = Math.max(0, picked.hslHue)
-        const n = 0.32 * tint
-        const s = 0.4 * Math.min(1, picked.hslSaturation * 4)
-        const surf = light => Qt.hsla(surfaceHue, n, light, 1)
+        const n = lv("tintMax") * tint
+        const s = lv("secSat") * Math.min(1, picked.hslSaturation * 4)
+        const surf = light => Qt.hsla(surfaceHue, n, Math.max(0, Math.min(1, light)), 1)
         const acc = (sat, light) => Qt.hsla(h, sat, light, 1)
-        const primary = readable(picked, surf(dark ? 0.065 : 0.975), dark)
+        const d = lv("surfStep"), b = dark ? lv("surfDark") : lv("surfLight"), k = dark ? 1 : -1
+        const primary = readable(picked, surf(b), dark)
         return dark ? {
             label: "Generated", dark: true,
-            surface: surf(0.065), container: surf(0.105), high: surf(0.145), highest: surf(0.185),
+            surface: surf(b), container: surf(b + d), high: surf(b + 2 * d), highest: surf(b + 3 * d),
             primary: primary, onPrimary: inkOn(primary),
-            secondary: acc(s, 0.26), onSecondary: acc(s, 0.88),
-            text: surf(0.91), dim: surf(0.75), outline: surf(0.52),
+            secondary: acc(s, lv("secDark")), onSecondary: acc(s, 0.88),
+            text: surf(lv("textDark")), dim: surf(lv("dimDark")), outline: surf(lv("outlineDark")),
             good: "#8bd5a0", warn: "#f2c36b", bad: "#ffb4ab"
         } : {
             label: "Generated", dark: false,
-            surface: surf(0.975), container: surf(0.935), high: surf(0.895), highest: surf(0.855),
+            surface: surf(b), container: surf(b - d), high: surf(b - 2 * d), highest: surf(b - 3 * d),
             primary: primary, onPrimary: inkOn(primary),
-            secondary: acc(s, 0.86), onSecondary: acc(s, 0.16),
-            text: surf(0.10), dim: surf(0.32), outline: surf(0.50),
+            secondary: acc(s, lv("secLight")), onSecondary: acc(s, 0.16),
+            text: surf(lv("textLight")), dim: surf(lv("dimLight")), outline: surf(lv("outlineLight")),
             good: "#2e9b5f", warn: "#b7791f", bad: "#d64545"
         }
     }
@@ -243,6 +265,17 @@ QtObject {
     readonly property color warn:        current.warn
     readonly property color bad:         current.bad
     readonly property bool  dark:        current.dark
+    // Labels and fills as the text colour at a level of alpha, so they work on glass of any opacity
+    // (Apple's vibrancy): the redesign draws with these instead of fixed greys and opaque surfaces.
+    function ink(a) { return Qt.rgba(text.r, text.g, text.b, a) }
+    readonly property color label1: text
+    readonly property color label2: ink(lv("label2"))
+    readonly property color label3: ink(lv("label3"))
+    readonly property color label4: ink(lv("label4"))
+    readonly property color fill1: ink(lv("fill1"))
+    readonly property color fill2: ink(lv("fill2"))
+    readonly property color fill3: ink(lv("fill3"))
+    readonly property color fill4: ink(lv("fill4"))
     readonly property color divider:     mix(surface, outline, 0.35)
     // the hairline round a panel's cards and resting tiles (Noctalia's box border): there, but quieter
     // than outline; Settings can turn them off
@@ -267,10 +300,14 @@ QtObject {
     // the island's largest corner; a shape lower than twice this is a capsule (the compact clock, HUDs).
     // Settings' Roundness scales them all (0.5 .. 1.5).
     property real roundness: 1
-    readonly property int radius: Math.round(28 * roundness)
-    readonly property int cardRadius: Math.round(24 * roundness)
-    readonly property int innerRadius: Math.round(16 * roundness)
-    readonly property int smallRadius: Math.round(12 * roundness)
+    // Numbers the shell would otherwise decide: a key here wins over what is derived (radii from
+    // roundness, the notch's gap...); missing = derived. Prefs keeps them in settings.json.
+    property var tuning: ({})
+    function tv(k, derived) { const v = tuning[k]; return v === undefined || v === null ? derived : v }
+    readonly property int radius: tv("radius", Math.round(28 * roundness))
+    readonly property int cardRadius: tv("cardRadius", Math.round(24 * roundness))
+    readonly property int innerRadius: tv("innerRadius", Math.round(16 * roundness))
+    readonly property int smallRadius: tv("smallRadius", Math.round(12 * roundness))
 
     property string style: "pill"
     property string handle: "strip"
@@ -280,10 +317,10 @@ QtObject {
     // its blur, and layers named glass:* get the same blur. The island is one (Bar), so it takes
     // the windows' opacity, which shell.qml keeps in step with services/Desktops.qml.
     property real windowOpacity: 1
-    // The island's own opacity, -1 = the windows'. Down to see-through: never quite 0, as the glass
-    // (Hyprland's blur, hyprglass) goes only where the island draws something.
+    // The island's own opacity, -1 = the windows'. All the way to 0, where the island draws nothing and
+    // so the glass (Hyprland's blur, hyprglass) has no shape to follow.
     property real islandOpacity: -1
-    readonly property real islandAlpha: Math.max(0.02, Math.min(1, islandOpacity < 0 ? windowOpacity : islandOpacity))
+    readonly property real islandAlpha: Math.max(0, Math.min(1, islandOpacity < 0 ? windowOpacity : islandOpacity))
     readonly property color island: Qt.rgba(surface.r, surface.g, surface.b, islandAlpha)
     property bool shadow: true
 
@@ -369,33 +406,11 @@ QtObject {
     readonly property int headline: 30
     readonly property int display: 56
 
+    // What isn't a setting stays here; the settings are in settings.json (services/Prefs.qml)
     property Store store: Store {
         category: "theme"
-        property alias source: root.source
-        property alias name: root.name
-        property alias accent: root.accent
         property alias recent: root.recent
-        property alias surfaceHue: root.surfaceHue
         property alias surfaceFrom: root.surfaceFrom
-        property alias tint: root.tint
-        property alias wallpaperSaturation: root.wallpaperSaturation
-        property alias wallpaperTone: root.wallpaperTone
-        property alias darkMode: root.darkMode
-        property alias scale: root.scale
-        property alias style: root.style
-        property alias handle: root.handle
-        property alias activateLinux: root.activateLinux
-        property alias surfaceFollows: root.surfaceFollows
-        property alias contrastLevel: root.contrastLevel
-        property alias outlines: root.outlines
-        property alias roundness: root.roundness
-        property alias islandOpacity: root.islandOpacity
-        property alias shadow: root.shadow
-        property alias reduceMotion: root.reduceMotion
-        property alias clock24: root.clock24
-        property alias firstDay: root.firstDay
-        property alias levelToasts: root.levelToasts
-        property alias switcherToasts: root.switcherToasts
         property alias lastDark: root.lastDark
     }
 }

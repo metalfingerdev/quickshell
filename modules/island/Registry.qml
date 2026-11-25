@@ -46,6 +46,7 @@ QtObject {
         // timeout 0: a board being sorted stays until Escape or a click outside, as the agent does
         { name: "tasks",      aliases: ["todo", "kanban", "board"], priority: 2, timeout: 0, view: Engine.View.Tasks, url: Qt.resolvedUrl("views/Board.qml") },
         { name: "dock",       aliases: ["favourites", "favorites", "apps"], priority: 2, timeout: 6000, view: Engine.View.Dock, url: Qt.resolvedUrl("views/Dock.qml") },
+        { name: "advanced",   aliases: ["prefs"], priority: 2, timeout: 0, view: Engine.View.Advanced, url: Qt.resolvedUrl("views/Advanced.qml") },
         // `opens`: a click on the toast opens this instead of pinning the toast
         { name: "switcher",   priority: 1, timeout: 1200, view: Engine.View.Switcher,   url: Qt.resolvedUrl("views/Switcher.qml"), queue: false,
           opens: Engine.View.Tabs }

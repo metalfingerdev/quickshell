@@ -15,8 +15,6 @@ Singleton {
     property real volume: 0.5               // 0..1, pw-play's own scale
     property Store store: Store {
         category: "sounds"
-        property alias enabled: root.enabled
-        property alias volume: root.volume
     }
 
     // The first theme folder that has it, then the system's (a service may get a short XDG_DATA_DIRS).
