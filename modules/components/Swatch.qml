@@ -22,7 +22,7 @@ Rectangle {
     border.width: 1
     border.color: Qt.rgba(Config.outline.r, Config.outline.g, Config.outline.b, 0.5)
     scale: hovered && !area.pressed ? 1.08 : 1
-    Behavior on scale { NumberAnimation { duration: 120; easing.type: Easing.OutCubic } }
+    Behavior on scale { NumberAnimation { duration: Config.durationFast; easing.type: Easing.OutCubic } }
 
     Rectangle {
         id: inner

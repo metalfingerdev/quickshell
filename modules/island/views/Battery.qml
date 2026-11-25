@@ -51,7 +51,7 @@ Item {
         id: column
         x: 24; y: 24
         width: parent.width - 48
-        spacing: 18
+        spacing: Config.spaceL
 
         Header {
             visible: Engine.pinned
@@ -80,7 +80,7 @@ Item {
                 }
             }
             Column {
-                anchors { left: badge.right; leftMargin: 14; right: parent.right; verticalCenter: parent.verticalCenter }
+                anchors { left: badge.right; leftMargin: Config.spaceL; right: parent.right; verticalCenter: parent.verticalCenter }
 
                 Label {
                     text: Energy.present ? (Energy.percent >= 0 ? Energy.percent + "%" : "…") : "No battery"
@@ -109,7 +109,7 @@ Item {
         Flow {
             visible: Energy.present && root.details.length > 0
             width: parent.width
-            spacing: 6
+            spacing: Config.spaceS
 
             Repeater {
                 model: root.details
@@ -124,7 +124,7 @@ Item {
                     Row {
                         id: chip
                         anchors.centerIn: parent
-                        spacing: 6
+                        spacing: Config.spaceS
                         Icon { anchors.verticalCenter: parent.verticalCenter; name: modelData.icon; size: 16; color: Config.dim }
                         Label {
                             anchors.verticalCenter: parent.verticalCenter

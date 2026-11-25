@@ -51,7 +51,7 @@ Rectangle {
     color: Config.state(Config.container, Config.text, area.containsMouse, area.pressed || (activeFocus && Config.focusVisible))
     border.width: modelData.critical ? 1 : 0
     border.color: Config.bad
-    Behavior on color { ColorAnimation { duration: 120 } }
+    Behavior on color { ColorAnimation { duration: Config.durationFast } }
 
     ClickArea {
         id: area
@@ -79,7 +79,7 @@ Rectangle {
         }
         IconImage {
             id: appIcon
-            anchors { fill: parent; margins: 6 }
+            anchors { fill: parent; margins: Config.spaceS }
             source: root.iconFor(root.n?.appIcon ?? "")
             visible: !picture.visible && source != ""
         }
@@ -95,8 +95,8 @@ Rectangle {
 
     Column {
         id: column
-        anchors { left: badge.right; leftMargin: 14; right: close.left; rightMargin: 6; top: parent.top; topMargin: 15 }
-        spacing: 2
+        anchors { left: badge.right; leftMargin: Config.spaceL; right: close.left; rightMargin: Config.spaceS; top: parent.top; topMargin: Config.spaceL }
+        spacing: Config.spaceHair
 
         Label {
             width: parent.width
@@ -130,8 +130,8 @@ Rectangle {
         Row {
             readonly property var actions: Array.from(root.n?.actions ?? []).filter(a => a.identifier !== "default").slice(0, 2)
             visible: actions.length > 0
-            topPadding: 6
-            spacing: 6
+            topPadding: Config.spaceS
+            spacing: Config.spaceS
 
             Repeater {
                 model: parent.actions
@@ -147,7 +147,7 @@ Rectangle {
 
     Pill {
         id: close
-        anchors { right: parent.right; rightMargin: 8; top: parent.top; topMargin: 8 }
+        anchors { right: parent.right; rightMargin: Config.spaceS; top: parent.top; topMargin: Config.spaceS }
         kind: "text"
         icon: "close"
         iconSize: 20

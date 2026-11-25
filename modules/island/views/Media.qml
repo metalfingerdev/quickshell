@@ -60,7 +60,7 @@ Item {
         visible: !root.player
         x: root.pad; y: root.pad
         width: parent.width - 2 * root.pad
-        spacing: 16
+        spacing: Config.spaceL
 
         Header {
             width: parent.width
@@ -83,7 +83,7 @@ Item {
         visible: root.player !== null
         x: root.pad; y: root.pad
         width: parent.width - 2 * root.pad
-        spacing: 18
+        spacing: Config.spaceL
 
         Header {
             width: parent.width
@@ -103,7 +103,7 @@ Item {
 
         Row {
             width: parent.width
-            spacing: 24
+            spacing: Config.spaceXl
 
             ClippingRectangle {
                 id: art
@@ -131,8 +131,8 @@ Item {
                 height: art.height
 
                 Column {
-                    anchors { left: parent.left; right: parent.right; top: parent.top; topMargin: 8 }
-                    spacing: 4
+                    anchors { left: parent.left; right: parent.right; top: parent.top; topMargin: Config.spaceS }
+                    spacing: Config.spaceXs
 
                     Label {
                         width: parent.width
@@ -154,7 +154,7 @@ Item {
 
                 Column {
                     anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
-                    spacing: 14
+                    spacing: Config.spaceL
 
                     Item {
                         visible: root.hasLength
@@ -207,7 +207,7 @@ Item {
 
                         Row {
                             anchors.centerIn: parent
-                            spacing: 16
+                            spacing: Config.spaceL
 
                             Pill {
                                 anchors.verticalCenter: parent.verticalCenter
@@ -231,7 +231,7 @@ Item {
                                 focus: true                    // Enter/Space toggle playback straight away
                                 enabled: Players.canToggle
                                 onClicked: Players.toggle()
-                                Behavior on radius { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+                                Behavior on radius { NumberAnimation { duration: Config.durationMedium; easing.type: Easing.OutCubic } }
                             }
                             Pill {
                                 anchors.verticalCenter: parent.verticalCenter
@@ -262,16 +262,16 @@ Item {
 
         Row {
             width: parent.width
-            spacing: 20
+            spacing: Config.spaceXl
 
             Column {
                 visible: Audio.sinks.length > 0
                 width: Players.list.length > 1 ? (parent.width - parent.spacing) / 2 : parent.width
-                spacing: 6
+                spacing: Config.spaceS
 
                 Label {
-                    leftPadding: 4
-                    bottomPadding: 4
+                    leftPadding: Config.spaceXs
+                    bottomPadding: Config.spaceXs
                     text: "Output"
                     font.pixelSize: Config.large
                     font.weight: Font.Medium
@@ -322,11 +322,11 @@ Item {
             Column {
                 visible: Players.list.length > 1
                 width: (parent.width - parent.spacing) / 2
-                spacing: 6
+                spacing: Config.spaceS
 
                 Label {
-                    leftPadding: 4
-                    bottomPadding: 4
+                    leftPadding: Config.spaceXs
+                    bottomPadding: Config.spaceXs
                     text: "Players"
                     font.pixelSize: Config.large
                     font.weight: Font.Medium

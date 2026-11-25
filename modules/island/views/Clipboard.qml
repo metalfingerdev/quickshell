@@ -45,7 +45,7 @@ Item {
         x: root.pad
         y: root.pad
         width: parent.width - 2 * root.pad
-        spacing: 12
+        spacing: Config.spaceM
 
         Header {
             width: parent.width

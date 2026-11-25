@@ -31,7 +31,7 @@ Rectangle {
              : area.containsMouse ? Config.mix(active ? base : Config.container, Config.text, 0.05)
              : base
     }
-    Behavior on color { ColorAnimation { duration: 120 } }
+    Behavior on color { ColorAnimation { duration: Config.durationFast } }
 
     // under the children, so buttons in the row still get their own clicks
     ClickArea {
@@ -44,8 +44,8 @@ Rectangle {
     }
 
     RowLayout {
-        anchors { fill: parent; leftMargin: 12; rightMargin: 14 }
-        spacing: 14
+        anchors { fill: parent; leftMargin: Config.spaceM; rightMargin: Config.spaceL }
+        spacing: Config.spaceL
 
         Rectangle {
             Layout.preferredWidth: 44
@@ -71,7 +71,7 @@ Rectangle {
         Column {
             Layout.fillWidth: true
             Layout.alignment: Qt.AlignVCenter
-            spacing: 2
+            spacing: Config.spaceHair
 
             Label {
                 width: parent.width
@@ -100,7 +100,7 @@ Rectangle {
 
         RowLayout {
             id: side
-            spacing: 6
+            spacing: Config.spaceS
         }
     }
 

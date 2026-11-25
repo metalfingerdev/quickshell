@@ -27,7 +27,7 @@ Item {
         id: column
         x: 24; y: 24
         width: parent.width - 48
-        spacing: 18
+        spacing: Config.spaceL
 
         Header {
             width: parent.width
@@ -38,7 +38,7 @@ Item {
 
         Row {
             id: tiles
-            spacing: 12
+            spacing: Config.spaceM
 
             Repeater {
                 model: Session.actions
@@ -57,7 +57,7 @@ Item {
 
                     Column {
                         anchors.centerIn: parent
-                        spacing: 12
+                        spacing: Config.spaceM
 
                         Rectangle {
                             anchors.horizontalCenter: parent.horizontalCenter

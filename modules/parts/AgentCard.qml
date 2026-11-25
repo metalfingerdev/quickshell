@@ -37,15 +37,15 @@ Rectangle {
                 running: Agent.busy && !root.asking
                 loops: Animation.Infinite
                 onRunningChanged: if (!running) face.opacity = 1
-                NumberAnimation { to: 0.45; duration: 700 }
-                NumberAnimation { to: 1; duration: 700 }
+                NumberAnimation { to: 0.45; duration: Config.durationPulse }
+                NumberAnimation { to: 1; duration: Config.durationPulse }
             }
         }
     }
 
     Column {
-        anchors { left: badge.right; leftMargin: 12; right: controls.left; rightMargin: 8; verticalCenter: parent.verticalCenter }
-        spacing: 2
+        anchors { left: badge.right; leftMargin: Config.spaceM; right: controls.left; rightMargin: Config.spaceS; verticalCenter: parent.verticalCenter }
+        spacing: Config.spaceHair
 
         Label {
             width: parent.width
@@ -75,8 +75,8 @@ Rectangle {
 
     Row {
         id: controls
-        anchors { right: parent.right; rightMargin: 12; verticalCenter: parent.verticalCenter }
-        spacing: 2
+        anchors { right: parent.right; rightMargin: Config.spaceM; verticalCenter: parent.verticalCenter }
+        spacing: Config.spaceHair
 
         Pill { visible: root.asking; kind: "text"; icon: "close"; iconSize: 22; onClicked: Agent.answer(false) }
         Pill { visible: root.asking; kind: "filled"; icon: "check"; iconSize: 22; onClicked: Agent.answer(true) }

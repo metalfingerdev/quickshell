@@ -22,7 +22,7 @@ Item {
         visible: !root.center
         x: 8; y: 8
         width: parent.width - 16
-        spacing: 6
+        spacing: Config.spaceS
 
         Repeater {
             model: root.center ? [] : root.popups
@@ -34,7 +34,7 @@ Item {
 
         Label {
             visible: root.more > 0
-            leftPadding: 12
+            leftPadding: Config.spaceM
             text: "+" + root.more + " more"
             color: Config.dim
             font.pixelSize: Config.small + 1
@@ -46,7 +46,7 @@ Item {
         visible: root.center
         x: 24; y: 24
         width: parent.width - 48
-        spacing: 14
+        spacing: Config.spaceL
 
         Header {
             width: parent.width
@@ -77,7 +77,7 @@ Item {
             visible: Notifier.count > 0
             width: parent.width
             maxHeight: 600
-            spacing: 10
+            spacing: Config.spaceM
 
             Repeater {
                 model: ScriptModel { values: root.center ? Notifier.items : []; objectProp: "id" }
@@ -91,9 +91,9 @@ Item {
         Column {
             visible: Notifier.count === 0
             width: parent.width
-            topPadding: 12
-            bottomPadding: 12
-            spacing: 8
+            topPadding: Config.spaceM
+            bottomPadding: Config.spaceM
+            spacing: Config.spaceS
 
             Icon {
                 anchors.horizontalCenter: parent.horizontalCenter

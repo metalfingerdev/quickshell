@@ -9,7 +9,7 @@ Item {
     id: root
 
     property real size: 46
-    property real spacing: 8
+    property real spacing: Config.spaceS
 
     readonly property int count: Desktops.shown
     readonly property real wide: Math.round(size * 1.5)
@@ -85,7 +85,7 @@ Item {
                     color: slot.current ? Config.state(Config.primary, Config.primaryInk, area.containsMouse, area.pressed || ring)
                          : slot.used ? Config.state(Config.high, Config.text, area.containsMouse, area.pressed || ring)
                          : Config.layer(area.containsMouse, area.pressed || ring)
-                    Behavior on color { ColorAnimation { duration: 200 } }
+                    Behavior on color { ColorAnimation { duration: Config.durationMedium } }
 
                     // one on its way out can't be reached
                     enabled: slot.present

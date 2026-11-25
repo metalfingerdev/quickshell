@@ -32,7 +32,7 @@ ClippingRectangle {
         }
 
         Label {
-            anchors { left: parent.left; right: parent.right; bottom: parent.bottom; margins: 10; bottomMargin: 7 }
+            anchors { left: parent.left; right: parent.right; bottom: parent.bottom; margins: Config.spaceM; bottomMargin: Config.spaceS }
             text: Wallpaper.baseName(root.path)
             elide: Text.ElideMiddle
             font.pixelSize: Config.small
@@ -48,7 +48,7 @@ ClippingRectangle {
     }
     Rectangle {
         visible: root.applied
-        anchors { right: parent.right; top: parent.top; margins: 8 }
+        anchors { right: parent.right; top: parent.top; margins: Config.spaceS }
         width: 24; height: 24; radius: 12
         color: Config.primary
 
@@ -64,7 +64,7 @@ ClippingRectangle {
     // would make (its Auto; the one in use, the option picked for it), as the Colours view's circles do.
     Loader {
         active: Config.source === "wallpaper" && root.path !== ""
-        anchors { left: parent.left; top: parent.top; margins: 8 }
+        anchors { left: parent.left; top: parent.top; margins: Config.spaceS }
         width: 26
         height: 26
 

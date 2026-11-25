@@ -16,7 +16,7 @@ Item {
 
     RowLayout {
         anchors.fill: parent
-        spacing: 10
+        spacing: Config.spaceM
 
         BackButton {
             visible: root.showBack
@@ -57,7 +57,7 @@ Item {
         RowLayout {
             id: tools
             Layout.alignment: Qt.AlignVCenter
-            spacing: 8
+            spacing: Config.spaceS
         }
     }
 }

@@ -74,8 +74,8 @@ ClippingRectangle {
         }
 
         Column {
-            anchors { left: thumb.right; leftMargin: 12; right: compactControls.left; rightMargin: 8; verticalCenter: parent.verticalCenter }
-            spacing: 2
+            anchors { left: thumb.right; leftMargin: Config.spaceM; right: compactControls.left; rightMargin: Config.spaceS; verticalCenter: parent.verticalCenter }
+            spacing: Config.spaceHair
 
             Label {
                 width: parent.width
@@ -100,8 +100,8 @@ ClippingRectangle {
 
         Row {
             id: compactControls
-            anchors { right: parent.right; rightMargin: 12; verticalCenter: parent.verticalCenter }
-            spacing: 2
+            anchors { right: parent.right; rightMargin: Config.spaceM; verticalCenter: parent.verticalCenter }
+            spacing: Config.spaceHair
 
             Pill { kind: "text"; icon: "skip_previous"; iconSize: 22; enabled: root.player?.canGoPrevious ?? false; onClicked: Players.previous() }
             Pill {
@@ -117,7 +117,7 @@ ClippingRectangle {
 
         Progress {
             visible: root.hasLength
-            anchors { left: thumb.right; leftMargin: 12; right: compactControls.left; rightMargin: 8; bottom: parent.bottom; bottomMargin: 9 }
+            anchors { left: thumb.right; leftMargin: Config.spaceM; right: compactControls.left; rightMargin: Config.spaceS; bottom: parent.bottom; bottomMargin: Config.spaceS }
             thickness: 3
             fraction: root.hasLength ? Players.position / Players.length : 0
         }
@@ -125,11 +125,11 @@ ClippingRectangle {
 
     Item {
         visible: !root.compact
-        anchors { fill: parent; margins: 16 }
+        anchors { fill: parent; margins: Config.spaceL }
 
         Row {
             id: output
-            spacing: 6
+            spacing: Config.spaceS
             width: parent.width - play.width - 12
 
             Icon {
@@ -150,8 +150,8 @@ ClippingRectangle {
 
         Column {
             id: words
-            anchors { left: parent.left; right: play.left; rightMargin: 12; top: output.bottom; topMargin: 12 }
-            spacing: 2
+            anchors { left: parent.left; right: play.left; rightMargin: Config.spaceM; top: output.bottom; topMargin: Config.spaceM }
+            spacing: Config.spaceHair
 
             Label {
                 width: parent.width
@@ -186,7 +186,7 @@ ClippingRectangle {
 
         Row {
             anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
-            spacing: 6
+            spacing: Config.spaceS
 
             Pill {
                 id: prev

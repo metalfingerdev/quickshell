@@ -28,10 +28,10 @@ Rectangle {
         property real fraction: -1
         property color tone: Config.primary
         width: (column.width - 3 * 12) / 4
-        spacing: 6
+        spacing: Config.spaceS
 
         Row {
-            spacing: 6
+            spacing: Config.spaceS
 
             Icon {
                 anchors.verticalCenter: parent.verticalCenter
@@ -59,7 +59,7 @@ Rectangle {
                 height: parent.height
                 radius: 2
                 color: meter.tone
-                Behavior on width { NumberAnimation { duration: 400; easing.type: Easing.OutCubic } }
+                Behavior on width { NumberAnimation { duration: Config.motionMs; easing.type: Easing.OutCubic } }
             }
         }
     }
@@ -69,7 +69,7 @@ Rectangle {
         x: 16
         y: 12
         width: parent.width - 32
-        spacing: 12
+        spacing: Config.spaceM
 
         // the weather on the left (its sky is the icon; the place shows when there's room), what's
         // next on the right, cut short before it reaches the weather; the event opens the calendar
@@ -82,7 +82,7 @@ Rectangle {
                 id: sky
                 visible: root.weather
                 anchors.verticalCenter: parent.verticalCenter
-                spacing: 8
+                spacing: Config.spaceS
 
                 Icon {
                     anchors.verticalCenter: parent.verticalCenter
@@ -109,7 +109,7 @@ Rectangle {
                 id: next
                 visible: root.event
                 anchors { right: parent.right; verticalCenter: parent.verticalCenter }
-                spacing: 6
+                spacing: Config.spaceS
 
                 Icon {
                     anchors.verticalCenter: parent.verticalCenter
@@ -134,7 +134,7 @@ Rectangle {
 
         Row {
             width: parent.width
-            spacing: 12
+            spacing: Config.spaceM
 
             Meter { icon: "developer_board"; value: Math.round(SysStats.cpu * 100) + "%"; fraction: SysStats.cpu }
             Meter { icon: "memory"; value: SysStats.memGB.toFixed(1) + " GB"; fraction: SysStats.mem }

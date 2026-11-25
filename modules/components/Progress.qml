@@ -34,7 +34,7 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
         radius: height / 2
         color: Config.high
-        Behavior on height { NumberAnimation { duration: 100 } }
+        Behavior on height { NumberAnimation { duration: Config.durationFast } }
 
         Rectangle {
             width: track.width * root.shownFraction

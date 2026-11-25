@@ -43,7 +43,7 @@ FocusScope {
         color: Config.state(Config.high, Config.text, area.containsMouse && root.readOnly, false)
         border.width: field.activeFocus && !root.readOnly ? 2 : 0
         border.color: Config.primary
-        Behavior on color { ColorAnimation { duration: 120 } }
+        Behavior on color { ColorAnimation { duration: Config.durationFast } }
     }
 
     MouseArea {
@@ -73,7 +73,7 @@ FocusScope {
 
     TextInput {
         id: field
-        anchors { left: badge.right; leftMargin: 12; right: side.left; rightMargin: 10; top: parent.top; bottom: parent.bottom }
+        anchors { left: badge.right; leftMargin: Config.spaceM; right: side.left; rightMargin: Config.spaceM; top: parent.top; bottom: parent.bottom }
         focus: true
         verticalAlignment: TextInput.AlignVCenter
         readOnly: root.readOnly
@@ -127,7 +127,7 @@ FocusScope {
 
     Row {
         id: side
-        anchors { right: parent.right; rightMargin: 8; verticalCenter: parent.verticalCenter }
-        spacing: 6
+        anchors { right: parent.right; rightMargin: Config.spaceS; verticalCenter: parent.verticalCenter }
+        spacing: Config.spaceS
     }
 }

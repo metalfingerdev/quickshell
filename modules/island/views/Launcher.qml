@@ -353,10 +353,10 @@ Item {
             height: grid.cellHeight
 
             Rectangle {
-                anchors { fill: parent; margins: 3 }
+                anchors { fill: parent; margins: Config.spaceXs }
                 radius: Config.innerRadius
                 color: cell.current ? Config.secondary : cellArea.containsMouse ? Config.high : "transparent"
-                Behavior on color { ColorAnimation { duration: 100 } }
+                Behavior on color { ColorAnimation { duration: Config.durationFast } }
             }
             // a kaomoji is long: it shrinks to its cell, and the line below shows it whole
             Text {
@@ -389,7 +389,7 @@ Item {
         visible: grid.visible && grid.current !== null
         x: 32
         y: grid.y + grid.height + 10
-        spacing: 12
+        spacing: Config.spaceM
 
         Text {
             anchors.verticalCenter: parent.verticalCenter
@@ -411,7 +411,7 @@ Item {
         y: bar.y + bar.height + 12
         width: parent.width - 40
         height: Math.min(root.results.length, root.maxRows) * (root.rowH + spacing)
-        spacing: 2
+        spacing: Config.spaceHair
         clip: true
         boundsBehavior: Flickable.StopAtBounds
         model: root.emojiMode ? [] : root.results
@@ -426,7 +426,7 @@ Item {
             height: root.rowH
             radius: Config.innerRadius
             color: current ? Config.secondary : "transparent"
-            Behavior on color { ColorAnimation { duration: 100 } }
+            Behavior on color { ColorAnimation { duration: Config.durationFast } }
 
             Item {
                 id: lead
@@ -473,8 +473,8 @@ Item {
             }
 
             Column {
-                anchors { left: lead.right; leftMargin: 14; right: parent.right; rightMargin: 14; verticalCenter: parent.verticalCenter }
-                spacing: 2
+                anchors { left: lead.right; leftMargin: Config.spaceL; right: parent.right; rightMargin: Config.spaceL; verticalCenter: parent.verticalCenter }
+                spacing: Config.spaceHair
 
                 Label {
                     width: parent.width

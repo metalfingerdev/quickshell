@@ -265,6 +265,7 @@ QtObject {
 
     // Spacing, on a 4 px grid: margins, padding and gaps take one of these (modules/tests/lint-views.js
     // flags a literal off the scale). Radii and font sizes have their own tokens above.
+    readonly property int spaceHair: 2                    // a hairline gap between tightly packed things
     readonly property int spaceXs: 4
     readonly property int spaceS: 8
     readonly property int spaceM: 12
@@ -275,6 +276,8 @@ QtObject {
     // fade in durationFast, a control changing size or position in durationMedium.
     readonly property int durationFast: 120
     readonly property int durationMedium: 200
+    readonly property int durationPulse: 700     // one half of a looping pulse (recording dot, working indicator)
+    readonly property int durationSweep: 1200    // a looping sweep across a bar
 
     // the "Dark theme" tile: the dark palette to come back to from a light one
     property string lastDark: "teal"

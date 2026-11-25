@@ -24,13 +24,13 @@ Item {
         height: 40
 
         Label {
-            anchors { left: parent.left; leftMargin: 4; verticalCenter: parent.verticalCenter }
+            anchors { left: parent.left; leftMargin: Config.spaceXs; verticalCenter: parent.verticalCenter }
             text: line.text
             font.pixelSize: Config.body + 1
         }
         Toggle {
             id: toggle
-            anchors { right: parent.right; rightMargin: 4; verticalCenter: parent.verticalCenter }
+            anchors { right: parent.right; rightMargin: Config.spaceXs; verticalCenter: parent.verticalCenter }
             onToggled: on => line.toggled(on)
         }
     }
@@ -58,12 +58,12 @@ Item {
         signal picked(int seconds)
 
         width: parent.width
-        spacing: 12
+        spacing: Config.spaceM
 
         Label {
             id: caption
             width: 104
-            leftPadding: 4
+            leftPadding: Config.spaceXs
             anchors.verticalCenter: parent.verticalCenter
             text: delay.text
             font.pixelSize: Config.body + 1
@@ -111,7 +111,7 @@ Item {
         x: root.pad
         y: root.pad
         width: root.colW
-        spacing: 14
+        spacing: Config.spaceL
 
         Header {
             width: parent.width
@@ -139,12 +139,12 @@ Item {
         Column {
             visible: root.section === "shell"
             width: parent.width
-            spacing: 14
+            spacing: Config.spaceL
 
-            SectionLabel { text: "Size"; topPadding: 6 }
+            SectionLabel { text: "Size"; topPadding: Config.spaceS }
             Row {
                 width: parent.width
-                spacing: 10
+                spacing: Config.spaceM
 
                 // applied on release (or per key step): the island rescales under the slider
                 Slider {
@@ -167,7 +167,7 @@ Item {
                 }
             }
 
-            SectionLabel { text: "Island"; topPadding: 4 }
+            SectionLabel { text: "Island"; topPadding: Config.spaceXs }
             Segmented {
                 width: parent.width
                 options: [{ key: "pill", label: "Floating" }, { key: "notch", label: "Notch" }]
@@ -188,7 +188,7 @@ Item {
                 onPicked: key => Config.handle = key
             }
 
-            SectionLabel { text: "Desktop"; topPadding: 4 }
+            SectionLabel { text: "Desktop"; topPadding: Config.spaceXs }
             Switch {
                 text: "\"Activate Linux\""
                 checked: Config.activateLinux
@@ -199,7 +199,7 @@ Item {
         Column {
             visible: root.section === "idle"
             width: parent.width
-            spacing: 14
+            spacing: Config.spaceL
 
             Switch {
                 text: "When there's no input"
@@ -234,9 +234,9 @@ Item {
         Column {
             visible: root.section === "lock"
             width: parent.width
-            spacing: 10
+            spacing: Config.spaceM
 
-            SectionLabel { text: "Pictures"; topPadding: 6 }
+            SectionLabel { text: "Pictures"; topPadding: Config.spaceS }
             PathField {
                 setting: "image"
                 icon: Config.symbol.wallpaper
@@ -265,14 +265,14 @@ Item {
             Label {
                 visible: root.pathError !== ""
                 width: parent.width
-                leftPadding: 4
+                leftPadding: Config.spaceXs
                 elide: Text.ElideMiddle
                 text: root.pathError
                 color: Config.bad
                 font.pixelSize: Config.small
             }
 
-            SectionLabel { text: "Who"; topPadding: 6 }
+            SectionLabel { text: "Who"; topPadding: Config.spaceS }
             Field {
                 text: LockConfig.name
                 icon: "badge"

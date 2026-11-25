@@ -39,7 +39,7 @@ Item {
         x: root.pad
         y: root.pad
         width: root.contentW
-        spacing: 16
+        spacing: Config.spaceL
 
         Header {
             width: parent.width
@@ -122,9 +122,9 @@ Item {
         Column {
             visible: !root.any
             width: parent.width
-            topPadding: 24
-            bottomPadding: 24
-            spacing: 10
+            topPadding: Config.spaceXl
+            bottomPadding: Config.spaceXl
+            spacing: Config.spaceM
 
             Icon {
                 anchors.horizontalCenter: parent.horizontalCenter

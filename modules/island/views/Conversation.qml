@@ -78,8 +78,8 @@ Item {
     // ---- the peek ----
     Row {
         visible: root.peek
-        anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter; leftMargin: 20; rightMargin: 20 }
-        spacing: 14
+        anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter; leftMargin: Config.spaceXl; rightMargin: Config.spaceXl }
+        spacing: Config.spaceL
 
         Rectangle {
             anchors.verticalCenter: parent.verticalCenter
@@ -98,7 +98,7 @@ Item {
             id: peekText
             anchors.verticalCenter: parent.verticalCenter
             width: parent.width - 58
-            spacing: 2
+            spacing: Config.spaceHair
 
             Label {
                 width: parent.width
@@ -125,7 +125,7 @@ Item {
         x: root.pad
         y: root.pad
         width: parent.width - 2 * root.pad
-        spacing: 12
+        spacing: Config.spaceM
 
         Header {
             width: parent.width
@@ -146,7 +146,7 @@ Item {
         // which model, and what it may do: read the web first (SearXNG), and think before answering
         Flow {
             width: parent.width
-            spacing: 8
+            spacing: Config.spaceS
 
             Repeater {
                 // one model is no choice: its chip would look like a button that does nothing
@@ -176,8 +176,8 @@ Item {
         Label {
             visible: Agent.messages.count === 0
             width: parent.width
-            topPadding: 8
-            bottomPadding: 8
+            topPadding: Config.spaceS
+            bottomPadding: Config.spaceS
             wrapMode: Text.Wrap
             text: "Ask anything. The model runs on this computer: nothing leaves it unless Internet is on, "
                 + "when it may search the web and read pages. It can also look up this computer and open apps. "
@@ -190,7 +190,7 @@ Item {
             visible: Agent.messages.count > 0
             width: parent.width
             height: Math.min(contentHeight, 440)
-            spacing: 14
+            spacing: Config.spaceL
             clip: true
             boundsBehavior: Flickable.StopAtBounds
             model: Agent.messages
@@ -246,14 +246,14 @@ Item {
                     id: answer
                     visible: !msg.mine
                     width: parent.width
-                    spacing: 8
+                    spacing: Config.spaceS
 
                     // The thinking as the model wrote it, folded to its latest words while it goes on; a
                     // click opens all of it. Laid out only when open: it can run to thousands of words.
                     Column {
                         visible: msg.thinking !== ""
                         width: parent.width
-                        spacing: 6
+                        spacing: Config.spaceS
 
                         Item {
                             width: parent.width
@@ -261,7 +261,7 @@ Item {
 
                             Row {
                                 anchors.verticalCenter: parent.verticalCenter
-                                spacing: 4
+                                spacing: Config.spaceXs
 
                                 Icon {
                                     anchors.verticalCenter: parent.verticalCenter
@@ -282,7 +282,7 @@ Item {
                         Label {
                             visible: !msg.open && msg.thinkingNow
                             width: parent.width
-                            leftPadding: 22
+                            leftPadding: Config.spaceXl
                             text: msg.thinking.slice(-160).replace(/\s+/g, " ")
                             elide: Text.ElideLeft
                             font.italic: true
@@ -320,7 +320,7 @@ Item {
                         Row {
                             id: tool
                             required property var modelData
-                            spacing: 10
+                            spacing: Config.spaceM
 
                             Rectangle {
                                 id: dot
@@ -333,8 +333,8 @@ Item {
                                     running: tool.modelData.status === "running"
                                     loops: Animation.Infinite
                                     onRunningChanged: if (!running) dot.opacity = 1
-                                    NumberAnimation { to: 0.2; duration: 420 }
-                                    NumberAnimation { to: 1; duration: 420 }
+                                    NumberAnimation { to: 0.2; duration: Config.durationMedium * 2 }
+                                    NumberAnimation { to: 1; duration: Config.durationMedium * 2 }
                                 }
                             }
                             Label {
@@ -380,7 +380,7 @@ Item {
                     Flow {
                         visible: !msg.streaming && msg.content !== ""
                         width: parent.width
-                        spacing: 6
+                        spacing: Config.spaceS
 
                         Repeater {
                             model: msg.links
@@ -417,7 +417,7 @@ Item {
                 x: 16
                 y: 14
                 width: parent.width - 32
-                spacing: 10
+                spacing: Config.spaceM
 
                 Label {
                     width: parent.width
@@ -427,7 +427,7 @@ Item {
                     text: root.question(Agent.asking)
                 }
                 Row {
-                    spacing: 8
+                    spacing: Config.spaceS
 
                     Chip {
                         icon: "check"
@@ -442,7 +442,7 @@ Item {
 
         Row {
             width: parent.width
-            spacing: 10
+            spacing: Config.spaceM
 
             SearchBar {
                 id: field

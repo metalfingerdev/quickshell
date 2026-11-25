@@ -11,7 +11,7 @@ Row {
     property int barWidth: 3
     property color color: Config.text
 
-    spacing: 2
+    spacing: Config.spaceHair
     height: 14
 
     Repeater {

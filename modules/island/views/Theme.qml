@@ -58,7 +58,7 @@ Item {
         x: root.pad
         y: root.pad
         width: root.contentW
-        spacing: 14
+        spacing: Config.spaceL
 
         Header {
             width: parent.width
@@ -80,7 +80,7 @@ Item {
             Row {
                 id: swatches
                 anchors.verticalCenter: parent.verticalCenter
-                spacing: 10
+                spacing: Config.spaceM
 
                 Repeater {
                     model: Config.names
@@ -105,7 +105,7 @@ Item {
             }
 
             Segmented {
-                anchors { left: swatches.right; leftMargin: 24; right: parent.right; verticalCenter: parent.verticalCenter }
+                anchors { left: swatches.right; leftMargin: Config.spaceXl; right: parent.right; verticalCenter: parent.verticalCenter }
                 height: root.swatch
                 options: [{ key: "dark", label: "Dark", icon: "dark_mode" }, { key: "light", label: "Light", icon: "light_mode" }]
                 current: Config.dark ? "dark" : "light"
@@ -159,7 +159,7 @@ Item {
 
         Label {
             visible: Wallpaper.files.length === 0
-            leftPadding: 4
+            leftPadding: Config.spaceXs
             text: "No images in " + Wallpaper.dir
             color: Config.dim
         }

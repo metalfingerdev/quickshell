@@ -39,7 +39,7 @@ Rectangle {
                 bottomRightRadius: index === root.options.length - 1 ? root.radius : 0
                 color: Config.state(chosen ? Config.secondary : Qt.rgba(Config.surface.r, Config.surface.g, Config.surface.b, 0),
                                     Config.text, area.containsMouse, area.pressed || ring)
-                Behavior on color { ColorAnimation { duration: 140 } }
+                Behavior on color { ColorAnimation { duration: Config.durationFast } }
 
                 activeFocusOnTab: true
 
@@ -52,7 +52,7 @@ Rectangle {
 
                 Row {
                     anchors.centerIn: parent
-                    spacing: 6
+                    spacing: Config.spaceS
 
                     Icon {
                         readonly property string glyph: segment.chosen && root.showCheck ? "check" : segment.modelData.icon ?? ""
@@ -78,7 +78,7 @@ Rectangle {
 
                 // inside the segment: it touches its neighbours
                 Rectangle {
-                    anchors { fill: parent; margins: 4 }
+                    anchors { fill: parent; margins: Config.spaceXs }
                     visible: segment.ring
                     topLeftRadius: Math.max(0, segment.topLeftRadius - 4)
                     bottomLeftRadius: Math.max(0, segment.bottomLeftRadius - 4)
@@ -88,7 +88,7 @@ Rectangle {
                     border.width: 3
                     border.color: Config.primary
                 }
-                KeyBadge { key: segment.shortcut; anchors { rightMargin: 8; topMargin: -8 } }
+                KeyBadge { key: segment.shortcut; anchors { rightMargin: Config.spaceS; topMargin: -8 } }
             }
         }
     }

@@ -31,12 +31,12 @@ Rectangle {
     color: bare ? Qt.rgba(ink.r, ink.g, ink.b, area.pressed ? 0.14 : area.containsMouse || keyboardSelected ? 0.10 : 0)
                 : Config.state(filled ? Config.primary : Config.container, ink, area.containsMouse || keyboardSelected, area.pressed)
     opacity: enabled ? 1 : 0.38
-    Behavior on color { ColorAnimation { duration: 120 } }
+    Behavior on color { ColorAnimation { duration: Config.durationFast } }
 
     Row {
         id: content
         anchors.centerIn: parent
-        spacing: 8
+        spacing: Config.spaceS
 
         Icon {
             visible: root.icon !== ""

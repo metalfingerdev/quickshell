@@ -7,14 +7,14 @@ Flow {
     property var keys: []
 
     visible: Config.focusVisible && keys.length > 0
-    spacing: 16
+    spacing: Config.spaceL
 
     Repeater {
         model: root.keys
 
         Row {
             required property var modelData
-            spacing: 6
+            spacing: Config.spaceS
 
             Rectangle {
                 anchors.verticalCenter: parent.verticalCenter

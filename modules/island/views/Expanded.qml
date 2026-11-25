@@ -25,7 +25,7 @@ Item {
         x: root.pad
         y: root.pad
         width: parent.width - 2 * root.pad
-        spacing: 8
+        spacing: Config.spaceS
 
         Item {
             width: parent.width

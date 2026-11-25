@@ -5,7 +5,7 @@ Rectangle {
 
     property bool current: false
     property color tint: "transparent"
-    property int padding: 14
+    property int padding: Config.spaceL
     property string shortcut: ""
     property bool keyboardSelected: activeFocus && Config.focusVisible
     readonly property bool hovered: area.containsMouse
@@ -19,7 +19,7 @@ Rectangle {
     color: Config.state(tint.a > 0 ? tint : Config.container, Config.text, area.containsMouse, area.pressed || keyboardSelected)
     border.width: current ? 2 : 0
     border.color: Config.primary
-    Behavior on color { ColorAnimation { duration: 120 } }
+    Behavior on color { ColorAnimation { duration: Config.durationFast } }
 
     ClickArea {
         id: area

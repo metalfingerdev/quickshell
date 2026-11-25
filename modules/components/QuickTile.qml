@@ -32,7 +32,7 @@ Rectangle {
                         body.containsMouse && !arrowArea.containsMouse && !circleArea.containsMouse,
                         body.pressed || keyboardSelected)
     opacity: enabled ? 1 : 0.38
-    Behavior on color { ColorAnimation { duration: 160 } }
+    Behavior on color { ColorAnimation { duration: Config.durationFast } }
 
     ClickArea {
         id: body
@@ -47,7 +47,7 @@ Rectangle {
         height: width
         radius: width / 2
         color: Config.state(root.on ? Config.primaryDeep : Config.high, root.ink, circleArea.containsMouse, circleArea.pressed)
-        Behavior on color { ColorAnimation { duration: 160 } }
+        Behavior on color { ColorAnimation { duration: Config.durationFast } }
 
         Icon {
             anchors.centerIn: parent
@@ -65,10 +65,10 @@ Rectangle {
     }
 
     Column {
-        anchors { left: circle.right; leftMargin: 12; verticalCenter: parent.verticalCenter
+        anchors { left: circle.right; leftMargin: Config.spaceM; verticalCenter: parent.verticalCenter
                   right: root.showSwitch ? knob.left : root.more ? arrow.left : parent.right
                   rightMargin: root.showSwitch || root.more ? 8 : 18 }
-        spacing: 2
+        spacing: Config.spaceHair
 
         Label {
             width: parent.width
@@ -91,12 +91,12 @@ Rectangle {
     Rectangle {
         id: arrow
         visible: root.more
-        anchors { right: parent.right; rightMargin: 12; verticalCenter: parent.verticalCenter }
+        anchors { right: parent.right; rightMargin: Config.spaceM; verticalCenter: parent.verticalCenter }
         width: root.inner
         height: width
         radius: width / 2
         color: Config.state(root.on ? Config.primaryDeep : Config.high, root.ink, arrowArea.containsMouse, arrowArea.pressed)
-        Behavior on color { ColorAnimation { duration: 160 } }
+        Behavior on color { ColorAnimation { duration: Config.durationFast } }
 
         Icon {
             anchors.centerIn: parent
@@ -115,7 +115,7 @@ Rectangle {
     Rectangle {
         id: knob
         visible: root.showSwitch
-        anchors { right: parent.right; rightMargin: 20; verticalCenter: parent.verticalCenter }
+        anchors { right: parent.right; rightMargin: Config.spaceXl; verticalCenter: parent.verticalCenter }
         width: 52
         height: 32
         radius: 16
@@ -130,7 +130,7 @@ Rectangle {
             anchors.verticalCenter: parent.verticalCenter
             x: root.on ? parent.width - width - 4 : 8
             color: root.on ? Config.primary : Config.outline
-            Behavior on x { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
+            Behavior on x { NumberAnimation { duration: Config.durationFast; easing.type: Easing.OutCubic } }
         }
     }
 

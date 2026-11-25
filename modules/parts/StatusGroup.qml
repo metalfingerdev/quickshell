@@ -89,7 +89,7 @@ Rectangle {
     implicitHeight: segmentHeight + 2 * pad
     radius: height / 2
     color: Config.state(Config.container, Config.text, back.containsMouse, back.pressed)
-    Behavior on color { ColorAnimation { duration: 120 } }
+    Behavior on color { ColorAnimation { duration: Config.durationFast } }
 
     // the group's own pill: under the buttons, so it only sees what misses them
     ClickArea {
@@ -101,7 +101,7 @@ Rectangle {
         id: row
         x: root.pad
         y: root.pad
-        spacing: 2
+        spacing: Config.spaceHair
 
         Pill {
             implicitHeight: root.segmentHeight
@@ -130,7 +130,7 @@ Rectangle {
                 topRightRadius: last ? height / 2 : 6
                 bottomRightRadius: last ? height / 2 : 6
                 color: Config.state(Config.high, Config.text, area.containsMouse, area.pressed || ring)
-                Behavior on color { ColorAnimation { duration: 120 } }
+                Behavior on color { ColorAnimation { duration: Config.durationFast } }
 
                 activeFocusOnTab: true
                 function activate() { root.clicked(root.view(modelData), -1) }
@@ -138,7 +138,7 @@ Rectangle {
                 Row {
                     id: content
                     anchors.centerIn: parent
-                    spacing: 6
+                    spacing: Config.spaceS
 
                     Icon {
                         anchors.verticalCenter: parent.verticalCenter
@@ -165,7 +165,7 @@ Rectangle {
 
                 // inside the segment: it nearly touches its neighbours
                 Rectangle {
-                    anchors { fill: parent; margins: 3 }
+                    anchors { fill: parent; margins: Config.spaceXs }
                     visible: seg.ring
                     topLeftRadius: Math.max(0, seg.topLeftRadius - 3)
                     bottomLeftRadius: Math.max(0, seg.bottomLeftRadius - 3)

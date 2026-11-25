@@ -57,7 +57,7 @@ Item {
         x: root.pad
         y: root.pad
         width: parent.width - 2 * root.pad
-        spacing: 16
+        spacing: Config.spaceL
 
         Header {
             width: parent.width
@@ -68,7 +68,7 @@ Item {
 
         Row {
             width: parent.width
-            spacing: 12
+            spacing: Config.spaceM
 
             QuickTile {
                 width: Net.ethernet ? (parent.width - 12) / 2 : parent.width
@@ -99,8 +99,8 @@ Item {
         Label {
             visible: text !== ""
             width: parent.width
-            topPadding: 8
-            bottomPadding: 8
+            topPadding: Config.spaceS
+            bottomPadding: Config.spaceS
             horizontalAlignment: Text.AlignHCenter
             text: !Net.available ? "NetworkManager isn't running"
                 : Net.wifi === null ? "No Wi-Fi device"
@@ -119,7 +119,7 @@ Item {
                 id: grid
                 width: list.innerWidth
                 columns: 2
-                spacing: 12
+                spacing: Config.spaceM
 
                 Repeater {
                     // ScriptModel: an update (a scan, a signal change) moves, adds and removes tiles
@@ -158,10 +158,10 @@ Item {
                 id: panel
                 x: 16; y: 16
                 width: parent.width - 32
-                spacing: 12
+                spacing: Config.spaceM
 
                 Label {
-                    leftPadding: 4
+                    leftPadding: Config.spaceXs
                     text: !root.selected ? "" : root.asking ? "Connect to " + root.selected.name : root.selected.name
                     font.pixelSize: Config.large
                     font.weight: Font.Medium
@@ -170,7 +170,7 @@ Item {
                 Row {
                     visible: root.asking
                     width: parent.width
-                    spacing: 10
+                    spacing: Config.spaceM
 
                     Rectangle {
                         width: parent.width - join.width - cancel.width - 2 * parent.spacing
@@ -182,7 +182,7 @@ Item {
 
                         TextInput {
                             id: password
-                            anchors { fill: parent; leftMargin: 20; rightMargin: 20 }
+                            anchors { fill: parent; leftMargin: Config.spaceXl; rightMargin: Config.spaceXl }
                             verticalAlignment: TextInput.AlignVCenter
                             echoMode: TextInput.Password
                             enabled: !root.connecting
@@ -228,7 +228,7 @@ Item {
 
                 Row {
                     visible: root.selected !== null && !root.asking
-                    spacing: 10
+                    spacing: Config.spaceM
 
                     Pill {
                         implicitHeight: 52
@@ -257,7 +257,7 @@ Item {
         Label {
             visible: Net.lastError !== ""
             width: parent.width
-            leftPadding: 12
+            leftPadding: Config.spaceM
             text: Net.lastError
             elide: Text.ElideRight
             color: Config.bad

@@ -34,7 +34,7 @@ Item {
         x: root.pad
         y: root.pad
         width: parent.width - 2 * root.pad
-        spacing: 16
+        spacing: Config.spaceL
 
         Header {
             width: parent.width
@@ -70,8 +70,8 @@ Item {
         Label {
             visible: text !== ""
             width: parent.width
-            topPadding: 8
-            bottomPadding: 8
+            topPadding: Config.spaceS
+            bottomPadding: Config.spaceS
             horizontalAlignment: Text.AlignHCenter
             text: !Bluez.available ? "No Bluetooth adapter"
                 : !Bluez.enabled ? "Turn Bluetooth on to see devices"
@@ -89,7 +89,7 @@ Item {
                 id: grid
                 width: list.innerWidth
                 columns: 2
-                spacing: 12
+                spacing: Config.spaceM
 
                 Repeater {
                     model: Bluez.enabled ? Bluez.devices : []

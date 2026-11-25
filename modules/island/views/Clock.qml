@@ -30,7 +30,7 @@ Item {
         id: column
         x: root.pad; y: root.pad
         width: parent.width - 2 * root.pad
-        spacing: 16
+        spacing: Config.spaceL
 
         Header {
             width: parent.width
@@ -44,15 +44,15 @@ Item {
 
         Row {
             width: parent.width
-            spacing: 24
+            spacing: Config.spaceXl
 
             Column {
                 width: parent.width - card.width - parent.spacing
                 anchors.verticalCenter: card.verticalCenter
-                spacing: 8
+                spacing: Config.spaceS
 
                 Row {
-                    spacing: 8
+                    spacing: Config.spaceS
 
                     Label {
                         id: time
@@ -90,10 +90,10 @@ Item {
                 Column {
                     id: month
                     x: 16; y: 16
-                    spacing: 8
+                    spacing: Config.spaceS
 
                     Label {
-                        leftPadding: 8
+                        leftPadding: Config.spaceS
                         text: Qt.formatDateTime(root.shown, "MMMM yyyy")
                         font.pixelSize: Config.large
                         font.weight: Font.Medium

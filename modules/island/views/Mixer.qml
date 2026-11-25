@@ -31,7 +31,7 @@ Item {
             font.weight: Font.Medium
         }
         Label {
-            anchors { left: heading.right; leftMargin: 10; right: parent.right; baseline: heading.baseline }
+            anchors { left: heading.right; leftMargin: Config.spaceM; right: parent.right; baseline: heading.baseline }
             visible: text !== ""
             text: parent.detail
             elide: Text.ElideRight
@@ -44,7 +44,7 @@ Item {
         x: root.pad
         y: root.pad
         width: parent.width - 2 * root.pad
-        spacing: 14
+        spacing: Config.spaceL
 
         Header {
             width: parent.width
@@ -81,8 +81,8 @@ Item {
         Label {
             visible: Audio.streams.length === 0
             width: parent.width
-            topPadding: 4
-            bottomPadding: 8
+            topPadding: Config.spaceXs
+            bottomPadding: Config.spaceS
             horizontalAlignment: Text.AlignHCenter
             text: "Nothing is playing sound right now"
             color: Config.dim
@@ -138,8 +138,8 @@ Item {
 
                     Column {
                         id: info
-                        anchors { left: lead.right; leftMargin: 14; right: parent.right; verticalCenter: parent.verticalCenter }
-                        spacing: 6
+                        anchors { left: lead.right; leftMargin: Config.spaceL; right: parent.right; verticalCenter: parent.verticalCenter }
+                        spacing: Config.spaceS
 
                         Item {
                             width: parent.width
@@ -155,7 +155,7 @@ Item {
                                 font.weight: Font.Medium
                             }
                             Label {
-                                anchors { left: name.right; leftMargin: 8; right: parent.right; baseline: name.baseline }
+                                anchors { left: name.right; leftMargin: Config.spaceS; right: parent.right; baseline: name.baseline }
                                 visible: text !== ""
                                 text: Audio.mediaName(app.modelData)
                                 elide: Text.ElideRight

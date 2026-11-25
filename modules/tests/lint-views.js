@@ -6,7 +6,7 @@ const fs = require("fs"), path = require("path")
 const root = path.join(__dirname, "..")
 const dirs = ["island/views", "parts", "components"]
 
-const SCALE = [0, 4, 8, 12, 16, 24]           // Config.spaceXs..spaceXl (and 0)
+const SCALE = [0, 2, 4, 8, 12, 16, 24]        // Config.spaceHair..spaceXl (and 0)
 const FAIL_ON = new Set([])                    // rules that fail the run; the rest only warn
 
 // Panels and the files that are on purpose different. Rule names: hex, duration, spacing, easing,

@@ -19,7 +19,7 @@ Item {
     implicitWidth: 48
     implicitHeight: 48
     scale: hovered && !area.pressed ? 1.08 : 1
-    Behavior on scale { NumberAnimation { duration: 120; easing.type: Easing.OutCubic } }
+    Behavior on scale { NumberAnimation { duration: Config.durationFast; easing.type: Easing.OutCubic } }
 
     ClippingRectangle {
         anchors { fill: parent; margins: root.chosen ? 5 : 0 }

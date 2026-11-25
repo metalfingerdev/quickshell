@@ -22,12 +22,12 @@ Rectangle {
                     : Config.layer(area.containsMouse, area.pressed)
     border.width: selected ? 0 : 1
     border.color: Config.outline
-    Behavior on color { ColorAnimation { duration: 140 } }
+    Behavior on color { ColorAnimation { duration: Config.durationFast } }
 
     Row {
         id: row
         anchors.centerIn: parent
-        spacing: 6
+        spacing: Config.spaceS
 
         Icon {
             visible: root.icon !== ""

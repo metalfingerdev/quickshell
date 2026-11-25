@@ -10,7 +10,7 @@ import qs.modules.services
 Item {
     id: root
 
-    readonly property int margin: 12
+    readonly property int margin: Config.spaceM
     readonly property int control: 40               // a button's height, as in StatusGroup
     readonly property int pad: 4                    // a capsule around its buttons, as in StatusGroup
     // Taken once: opening a view from here adds to the history while this one is still fading out,
@@ -53,7 +53,7 @@ Item {
             id: inner
             x: root.pad
             y: root.pad
-            spacing: 2
+            spacing: Config.spaceHair
         }
     }
 
@@ -68,7 +68,7 @@ Item {
     Row {
         id: row
         anchors.centerIn: parent
-        spacing: 10
+        spacing: Config.spaceM
 
 
         BackButton {
@@ -81,13 +81,13 @@ Item {
 
         Capsule {
             id: spaces
-            spacing: 4
+            spacing: Config.spaceXs
 
             WorkspaceButtons {
                 id: workspaces
                 anchors.verticalCenter: parent.verticalCenter
                 size: root.control
-                spacing: 4
+                spacing: Config.spaceXs
             }
             Tab { icon: Config.symbol.overview; shortcut: "w"; view: Engine.View.Workspaces }
         }

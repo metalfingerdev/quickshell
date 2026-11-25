@@ -18,7 +18,7 @@ Item {
         id: toast
         visible: !Engine.pinned
         anchors.centerIn: parent
-        spacing: 14
+        spacing: Config.spaceL
 
         Rectangle {
             anchors.verticalCenter: parent.verticalCenter
@@ -35,7 +35,7 @@ Item {
         }
         Column {
             anchors.verticalCenter: parent.verticalCenter
-            spacing: 2
+            spacing: Config.spaceHair
 
             Label {
                 text: Activities.lastLabel
@@ -58,7 +58,7 @@ Item {
         x: root.pad
         y: root.pad
         width: parent.width - 2 * root.pad
-        spacing: 12
+        spacing: Config.spaceM
 
         Header {
             width: parent.width

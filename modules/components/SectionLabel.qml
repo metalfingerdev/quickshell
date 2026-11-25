@@ -1,7 +1,7 @@
 import QtQuick
 
 Label {
-    leftPadding: 4
+    leftPadding: Config.spaceXs
     color: Config.primary
     font.weight: Font.DemiBold
 }

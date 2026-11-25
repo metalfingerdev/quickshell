@@ -63,7 +63,7 @@ Item {
         x: root.pad
         y: root.pad
         width: root.contentW
-        spacing: 14
+        spacing: Config.spaceL
 
         Header {
             width: parent.width
@@ -87,7 +87,7 @@ Item {
         Grid {
             visible: Config.source === "preset"
             columns: 4
-            spacing: 12
+            spacing: Config.spaceM
 
             Repeater {
                 model: Config.names
@@ -99,7 +99,7 @@ Item {
 
                     width: (column.width - 36) / 4
                     height: 112
-                    padding: 14
+                    padding: Config.spaceL
                     tint: p.surface
                     current: Config.name === modelData
                     // a hairline, so a palette as dark as the island still has an edge
@@ -153,12 +153,12 @@ Item {
 
             Row {
                 anchors.verticalCenter: parent.verticalCenter
-                spacing: 8
+                spacing: Config.spaceS
 
                 Label {
                     visible: Config.recentAccents.length > 0
                     anchors.verticalCenter: parent.verticalCenter
-                    rightPadding: 4
+                    rightPadding: Config.spaceXs
                     text: "Recent"
                     color: Config.dim
                 }
@@ -179,7 +179,7 @@ Item {
             Row {
                 visible: root.adjusted
                 anchors { right: parent.right; verticalCenter: parent.verticalCenter }
-                spacing: 8
+                spacing: Config.spaceS
 
                 Rectangle {
                     anchors.verticalCenter: parent.verticalCenter
@@ -212,7 +212,7 @@ Item {
         Row {
             visible: root.wallpaper
             width: parent.width
-            spacing: 16
+            spacing: Config.spaceL
 
             ClippingRectangle {
                 width: 176
@@ -230,7 +230,7 @@ Item {
             Flow {
                 anchors.verticalCenter: parent.verticalCenter
                 width: parent.width - 176 - parent.spacing
-                spacing: 14
+                spacing: Config.spaceL
 
                 Repeater {
                     model: Wallpaper.options
@@ -239,7 +239,7 @@ Item {
                         id: option
                         required property var modelData
                         required property int index
-                        spacing: 6
+                        spacing: Config.spaceS
 
                         PaletteDot {
                             anchors.horizontalCenter: parent.horizontalCenter
@@ -276,7 +276,7 @@ Item {
 
             visible: root.wallpaper
             width: parent.width
-            spacing: 12
+            spacing: Config.spaceM
 
             Level {
                 width: levels.each
@@ -300,7 +300,7 @@ Item {
             id: surfaceRow
             visible: root.generated
             width: parent.width
-            spacing: 16
+            spacing: Config.spaceL
 
             Label {
                 id: surfaceLabel
@@ -327,7 +327,7 @@ Item {
 
         Row {
             width: parent.width
-            spacing: 12
+            spacing: Config.spaceM
 
             Rectangle {
                 visible: root.accent
@@ -352,7 +352,7 @@ Item {
 
                 TextInput {
                     id: field
-                    anchors { left: badge.right; leftMargin: 12; right: parent.right; rightMargin: 20; top: parent.top; bottom: parent.bottom }
+                    anchors { left: badge.right; leftMargin: Config.spaceM; right: parent.right; rightMargin: Config.spaceXl; top: parent.top; bottom: parent.bottom }
                     verticalAlignment: TextInput.AlignVCenter
                     activeFocusOnTab: true
                     color: Config.text

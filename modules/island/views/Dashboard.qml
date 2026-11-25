@@ -167,11 +167,11 @@ Item {
         width: root.sixth
         height: root.rowH
         radius: on ? height / 2 : 18
-        Behavior on radius { NumberAnimation { duration: 340; easing.type: Easing.OutBack } }
+        Behavior on radius { Motion {} }
         scale: area.pressed ? 0.92 : 1
-        Behavior on scale { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
+        Behavior on scale { NumberAnimation { duration: Config.durationFast; easing.type: Easing.OutCubic } }
         color: Config.state(on ? Config.primary : Config.container, ink, area.containsMouse, area.pressed || keyboardSelected)
-        Behavior on color { ColorAnimation { duration: 160 } }
+        Behavior on color { ColorAnimation { duration: Config.durationFast } }
         opacity: enabled ? 1 : 0.38
 
         Icon {
@@ -201,7 +201,7 @@ Item {
         height: root.rowH
         split: true
         radius: on ? height / 2 : 22
-        Behavior on radius { NumberAnimation { duration: 340; easing.type: Easing.OutBack } }
+        Behavior on radius { Motion {} }
     }
 
     // One button of a connected group: its outer corners round, its inner ones nearly square, and
@@ -232,13 +232,13 @@ Item {
         Behavior on topRightRadius { Motion {} }
         Behavior on bottomRightRadius { Motion {} }
         scale: area.pressed ? 0.96 : 1
-        Behavior on scale { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
+        Behavior on scale { NumberAnimation { duration: Config.durationFast; easing.type: Easing.OutCubic } }
         color: Config.state(selected ? Config.primary : Config.container, ink, area.containsMouse, area.pressed || keyboardSelected)
-        Behavior on color { ColorAnimation { duration: 160 } }
+        Behavior on color { ColorAnimation { duration: Config.durationFast } }
 
         Row {
             anchors.centerIn: parent
-            spacing: 8
+            spacing: Config.spaceS
 
             Icon {
                 anchors.verticalCenter: parent.verticalCenter
@@ -267,7 +267,7 @@ Item {
         x: root.pad
         y: root.pad
         width: root.contentW
-        spacing: 14
+        spacing: Config.spaceL
 
         // the time large, as Android's shade opens with it
         Item {
@@ -280,7 +280,7 @@ Item {
                 onClicked: Engine.back()
             }
             Column {
-                anchors { left: back.right; leftMargin: 14; verticalCenter: parent.verticalCenter }
+                anchors { left: back.right; leftMargin: Config.spaceL; verticalCenter: parent.verticalCenter }
 
                 Text {
                     text: Qt.formatDateTime(clock.date, "HH:mm")
@@ -384,16 +384,16 @@ Item {
                 width: root.cw(2); height: root.ch(2)
                 radius: 28
                 scale: agentArea.pressed ? 0.97 : 1
-                Behavior on scale { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
+                Behavior on scale { NumberAnimation { duration: Config.durationFast; easing.type: Easing.OutCubic } }
                 color: Config.state(Config.secondary, ink, agentArea.containsMouse, agentArea.pressed || keyboardSelected)
 
                 Column {
                     x: 16; y: 14
                     width: parent.width - 32
-                    spacing: 6
+                    spacing: Config.spaceS
 
                     Row {
-                        spacing: 8
+                        spacing: Config.spaceS
 
                         Icon {
                             anchors.verticalCenter: parent.verticalCenter
@@ -425,18 +425,18 @@ Item {
                     }
                 }
                 Rectangle {
-                    anchors { left: parent.left; right: parent.right; bottom: parent.bottom; margins: 10 }
+                    anchors { left: parent.left; right: parent.right; bottom: parent.bottom; margins: Config.spaceM }
                     height: 38
                     radius: height / 2
                     color: Config.mix(Config.secondary, agentCard.ink, 0.12)
 
                     Label {
-                        anchors { left: parent.left; leftMargin: 14; verticalCenter: parent.verticalCenter }
+                        anchors { left: parent.left; leftMargin: Config.spaceL; verticalCenter: parent.verticalCenter }
                         text: "Ask anything"
                         color: Config.mix(agentCard.ink, Config.secondary, 0.35)
                     }
                     Icon {
-                        anchors { right: parent.right; rightMargin: 10; verticalCenter: parent.verticalCenter }
+                        anchors { right: parent.right; rightMargin: Config.spaceM; verticalCenter: parent.verticalCenter }
                         name: "arrow_upward"
                         size: 18
                         color: agentCard.ink
@@ -486,7 +486,7 @@ Item {
                 radius: 28
                 color: Config.container
                 scale: wallArea.pressed ? 0.97 : 1
-                Behavior on scale { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
+                Behavior on scale { NumberAnimation { duration: Config.durationFast; easing.type: Easing.OutCubic } }
 
                 CoverImage {
                     source: Wallpaper.current ? Wallpaper.fileUrl(Wallpaper.current) : ""
@@ -520,7 +520,7 @@ Item {
             height: 32
 
             Label {
-                anchors { left: parent.left; leftMargin: 4; right: more.left; rightMargin: 12; verticalCenter: parent.verticalCenter }
+                anchors { left: parent.left; leftMargin: Config.spaceXs; right: more.left; rightMargin: Config.spaceM; verticalCenter: parent.verticalCenter }
                 elide: Text.ElideRight
                 color: root.pointed ? Config.text : Config.dim
                 text: root.pointed ? root.pointed.caption : (() => {

@@ -1,4 +1,5 @@
 import QtQuick
+import qs.modules.components
 import qs.modules.parts
 
 Item {
@@ -6,7 +7,7 @@ Item {
     implicitHeight: 72
 
     BrightnessSlider {
-        anchors { fill: parent; margins: 10 }
+        anchors { fill: parent; margins: Config.spaceM }
         activeFocusOnTab: false
     }
 }

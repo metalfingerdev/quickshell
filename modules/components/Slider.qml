@@ -46,7 +46,7 @@ Item {
             height: parent.height
             radius: height / 2
             color: Config.primary
-            Behavior on width { enabled: !root.dragging; NumberAnimation { duration: 90 } }
+            Behavior on width { enabled: !root.dragging; NumberAnimation { duration: Config.durationFast } }
         }
 
         Icon {

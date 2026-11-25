@@ -22,7 +22,7 @@ Item {
         color: root.checked ? Config.primary : Config.high
         border.width: root.checked ? 0 : 2
         border.color: Config.outline
-        Behavior on color { ColorAnimation { duration: 140 } }
+        Behavior on color { ColorAnimation { duration: Config.durationFast } }
 
         FocusRing { on: root.activeFocus }
 
@@ -34,8 +34,8 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
             x: root.checked ? track.width - width - 4 : (track.height - width) / 2
             color: root.checked ? Config.primaryInk : Config.outline
-            Behavior on x { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
-            Behavior on width { NumberAnimation { duration: 120 } }
+            Behavior on x { NumberAnimation { duration: Config.durationFast; easing.type: Easing.OutCubic } }
+            Behavior on width { NumberAnimation { duration: Config.durationFast } }
 
             Icon {
                 anchors.centerIn: parent

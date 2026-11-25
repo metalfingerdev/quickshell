@@ -1,4 +1,5 @@
 import QtQuick
+import qs.modules.components
 import qs.modules.parts
 import qs.modules.services
 
@@ -9,7 +10,7 @@ Item {
     implicitHeight: 72
 
     VolumeSlider {
-        anchors { fill: parent; margins: 10 }
+        anchors { fill: parent; margins: Config.spaceM }
         activeFocusOnTab: false
         node: Audio.source
         icon: silent ? "mic_off" : "mic"

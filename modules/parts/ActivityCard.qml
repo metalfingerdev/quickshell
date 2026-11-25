@@ -17,7 +17,7 @@ Rectangle {
         x: 16
         y: 12
         width: parent.width - 32
-        spacing: 10
+        spacing: Config.spaceM
 
         Repeater {
             model: Activities.shared
@@ -27,7 +27,7 @@ Rectangle {
                 required property var modelData
                 readonly property bool known: modelData.fraction >= 0
                 width: list.width
-                spacing: 6
+                spacing: Config.spaceS
 
                 Item {
                     width: parent.width
@@ -41,7 +41,7 @@ Rectangle {
                         color: Config.primary
                     }
                     Label {
-                        anchors { left: glyph.right; leftMargin: 8; right: percent.left; rightMargin: 8; verticalCenter: parent.verticalCenter }
+                        anchors { left: glyph.right; leftMargin: Config.spaceS; right: percent.left; rightMargin: Config.spaceS; verticalCenter: parent.verticalCenter }
                         text: job.modelData.label
                         elide: Text.ElideMiddle
                     }
@@ -77,7 +77,7 @@ Rectangle {
                         SequentialAnimation on x {
                             running: !job.known
                             loops: Animation.Infinite
-                            NumberAnimation { from: -stripe.width; to: list.width; duration: 1200; easing.type: Easing.InOutQuad }
+                            NumberAnimation { from: -stripe.width; to: list.width; duration: Config.durationSweep; easing.type: Easing.InOutQuad }
                         }
                     }
                 }

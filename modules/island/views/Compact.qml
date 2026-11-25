@@ -20,14 +20,14 @@ Item {
     Row {
         id: row
         anchors.centerIn: parent
-        spacing: 8
+        spacing: Config.spaceS
 
         // an activity running (Activities): how far it has got, or a stretch going back and forth
         // while it doesn't say, and what it is
         Row {
             visible: Activities.working
             anchors.verticalCenter: parent.verticalCenter
-            spacing: 6
+            spacing: Config.spaceS
 
             Rectangle {
                 anchors.verticalCenter: parent.verticalCenter
@@ -45,7 +45,7 @@ Item {
                     NumberAnimation on sweep {
                         running: Activities.working && Activities.level < 0
                         loops: Animation.Infinite
-                        from: -12; to: 28; duration: 1100
+                        from: -12; to: 28; duration: Config.durationSweep
                     }
                 }
             }
@@ -61,7 +61,7 @@ Item {
         Row {
             visible: Toggles.recording
             anchors.verticalCenter: parent.verticalCenter
-            spacing: 5
+            spacing: Config.spaceXs
 
             Rectangle {
                 anchors.verticalCenter: parent.verticalCenter
@@ -70,8 +70,8 @@ Item {
                 SequentialAnimation on opacity {
                     running: Toggles.recording
                     loops: Animation.Infinite
-                    NumberAnimation { to: 0.35; duration: 700 }
-                    NumberAnimation { to: 1; duration: 700 }
+                    NumberAnimation { to: 0.35; duration: Config.durationPulse }
+                    NumberAnimation { to: 1; duration: Config.durationPulse }
                 }
             }
             // the microphone goes in too
@@ -96,7 +96,7 @@ Item {
         Row {
             visible: Toggles.memoRecording
             anchors.verticalCenter: parent.verticalCenter
-            spacing: 4
+            spacing: Config.spaceXs
 
             Icon {
                 anchors.verticalCenter: parent.verticalCenter
@@ -107,8 +107,8 @@ Item {
                 SequentialAnimation on opacity {
                     running: Toggles.memoRecording
                     loops: Animation.Infinite
-                    NumberAnimation { to: 0.4; duration: 700 }
-                    NumberAnimation { to: 1; duration: 700 }
+                    NumberAnimation { to: 0.4; duration: Config.durationPulse }
+                    NumberAnimation { to: 1; duration: Config.durationPulse }
                 }
             }
             Label {
