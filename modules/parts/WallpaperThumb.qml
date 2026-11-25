@@ -13,6 +13,10 @@ ClippingRectangle {
     readonly property bool ringed: picked && Config.focusVisible
     signal clicked()
     function activate() { clicked() }
+    Accessible.role: Accessible.Button
+    Accessible.name: path.split("/").pop()
+    Accessible.checked: applied
+    Accessible.onPressAction: activate()
 
     radius: Config.innerRadius
     color: Config.container

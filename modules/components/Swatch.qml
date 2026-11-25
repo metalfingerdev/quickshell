@@ -14,6 +14,10 @@ Rectangle {
 
     activeFocusOnTab: true
     function activate() { picked() }
+    Accessible.role: Accessible.RadioButton
+    Accessible.name: icon !== "" ? Config.spoken(icon) : Config.hex(tone)
+    Accessible.checked: chosen
+    Accessible.onPressAction: activate()
 
     implicitWidth: 52
     implicitHeight: 52

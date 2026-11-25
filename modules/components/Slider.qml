@@ -26,6 +26,11 @@ Item {
     activeFocusOnTab: true
     function nudge(dir) { const v = clamp(value + dir * step); moved(v); committed(v) }
     function activate() { if (iconClickable) iconClicked() }
+    Accessible.role: Accessible.Slider
+    Accessible.name: Config.spoken(icon)
+    Accessible.description: valueText
+    Accessible.onIncreaseAction: nudge(1)
+    Accessible.onDecreaseAction: nudge(-1)
 
     implicitWidth: 300
     implicitHeight: 52

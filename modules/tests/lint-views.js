@@ -29,8 +29,8 @@ const ALLOW = {
     "island/views/Switcher.qml":   { rules: ["header", "hints", "empty"], reason: "an overlay switcher with fixed keys" },
 }
 // Panels that show a list, which can be empty or unavailable
-const LISTS = ["Activity", "Battery", "Clipboard", "Forecast", "Schedule", "Wallpapers"]
-const PANELS = ["Activity", "Battery", "Bluetooth", "Clipboard", "Clock", "Colours", "Conversation", "Media", "Mixer",
+const LISTS = ["Activity", "Battery", "Board", "Clipboard", "Dock", "Forecast", "History", "Schedule", "TrayMenu", "Wallpapers"]
+const PANELS = ["Activity", "Battery", "Bluetooth", "Board", "Clipboard", "Dock", "History", "TrayMenu", "Clock", "Colours", "Conversation", "Media", "Mixer",
                 "Network", "Notification", "Power", "Schedule", "Settings", "System", "Theme", "Forecast", "Wallpapers", "Workspaces"]
 
 const strip = src => src.replace(/\/\*[\s\S]*?\*\//g, m => m.replace(/[^\n]/g, " "))

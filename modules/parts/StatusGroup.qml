@@ -134,6 +134,9 @@ Rectangle {
 
                 activeFocusOnTab: true
                 function activate() { root.clicked(root.view(modelData), -1) }
+                Accessible.role: Accessible.Button
+                Accessible.name: text !== "" ? modelData + ": " + text : Config.spoken(modelData)
+                Accessible.onPressAction: activate()
 
                 Row {
                     id: content

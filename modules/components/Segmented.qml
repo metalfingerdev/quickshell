@@ -30,6 +30,10 @@ Rectangle {
                 readonly property bool ring: activeFocus && Config.focusVisible
 
                 function activate() { root.picked(modelData.key) }
+                Accessible.role: Accessible.RadioButton
+                Accessible.name: modelData.label ?? Config.spoken(modelData.icon)
+                Accessible.checked: chosen
+                Accessible.onPressAction: activate()
 
                 width: root.width / Math.max(1, root.options.length)
                 height: root.height

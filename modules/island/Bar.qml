@@ -324,6 +324,13 @@ Scope {
                     source: Registry.get(root.shown)?.url ?? ""
                 }
             }
+
+            GlyphLight {
+                anchors.fill: parent
+                visible: lit && !Engine.hidden && !root.strip
+                topRadius: surface.topLeftRadius
+                bottomRadius: surface.bottomLeftRadius
+            }
         }
 
         Row {

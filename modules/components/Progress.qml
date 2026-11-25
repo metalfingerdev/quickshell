@@ -23,6 +23,10 @@ Item {
 
     activeFocusOnTab: seekable
     function nudge(dir) { seek(clamp(fraction + dir * step)) }
+    Accessible.role: seekable ? Accessible.Slider : Accessible.ProgressBar
+    Accessible.description: Math.round(shownFraction * 100) + "%"
+    Accessible.onIncreaseAction: if (seekable) nudge(1)
+    Accessible.onDecreaseAction: if (seekable) nudge(-1)
 
     implicitWidth: 200
     implicitHeight: seekable ? 20 : thickness

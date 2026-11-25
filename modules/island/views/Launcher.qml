@@ -53,18 +53,20 @@ Item {
         for (const c of name) if (c === q[i]) i++
         return i === q.length ? 100 : 0
     }
+    // With nothing typed the pinned ones come first, in their order (Ctrl+P pins the selected app)
     readonly property var apps: {
         const q = query
-        const all = Array.from(DesktopEntries.applications.values).filter(a => !a.noDisplay)
+        const pinned = q === "" ? Pins.apps : []
+        const all = Array.from(DesktopEntries.applications.values).filter(a => !a.noDisplay && !pinned.includes(a))
         const ranked = q === ""
             ? all.map(a => ({ app: a, score: used(a) > 0 ? 1 : 0 }))
             : all.map(a => ({ app: a, score: score(a, q) })).filter(m => m.score > 0)
-        return ranked
+        return pinned.concat(ranked
             .sort((a, b) => (b.score - a.score) || (used(b.app) - used(a.app)) || (a.app.name.length - b.app.name.length)
                             || a.app.name.localeCompare(b.app.name))
+            .map(m => m.app))
             .slice(0, maxResults)
-            .map(m => ({ kind: "app", app: m.app, name: m.app.name,
-                         description: m.app.comment || m.app.genericName || "" }))
+            .map(a => ({ kind: "app", app: a, name: a.name, description: a.comment || a.genericName || "" }))
     }
 
     function view(v) { return () => Engine.open(v) }
@@ -78,6 +80,10 @@ Item {
         { name: "Media", description: "What's playing", icon: Config.symbol.media, keys: "music player song", run: view(Engine.View.Media) },
         { name: "Mixer", description: "Volume for each app", icon: Config.symbol.mixer, keys: "volume sound audio apps", run: view(Engine.View.Mixer) },
         { name: "Workspaces", description: "Overview of every workspace", icon: Config.symbol.overview, keys: "overview windows", run: view(Engine.View.Workspaces) },
+        { name: "Tasks", description: Tasks.open > 0 ? Tasks.open + " not done" : "To do, doing, done", icon: "checklist", keys: "todo kanban board", run: view(Engine.View.Tasks) },
+        { name: "Favourites", description: "Pinned apps; Ctrl+P on one here pins it", icon: "keep", keys: "dock pinned apps favorites", run: view(Engine.View.Dock) },
+        { name: "NixOS", description: "Generations, and the flake's updates", icon: "history", keys: "generations updates rebuild flake nix", run: view(Engine.View.Generations) },
+        { name: "Tray", description: "Apps' tray icons and their menus", icon: "widgets", keys: "systray status icons", run: view(Engine.View.Tray) },
         { name: "Calendar", description: "The month, with today", icon: Config.symbol.calendar, keys: "clock date time", run: view(Engine.View.Clock) },
         { name: "Battery", description: "Charge, time left and health", icon: Config.symbol.battery, keys: "power energy", run: view(Engine.View.Battery) },
         { name: "Theme", description: "Colours and the wallpaper", icon: Config.symbol.theme, keys: "appearance look", run: view(Engine.View.Theme) },
@@ -248,13 +254,7 @@ Item {
         switch (row.kind) {
         case "app":
             count(row.app)
-            // in a scope of their own (Toggles.launch), so restarting the shell leaves them open
-            if (row.app.runInTerminal)
-                Toggles.launch([terminal, "-e"].concat(row.app.command), row.app.workingDirectory)
-            else if (Toggles.has("uwsm"))
-                Toggles.launch([row.app.id + ".desktop"])
-            else
-                row.app.execute()
+            Pins.run(row.app)
             Engine.close()
             break
         case "file":   Toggles.open(row.path); Engine.close(); break
@@ -295,6 +295,11 @@ Item {
         takesArrows: true
         takesSides: root.emojiMode
         focus: true
+        controlKeys: [Qt.Key_P]
+        onControl: key => {
+            const row = root.results[root.selected]
+            if (row?.kind === "app") { Engine.key(); Pins.toggle(row.app) }
+        }
 
         onKey: Engine.key()
         onDown: root.step(root.emojiMode ? grid.columns : 1)
@@ -492,6 +497,14 @@ Item {
                     color: row.current ? Config.mix(Config.secondaryInk, Config.secondary, 0.25) : Config.dim
                     font.pixelSize: Config.small + 1
                 }
+            }
+
+            Icon {
+                visible: row.modelData.kind === "app" && Pins.has(row.modelData.app)
+                anchors { right: parent.right; rightMargin: Config.spaceL; verticalCenter: parent.verticalCenter }
+                name: "keep"
+                size: 18
+                color: row.current ? Config.secondaryInk : Config.dim
             }
 
             ClickArea {

@@ -39,14 +39,17 @@ the lock screen (`Lock`, locked with `qs ipc call lock screen`) and the `Activat
 ## Tests
 
 ```sh
-node modules/tests/machine.test.js                                         # the state machine
+for t in modules/tests/*.test.js; do node "$t"; done                        # the machine and the pure .js
+node modules/tests/lint-views.js                                           # tokens and the panel standard
 QT_QPA_PLATFORM=offscreen qmltestrunner -input modules/tests/tst_keyboard.qml   # default keyboard
 qs -p lock-test.qml                                                        # the lock screen, in a window
 ```
 
 `machine.test.js` replays event sequences against `Machine.js`, with the view list and the Registry read
-from `Engine.qml` and `Registry.qml` themselves; GitHub Actions runs it on every push
-(`.github/workflows/tests.yml`). `tst_keyboard.qml` sends real key events to `ViewLoader` and the controls.
+from `Engine.qml` and `Registry.qml` themselves. The other `*.test.js` run the pure `.js` the services read
+their answers with (Open-Meteo, the agenda, generations, the task board's cards), through `harness.js`.
+`tst_keyboard.qml` sends real key events to `ViewLoader` and the controls. GitHub Actions runs all of
+them on every push (`.github/workflows/tests.yml`), the keyboard test with Qt from nixpkgs.
 
 In the session the shell runs as the `quickshell` systemd user service (nixos-dotfiles,
 `modules/features/quickshell`), which starts it again if it crashes; Super+R restarts it.

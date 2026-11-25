@@ -37,7 +37,11 @@ QtObject {
         Agent,
         System,
         Weather,
-        Agenda
+        Agenda,
+        Tray,
+        Generations,
+        Tasks,
+        Dock
     }
 
     readonly property int restView: Engine.View.Compact

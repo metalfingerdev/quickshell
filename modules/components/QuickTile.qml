@@ -19,6 +19,13 @@ Rectangle {
 
     function press() { if (more || split) clicked(-1); else toggled() }
     function activate() { toggled() }
+    Accessible.role: Accessible.Button
+    Accessible.name: title
+    Accessible.description: subtitle
+    Accessible.checkable: true
+    Accessible.checked: on
+    Accessible.onPressAction: press()
+    Accessible.onToggleAction: activate()
 
     activeFocusOnTab: true
 

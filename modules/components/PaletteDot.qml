@@ -15,6 +15,10 @@ Item {
 
     activeFocusOnTab: true
     function activate() { picked() }
+    Accessible.role: Accessible.RadioButton
+    Accessible.name: palette?.label ?? palette?.name ?? ""
+    Accessible.checked: chosen
+    Accessible.onPressAction: activate()
 
     implicitWidth: 48
     implicitHeight: 48

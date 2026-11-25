@@ -303,6 +303,13 @@ QtObject {
         mixer: "instant_mix", colours: "format_color_fill", wallpaper: "wallpaper"
     })
 
+    // An icon-only control's accessible name: what its glyph stands for here, else the glyph's own words.
+    function spoken(glyph) {
+        const thing = Object.keys(symbol).find(k => symbol[k] === glyph)
+        const words = (thing ?? String(glyph ?? "")).replace(/_/g, " ")
+        return words.charAt(0).toUpperCase() + words.slice(1)
+    }
+
     // Fonts come from modules/features/theme.nix (inter, jetbrains-mono, material-symbols).
     readonly property string font: "Inter"
     readonly property string mono: "JetBrains Mono"

@@ -2,16 +2,24 @@
 
 ## Open
 
-- [ ] Favourite apps dock (dynamicGlacier's "apps" panel): pinned launchers, saved to a state file.
 - [ ] Battery: charge limit and power profiles, for hardware that has them (see old-shell-notes.md).
 - [ ] Power profiles: the dashboard's segmented row shows once power-profiles-daemon runs
       (`services.power-profiles-daemon.enable`); it is hidden until then.
 - [ ] The media view's "Playing next": MPRIS has no queue, so it lists outputs and other players instead.
 - [ ] Keyboard, next steps: give each view real keyboard rules as it gets real content.
-- [ ] `tst_keyboard.qml` in CI: it needs Qt and Quickshell on the runner (Nix).
 
 ## Done
 
+- [x] More from Nihil-Shell (2026-11-25): the system tray, a view of its own and not in Tabs, which
+      stays uncluttered (the dashboard's More, the launcher, `open tray`): each app, its menu drawn in the
+      island (`QsMenuOpener`, with submenus) and Open for its own action; an app can be hidden, and
+      Settings shows them again; accessible names and roles on every control; tests for the pure
+      `.js` (Open-Meteo, the agenda, generations, the board's cards) and `tst_keyboard.qml` in CI; a light along
+      the island's edge after the Glyph Interface (a notification runs once round, a critical one or a low
+      battery twice in the warning colour, the charger rises up both sides, an activity's progress stays lit);
+      NixOS (generations, what each changed, the flake's inputs and what keeps a dotfile edit from the system:
+      uncommitted, unpushed, not in the lock), read-only; a task board (to do, doing, done, in its own JSON
+      file); favourite apps (Ctrl+P in the launcher pins one; the Dock view, and pinned first in the launcher).
 - [x] The agent (2026-11-24), after Nihil-Shell's Nilo but light: a view of its own (Conversation) with
       the local model through Ollama, streamed, Markdown, Internet (SearXNG, cited) and Think switches,
       the model loaded while you type, and a peek toast when an answer ends with the view closed. `?` in

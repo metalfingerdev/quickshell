@@ -24,6 +24,9 @@ Rectangle {
 
     activeFocusOnTab: true
     function activate() { clicked(-1) }
+    Accessible.role: Accessible.Button
+    Accessible.name: label.text !== "" ? label.text : Config.spoken(icon)
+    Accessible.onPressAction: activate()
 
     implicitWidth: label.text === "" && icon !== "" ? implicitHeight : content.implicitWidth + 32
     implicitHeight: 44

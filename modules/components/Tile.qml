@@ -14,6 +14,9 @@ Rectangle {
 
     activeFocusOnTab: true
     function activate() { clicked() }
+    // a tile is whatever is put in it, so the view names it (Accessible.name)
+    Accessible.role: Accessible.Button
+    Accessible.onPressAction: activate()
 
     radius: Config.cardRadius
     color: Config.state(tint.a > 0 ? tint : Config.container, Config.text, area.containsMouse, area.pressed || keyboardSelected)

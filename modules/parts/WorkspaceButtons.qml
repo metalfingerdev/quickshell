@@ -72,6 +72,9 @@ Item {
                     id: ws
                     readonly property bool ring: activeFocus && Config.focusVisible
                     function activate() { Desktops.focus(slot.wsId) }
+                    Accessible.role: Accessible.Button
+                    Accessible.name: "Workspace " + slot.wsId
+                    Accessible.onPressAction: activate()
 
                     x: slot.lead * slot.grown
                     width: Math.max(root.size, slot.span - slot.lead)

@@ -188,11 +188,38 @@ Item {
                 onPicked: key => Config.handle = key
             }
 
+            Switch {
+                text: "Light along the edge"
+                checked: Glyph.enabled
+                onToggled: on => Glyph.enabled = on
+            }
+
             SectionLabel { text: "Desktop"; topPadding: Config.spaceXs }
             Switch {
                 text: "\"Activate Linux\""
                 checked: Config.activateLinux
                 onToggled: on => Config.activateLinux = on
+            }
+            Row {
+                visible: Tray.hidden !== ""
+                width: parent.width
+                spacing: Config.spaceM
+
+                Label {
+                    width: parent.width - showTray.width - parent.spacing
+                    leftPadding: Config.spaceXs
+                    anchors.verticalCenter: parent.verticalCenter
+                    elide: Text.ElideRight
+                    text: "Hidden from the tray: " + Tray.patterns.join(", ")
+                    font.pixelSize: Config.body + 1
+                }
+                Pill {
+                    id: showTray
+                    implicitHeight: 40
+                    kind: "text"
+                    text: "Show all"
+                    onClicked: Tray.hidden = ""
+                }
             }
         }
 

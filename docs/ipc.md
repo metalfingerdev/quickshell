@@ -41,7 +41,9 @@ what hovering shows), `dashboard` (everything), `launcher`, `network`, `bluetoot
 `notifications` (`open` = the center, `alert` = the popups), `workspaces` (the overview), `clock`,
 `battery`, `power`, `theme` (colours and the wallpaper), `settings` (the shell, idle and the lock screen),
 `clipboard` (the history), `activity` (what's running), `system` (processor, memory, temperature, disk,
-network and the local model; alias `stats`), `weather` (`forecast`), `agenda` (`events`, `schedule`), and the toasts `switcher`
+network and the local model; alias `stats`), `weather` (`forecast`), `agenda` (`events`, `schedule`), `tray` (the tray's apps and their menus), `generations` (`updates`, `nixos`: NixOS's
+generations and the flake's inputs), `tasks` (`todo`, `kanban`: the task board), `dock` (`favourites`: pinned apps),
+and the toasts `switcher`
 (`alert switcher` shows the workspace dots) and `mic`.
 
 `peek` is meant for a key's press and release: `peek true` on press, `peek false` on release. When
@@ -66,6 +68,21 @@ clears the peek (a hover peek, a view opening), the next press shows it again.
 | `qs ipc call wallpaper set <path>` | show that image |
 | `qs ipc call wallpaper reload` | re-read the folder |
 | `qs ipc call wallpaper current` | print the path showing now |
+
+## Edge light, tasks and generations
+
+| Command | Effect |
+|---|---|
+| `qs ipc call glyph flash <run\|critical\|charge>` | light along the island's edge: once round, twice in the warning colour, up both sides |
+| `qs ipc call glyph enable <true\|false>` | the edge light on or off (Settings, Shell: "Light along the edge") |
+| `qs ipc call tasks add <text>` | a card on top of To do |
+| `qs ipc call tasks list` | the board, as `tasks.json` has it |
+| `qs ipc call generations flake <folder>` | the flake this machine is built from (`~/nixos-dotfiles`), for the Updates section |
+| `qs ipc call generations list` | the generations, as JSON |
+
+The edge light also shows how far an activity has got (`activity progress`), up both sides from the
+bottom. The board is `~/.local/state/quickshell/tasks.json` (`{ "cards": [{ "id", "text", "column" }] }`,
+column 0 to do, 1 doing, 2 done): edit it by hand and the board follows.
 
 ## Lock screen
 

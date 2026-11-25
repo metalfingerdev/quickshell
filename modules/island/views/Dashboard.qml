@@ -111,7 +111,13 @@ Item {
         { col: 2, row: 1, title: "Media", icon: Config.symbol.media, status: "What's playing", run: root.open(Engine.View.Media) },
         { col: 3, row: 1, title: "Calendar", icon: Config.symbol.calendar, run: root.open(Engine.View.Clock) },
         { col: 4, row: 1, letter: "f", title: "Files", icon: "folder", status: "Yazi, in kitty", run: root.launch(["kitty", "-e", "yazi"]) },
-        { col: 5, row: 1, letter: "t", title: "Terminal", icon: "terminal", status: "Kitty", run: root.launch(["kitty"]) }
+        { col: 5, row: 1, letter: "t", title: "Terminal", icon: "terminal", status: "Kitty", run: root.launch(["kitty"]) },
+        // a row under the wallpaper: what's kept, then what's around
+        { col: 0, row: 2, letter: "o", title: "Tasks", icon: "checklist", count: () => Tasks.open,
+          status: () => Tasks.open > 0 ? Tasks.open + " not done" : "None", run: root.open(Engine.View.Tasks) },
+        { col: 1, row: 2, letter: "h", title: "NixOS", icon: "history", status: "Generations, updates", run: root.open(Engine.View.Generations) },
+        { col: 2, row: 2, title: "Favourites", icon: "keep", status: () => Pins.apps.length + " pinned", run: root.open(Engine.View.Dock) },
+        { col: 3, row: 2, title: "Tray", icon: "widgets", status: () => Tray.items.length + " apps", run: root.open(Engine.View.Tray) }
     ]
     // record the screen, not the Control Center; either button stops whichever recording is on
     function record(mic) {
@@ -161,6 +167,10 @@ Item {
         readonly property color ink: on ? Config.primaryInk : Config.text
         signal clicked(real sceneX)
         function activate() { clicked(-1) }
+        Accessible.role: Accessible.Button
+        Accessible.name: caption !== "" ? caption : Config.spoken(icon)
+        Accessible.checked: on
+        Accessible.onPressAction: activate()
         onLitChanged: root.point(tile, lit)
 
         activeFocusOnTab: true
@@ -219,6 +229,10 @@ Item {
         readonly property real round: height / 2
         signal clicked(real sceneX)
         function activate() { clicked(-1) }
+        Accessible.role: Accessible.RadioButton
+        Accessible.name: text !== "" ? text : Config.spoken(icon)
+        Accessible.checked: selected
+        Accessible.onPressAction: activate()
 
         activeFocusOnTab: true
         height: 48
@@ -472,7 +486,7 @@ Item {
         Item {
             visible: root.showMore
             width: parent.width
-            height: root.ch(2)
+            height: root.ch(3)
 
             // not WallpaperThumb: its ring and tick say "applied", which this one always is
             ClippingRectangle {
@@ -507,6 +521,7 @@ Item {
                     y: root.cy(modelData.row)
                     icon: root.val(modelData.icon)
                     caption: root.caption(modelData)
+                    count: modelData.count?.() ?? 0
                     shortcut: modelData.letter ?? ""
                     enabled: root.usable(modelData)
                     onClicked: x => modelData.run(x)

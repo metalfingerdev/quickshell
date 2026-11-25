@@ -8,6 +8,11 @@ Item {
     signal toggled(bool on)
 
     function activate() { if (enabled) toggled(!checked) }
+    Accessible.role: Accessible.CheckBox
+    Accessible.checkable: true
+    Accessible.checked: checked
+    Accessible.onToggleAction: activate()
+    Accessible.onPressAction: activate()
 
     activeFocusOnTab: true
 

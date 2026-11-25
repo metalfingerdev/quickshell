@@ -5,15 +5,27 @@ on:
   pull_request:
 
 jobs:
-  machine:
+  node:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      # Machine.js against the view list and the Registry, read from Engine.qml and Registry.qml.
-      # tst_keyboard.qml needs Qt and Quickshell, so it still runs by hand (README, Tests).
-      - run: node modules/tests/machine.test.js
+      # Machine.js against the view list and the Registry (read from Engine.qml and Registry.qml), and the
+      # pure .js files the services read their answers with
+      - run: for t in modules/tests/*.test.js; do node "$t" || exit 1; done
       # Tokens and the panel standard (Header, KeyHints, EmptyState): fails on any violation
       - run: node modules/tests/lint-views.js
+
+  # ViewLoader's keyboard and Pill with real key events. Plain QtQuick, so Qt from nixpkgs is enough.
+  keyboard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@v31
+        with:
+          extra_nix_config: experimental-features = nix-command flakes
+      - run: |
+          qd=$(nix build --no-link --print-out-paths nixpkgs#qt6.qtdeclarative)
+          QML_IMPORT_PATH=$qd/lib/qt-6/qml QT_QPA_PLATFORM=offscreen "$qd/bin/qmltestrunner" -input modules/tests/tst_keyboard.qml

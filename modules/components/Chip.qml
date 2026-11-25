@@ -12,6 +12,10 @@ Rectangle {
 
     activeFocusOnTab: true
     function activate() { clicked() }
+    Accessible.role: Accessible.RadioButton
+    Accessible.name: label.text !== "" ? label.text : Config.spoken(icon)
+    Accessible.checked: selected
+    Accessible.onPressAction: activate()
 
     readonly property color ink: selected ? Config.primaryInk : Config.dim
 

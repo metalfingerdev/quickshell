@@ -21,6 +21,10 @@ Rectangle {
 
     activeFocusOnTab: true
     function activate() { clicked() }
+    Accessible.role: Accessible.Button
+    Accessible.name: title
+    Accessible.description: subtitle
+    Accessible.onPressAction: activate()
 
     implicitWidth: 320
     implicitHeight: subtitle !== "" ? 64 : 52
