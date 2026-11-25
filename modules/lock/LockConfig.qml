@@ -14,6 +14,8 @@ Singleton {
 	property string avatarShape: "circle"
 	property string name: ""
 	property string info: ""
+	// how far the picture softens behind the sign-in: 0 not at all .. 1 (Settings' Lock)
+	property real blur: 1
 
 	property Store store: Store {
 		category: "lock"
@@ -22,6 +24,7 @@ Singleton {
 		property alias avatarShape: root.avatarShape
 		property alias name: root.name
 		property alias info: root.info
+		property alias blur: root.blur
 	}
 
 	readonly property string user: Quickshell.env("USER") ?? ""

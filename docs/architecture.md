@@ -91,19 +91,24 @@ Loader item ──implicit size──► proxy (invisible, snaps instantly, the 
   full view, the Registry's `opens` (the workspace dots open the overview, the volume and brightness
   toasts the dashboard), or else its own view, Pinned; the clock (Compact, at rest) and Expanded (the
   peek) pin the hub, `Tabs`. Elsewhere it does nothing.
-- **Two looks**: the panels are the windows' glass (`Config.island`, under hyprglass when the plugin is
-  loaded: hypr/modules/plugins.lua, `services/Glass.qml`), after Noctalia: a `Header` card with the panel's
-  glyph, content on outlined cards (`Config.border`). Compact and Expanded (Registry `dynamic`) are Apple's
-  Dynamic Island instead: opaque black. Bar's `fill` eases between the two as a view swaps in.
+- **Panels**, after Noctalia: a `Header` card with the panel's glyph, content on outlined cards
+  (`Config.border`), all on the island's glass (`Config.island`, under hyprglass when the plugin is loaded:
+  hypr/modules/plugins.lua, `services/Glass.qml`).
 - **Locking**: `Session.covering` (set by `lock/Lock.qml`) makes the proxy the whole screen, the input mask
   the whole screen and the keyboard exclusive, so the island grows over everything and takes every input;
   the session lock engages once it has (a lock someone asked for), or at once (idle, logind before sleep).
   It stays under the lock, so unlocking (the picture fades to black first) shows the island shrinking back.
   A lock the compositor never confirms gives the screen back after 3 s.
-- **Shadow**: a `RectangularShadow` under the surface, from the same animated rect, close and light at Rest,
-  wider and deeper once the island opens. Bar draws it because Hyprland only shadows windows, not layers. It
-  isn't in the input mask, and its alpha stays under the `glass` layer rule's `ignore_alpha` (look.lua), so
-  the blur doesn't spread into it. An island less opaque than that `ignore_alpha` would lose its blur too.
+- **Opacity and glass**: the surface is `Config.island`, the palette's surface at `Config.islandAlpha` (the
+  windows' opacity, or the island's own from Settings, down to 0.02 so the glass still has a shape). The
+  `glass` layer rule's `ignore_alpha` and hyprglass's `mask_threshold` are 0.01 for that.
+  `services/Glass.qml` sets Hyprland's blur level, the windows' opacity and hyprglass at runtime, and again
+  after a config reload.
+- **Shadow**: a `RectangularShadow` from the same animated rect, close and light at Rest, wider and deeper
+  once the island opens. Bar draws it because Hyprland only shadows windows, not layers, in a window of its
+  own on the top layer (namespace `quickshell:shadow`, no input), under the island's overlay: in the overlay
+  its soft alpha would take the glass. It fades out as the island goes see-through, and isn't there over a
+  fullscreen window.
 - **Privacy dots** sit beside the surface while `Privacy.microphone` / `Privacy.camera` is true.
 - The **Loader** inside the surface (`ViewLoader.qml`) is always the view's *final* size. As the surface grows, it reveals
   the content instead of squashing it. It is centred horizontally (or pinned to its final screen position

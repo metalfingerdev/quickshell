@@ -9,7 +9,7 @@ Scope {
     id: root
 
     property bool followFocus: true
-    property bool switcherToasts: true
+    readonly property bool switcherToasts: Config.switcherToasts
 
     // services report their initial values at startup; don't toast those
     property bool armed: false
@@ -17,8 +17,10 @@ Scope {
 
     function alert(view) { if (armed) Engine.alert(view) }
 
+    // the toasts that only echo a key can be turned off (Settings' Alerts)
     Connections {
         target: Audio
+        enabled: Config.levelToasts
         function onVolumeChanged() { root.alert(Engine.View.Volume) }
         function onMutedChanged()  { root.alert(Engine.View.Volume) }
         // only muting: apps with automatic gain move the mic's level all the time
@@ -27,6 +29,7 @@ Scope {
 
     Connections {
         target: Backlight
+        enabled: Config.levelToasts
         function onPercentChanged() { root.alert(Engine.View.Brightness) }
     }
 

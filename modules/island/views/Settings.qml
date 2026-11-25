@@ -8,7 +8,7 @@ Item {
     id: root
 
     readonly property int pad: 24
-    readonly property int colW: 440
+    readonly property int colW: 520
     property string section: "shell"
 
     implicitWidth: colW + 2 * pad
@@ -39,6 +39,34 @@ Item {
             onToggled: on => line.toggled(on)
         }
     }
+
+    // a bar with its name and value above it; Look's opacities are see-through colours, over a checkerboard
+    component Level: Column {
+        id: level
+        property string text: ""
+        property string valueText: ""
+        property alias value: bar.value
+        property alias colourAt: bar.colourAt
+        property alias checker: bar.checker
+        signal moved(real value)
+        width: parent.width
+        spacing: Config.spaceS
+
+        Item {
+            width: parent.width
+            height: name.implicitHeight
+            Label { id: name; text: level.text; font.pixelSize: Config.body + 1 }
+            Label { anchors.right: parent.right; text: level.valueText; color: Config.dim; font.features: { "tnum": 1 } }
+        }
+        ColourBar {
+            id: bar
+            width: parent.width
+            title: level.text
+            onMoved: v => level.moved(v)
+        }
+    }
+    readonly property color see: Config.surface
+    function seeThrough(alpha) { return Qt.rgba(see.r, see.g, see.b, alpha) }
 
     // the waits an idle step can have, in seconds; 0 = never, at the far end of the slider
     readonly property var stops: [30, 60, 120, 180, 300, 600, 900, 1200, 1800, 2700, 3600, 7200, 0]
@@ -122,7 +150,12 @@ Item {
             width: parent.width
             icon: Config.symbol.settings
             title: "Settings"
-            subtitle: root.section === "idle"
+            subtitle: root.section === "look"
+                      ? (Config.islandOpacity < 0 ? "Island like the windows" : "Island " + Math.round(Config.islandOpacity * 100) + " %")
+                        + "  ·  " + (Glass.blurs.find(b => b.key === Glass.blur)?.label ?? "Medium") + " blur"
+                      : root.section === "alerts"
+                      ? (Notifier.dnd ? "Do not disturb is on" : "Popups: " + Notifier.popupLength) + (Sounds.enabled ? "  ·  sounds" : "")
+                      : root.section === "idle"
                       ? (!Idle.enabled ? "Stays on" : Toggles.caffeine ? "Caffeine: stays on"
                          : Idle.mediaPlaying ? "Media playing: stays on" : "Locks after " + root.spoken(Idle.lockAfter))
                       : root.section === "lock" ? LockConfig.shownName + "  ·  " + LockConfig.shownInfo
@@ -136,6 +169,8 @@ Item {
         Segmented {
             width: parent.width
             options: [{ key: "shell", label: "Shell", shortcut: "s" },
+                      { key: "look", label: "Look", shortcut: "k" },
+                      { key: "alerts", label: "Alerts", shortcut: "a" },
                       { key: "idle", label: "Idle", shortcut: "i" },
                       { key: "lock", label: "Lock", shortcut: "l" }]
             current: root.section
@@ -200,20 +235,17 @@ Item {
                 onToggled: on => Glyph.enabled = on
             }
 
-            // hidden while Hyprland runs without the plugin (left out for another version): look.lua's blur
-            SectionLabel { visible: Glass.available; text: "Glass"; topPadding: Config.spaceXs }
+            SectionLabel { text: "Clock"; topPadding: Config.spaceXs }
             Switch {
-                visible: Glass.available
-                text: "Liquid glass on windows and the island"
-                checked: Glass.enabled
-                onToggled: on => Glass.enabled = on
+                text: "24-hour clock"
+                checked: Config.clock24
+                onToggled: on => Config.clock24 = on
             }
             Segmented {
-                visible: Glass.available && Glass.enabled
                 width: parent.width
-                options: Glass.presets
-                current: Glass.preset
-                onPicked: key => Glass.preset = key
+                options: [{ key: "-1", label: "Week as the locale" }, { key: "1", label: "Monday" }, { key: "0", label: "Sunday" }]
+                current: String(Config.firstDay)
+                onPicked: key => Config.firstDay = Number(key)
             }
 
             SectionLabel { text: "Desktop"; topPadding: Config.spaceXs }
@@ -242,6 +274,125 @@ Item {
                     text: "Show all"
                     onClicked: Tray.hidden = ""
                 }
+            }
+        }
+
+        Column {
+            visible: root.section === "look"
+            width: parent.width
+            spacing: Config.spaceL
+
+            SectionLabel { text: "Island"; topPadding: Config.spaceS }
+            // its own opacity, down to see-through (the glass still shows its edge), or the windows'
+            Level {
+                text: "Opacity"
+                valueText: Config.islandOpacity < 0 ? "Like the windows" : Math.round(Config.islandOpacity * 100) + "%"
+                value: Config.islandOpacity < 0 ? Config.windowOpacity : Config.islandOpacity
+                checker: true
+                colourAt: t => root.seeThrough(t)
+                onMoved: v => Config.islandOpacity = Math.round(v * 100) / 100
+            }
+            Pill {
+                visible: Config.islandOpacity >= 0
+                implicitHeight: 40
+                kind: "text"
+                icon: "link"
+                text: "Like the windows"
+                onClicked: Config.islandOpacity = -1
+            }
+            Switch {
+                text: "Shadow"
+                checked: Config.shadow
+                onToggled: on => Config.shadow = on
+            }
+
+            // Hyprland's own, the windows' and the island's alike (or, with liquid glass, the glass's)
+            SectionLabel { text: "Blur"; topPadding: Config.spaceXs }
+            Segmented {
+                width: parent.width
+                options: Glass.blurs
+                current: Glass.blur
+                onPicked: key => Glass.blur = key
+            }
+            Level {
+                text: "Windows"
+                valueText: Math.round(value * 50 + 50) + "%"
+                value: ((Glass.windows > 0 ? Glass.windows : Config.windowOpacity) - 0.5) / 0.5
+                checker: true
+                colourAt: t => root.seeThrough(0.5 + t / 2)
+                onMoved: v => Glass.windows = Math.round((0.5 + v / 2) * 100) / 100
+            }
+
+            // hidden while Hyprland runs without the plugin (left out for another version): the blur above
+            SectionLabel { visible: Glass.available; text: "Liquid glass"; topPadding: Config.spaceXs }
+            Switch {
+                visible: Glass.available
+                text: "On windows and the island"
+                checked: Glass.enabled
+                onToggled: on => Glass.enabled = on
+            }
+            Segmented {
+                visible: Glass.available && Glass.enabled
+                width: parent.width
+                options: Glass.presets
+                current: Glass.preset
+                onPicked: key => Glass.preset = key
+            }
+
+            SectionLabel { text: "Shape and motion"; topPadding: Config.spaceXs }
+            Slider {
+                width: parent.width
+                icon: "rounded_corner"
+                value: Config.roundness - 0.5
+                valueText: "Roundness  " + Math.round((0.5 + shown) * 100) + "%"
+                onMoved: v => Config.roundness = Math.round((0.5 + v) * 20) / 20
+            }
+            Switch {
+                text: "Outlines on cards and tiles"
+                checked: Config.outlines
+                onToggled: on => Config.outlines = on
+            }
+            Switch {
+                text: "Reduce motion"
+                checked: Config.reduceMotion
+                onToggled: on => Config.reduceMotion = on
+            }
+        }
+
+        Column {
+            visible: root.section === "alerts"
+            width: parent.width
+            spacing: Config.spaceL
+
+            // for a notification that doesn't say how long it should stay; a critical one stays
+            SectionLabel { text: "Popups stay"; topPadding: Config.spaceS }
+            Segmented {
+                width: parent.width
+                options: [{ key: "short", label: "5 s" }, { key: "normal", label: "10 s" }, { key: "long", label: "20 s" }]
+                current: Notifier.popupLength
+                onPicked: key => Notifier.popupLength = key
+            }
+            Switch {
+                text: "Do not disturb"
+                checked: Notifier.dnd
+                onToggled: on => Notifier.dnd = on
+            }
+            Switch {
+                text: "Sounds"
+                checked: Sounds.enabled
+                onToggled: on => Sounds.enabled = on
+            }
+
+            SectionLabel { text: "Toasts"; topPadding: Config.spaceXs }
+            Switch {
+                text: "Volume, brightness, microphone"
+                checked: Config.levelToasts
+                onToggled: on => Config.levelToasts = on
+            }
+            Switch {
+                text: "Switching workspace"
+                checked: Config.switcherToasts
+                onToggled: on => Config.switcherToasts = on
             }
         }
 
@@ -321,6 +472,15 @@ Item {
                 font.pixelSize: Config.small
             }
 
+            // how far the picture softens once the sign-in comes up
+            Slider {
+                width: parent.width
+                icon: "blur_on"
+                value: LockConfig.blur
+                valueText: "Softened behind the sign-in  " + Math.round(shown * 100) + "%"
+                onMoved: v => LockConfig.blur = v
+            }
+
             SectionLabel { text: "Who"; topPadding: Config.spaceS }
             Field {
                 text: LockConfig.name
@@ -339,7 +499,8 @@ Item {
         KeyHints {
             width: parent.width
             keys: root.section === "lock" ? [["⏎", "apply"], ["Esc", "close"]]
-                : [["← →", root.section === "idle" ? "wait" : "size"], ["⌫", "back"], ["Esc", "close"]]
+                : root.section === "alerts" ? [["⏎", "switch"], ["⌫", "back"], ["Esc", "close"]]
+                : [["← →", root.section === "idle" ? "wait" : root.section === "look" ? "adjust" : "size"], ["⌫", "back"], ["Esc", "close"]]
         }
     }
 }

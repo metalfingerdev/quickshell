@@ -38,7 +38,7 @@ Rectangle {
     }
     function ago(t) {
         const m = Math.floor((Date.now() - t) / 60000)
-        return m < 1 ? "now" : m < 60 ? m + " min" : Qt.formatTime(new Date(t), "HH:mm")
+        return m < 1 ? "now" : m < 60 ? m + " min" : Qt.formatTime(new Date(t), Config.timeFormat)
     }
 
     activeFocusOnTab: center

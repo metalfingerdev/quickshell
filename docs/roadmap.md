@@ -23,10 +23,18 @@
 
 ## Done
 
+- [x] Colours and settings (2026-11-26): Theme is every colour choice in one place (light or dark,
+      standard or high contrast, the colours from the wallpaper, a custom colour or a preset, then that
+      source's bars, each drawn in the colours it gives, and the surfaces: matching the colour, a hue of
+      their own, or neutral); Colours is only the custom colour's full picker. Compact and Expanded are
+      on the island's glass again. Settings after Noctalia's: Look (the island's opacity down to
+      see-through, its shadow, the blur level, the windows' opacity, liquid glass, roundness, outlines,
+      reduce motion) and Alerts (how long popups stay, sounds, the toasts), the clock's 24 hours and the
+      week's first day, and how far the lock screen's picture softens.
+
 - [x] Two looks and a lock (2026-11-25): the panels after Noctalia (a header card with the panel's glyph
       in the primary colour, outlined cards and tiles, list rows as tiles; System as cards with a graph
-      of the last minute), Compact and Expanded as Apple's Dynamic Island (opaque black, Registry
-      `dynamic`); liquid glass by hyprglass (a flake input built for the Hyprland it names, switched and
+      of the last minute); liquid glass by hyprglass (a flake input built for the Hyprland it names, switched and
       its look picked in Settings); the lock screen after Apple's (the picture and the time until a key or
       the pointer, then the sign-in over a softened picture), and the island growing over the screen as
       it locks and shrinking back as it unlocks.

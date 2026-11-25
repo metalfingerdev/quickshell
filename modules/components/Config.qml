@@ -59,7 +59,12 @@ QtObject {
     property real surfaceHue: 0.47
     property real tint: 0.5
     property bool darkMode: true
-    readonly property var current: source === "preset" ? (palettes[name] ?? palettes.teal) : generated(source)
+    // The surfaces of a custom accent take its hue, as Android's do, rather than surfaceHue of their own
+    // (Theme's Surfaces: Matched; Custom and Neutral leave it off). A wallpaper option sets its own.
+    property bool surfaceFollows: false
+    // "standard" or "high": every source, presets too, so it's applied after the palette is picked
+    property string contrastLevel: "standard"
+    readonly property var current: withContrast(source === "preset" ? (palettes[name] ?? palettes.teal) : generated(source))
 
     // The last accents chosen (the eyedropper, the hex field, or what the map was left on), newest
     // first, for the Colours view's Recent row. A string, so the state file keeps it as written.
@@ -142,7 +147,22 @@ QtObject {
         const primary = from === "wallpaper"
             ? Qt.hsla(Math.max(0, wallpaperSeed.hslHue), wallpaperSeed.hslHue < 0 ? 0 : wallpaperSaturation, wallpaperLightness, 1)
             : accent
-        return scheme(primary, surfaceHue, tint, darkMode)
+        const hue = from === "accent" && surfaceFollows ? Math.max(0, accent.hslHue) : surfaceHue
+        return scheme(primary, hue, tint, darkMode)
+    }
+    // High contrast: the secondary text and the outlines move toward the text, the text to black or
+    // white, and the primary has to reach 7:1 (WCAG AAA) on the surface instead of 4.5:1. A preset's
+    // roles are hex strings: Qt.darker(x, 1) is the colour itself, as an object with r, g, b.
+    function withContrast(p) {
+        if (contrastLevel !== "high") return p
+        const c = v => Qt.darker(v, 1)
+        const out = Object.assign({}, p)
+        out.text = mix(c(p.text), p.dark ? Qt.rgba(1, 1, 1, 1) : Qt.rgba(0, 0, 0, 1), 0.6)
+        out.dim = mix(c(p.dim), out.text, 0.55)
+        out.outline = mix(c(p.outline), out.text, 0.35)
+        out.primary = readable(c(p.primary), c(p.surface), p.dark, 7)
+        out.onPrimary = inkOn(out.primary)
+        return out
     }
     // WCAG's relative luminance, and the contrast ratio between two colours (1 .. 21)
     function luminance(c) {
@@ -161,13 +181,14 @@ QtObject {
     // the colour as picked when it does, otherwise lighter (dark) or darker (light), only as much as it
     // takes. Pure blue on a dark island or yellow on a light one would all but vanish as they are.
     readonly property real primaryContrast: 4.5          // WCAG AA for text
-    function readable(c, surface, dark) {
-        if (contrast(c, surface) >= primaryContrast) return c
+    function readable(c, surface, dark, ratio) {
+        const need = ratio ?? primaryContrast
+        if (contrast(c, surface) >= need) return c
         const h = Math.max(0, c.hslHue), s = c.hslSaturation
         let fails = c.hslLightness, passes = dark ? 1 : 0   // white on dark, black on light always do
         for (let i = 0; i < 16; i++) {
             const mid = (fails + passes) / 2
-            if (contrast(Qt.hsla(h, s, mid, 1), surface) >= primaryContrast) passes = mid
+            if (contrast(Qt.hsla(h, s, mid, 1), surface) >= need) passes = mid
             else fails = mid
         }
         return Qt.hsla(h, s, passes, 1)
@@ -223,8 +244,10 @@ QtObject {
     readonly property color bad:         current.bad
     readonly property bool  dark:        current.dark
     readonly property color divider:     mix(surface, outline, 0.35)
-    // the hairline round a panel's cards and resting tiles (Noctalia's box border): there, but quieter than outline
-    readonly property color border:      mix(container, outline, 0.4)
+    // the hairline round a panel's cards and resting tiles (Noctalia's box border): there, but quieter
+    // than outline; Settings can turn them off
+    property bool outlines: true
+    readonly property color border:      outlines ? mix(container, outline, 0.4) : "transparent"
     readonly property color primaryDeep: mix(primary, primaryInk, 0.16)
 
     function mix(a, b, t) {
@@ -241,11 +264,13 @@ QtObject {
         return "#" + h(c.r) + h(c.g) + h(c.b)
     }
 
-    // the island's largest corner; a shape lower than twice this is a capsule (the compact clock, HUDs)
-    readonly property int radius: 28
-    readonly property int cardRadius: 24
-    readonly property int innerRadius: 16
-    readonly property int smallRadius: 12
+    // the island's largest corner; a shape lower than twice this is a capsule (the compact clock, HUDs).
+    // Settings' Roundness scales them all (0.5 .. 1.5).
+    property real roundness: 1
+    readonly property int radius: Math.round(28 * roundness)
+    readonly property int cardRadius: Math.round(24 * roundness)
+    readonly property int innerRadius: Math.round(16 * roundness)
+    readonly property int smallRadius: Math.round(12 * roundness)
 
     property string style: "pill"
     property string handle: "strip"
@@ -255,7 +280,12 @@ QtObject {
     // its blur, and layers named glass:* get the same blur. The island is one (Bar), so it takes
     // the windows' opacity, which shell.qml keeps in step with services/Desktops.qml.
     property real windowOpacity: 1
-    readonly property color island: Qt.rgba(surface.r, surface.g, surface.b, Math.max(0, Math.min(1, windowOpacity)))
+    // The island's own opacity, -1 = the windows'. Down to see-through: never quite 0, as the glass
+    // (Hyprland's blur, hyprglass) goes only where the island draws something.
+    property real islandOpacity: -1
+    readonly property real islandAlpha: Math.max(0.02, Math.min(1, islandOpacity < 0 ? windowOpacity : islandOpacity))
+    readonly property color island: Qt.rgba(surface.r, surface.g, surface.b, islandAlpha)
+    property bool shadow: true
 
     // Hyprland's windows animation (its curve, "Glide" in hypr/modules/look.lua, and its speed: 3.5 = 350 ms),
     // read from Hyprland itself (services/Desktops.qml, kept in step by shell.qml), so the shell and the
@@ -264,6 +294,8 @@ QtObject {
     // flush with the top edge instead of dipping a pixel below it and settling back.
     property var curve: [0.22, 1, 0.36, 1, 1, 1]     // Easing.BezierSpline: x1, y1, x2, y2, end
     property int motionMs: 350
+    // Settings' Reduce motion: the island jumps instead of moving (shell.qml), and nothing fades
+    property bool reduceMotion: false
 
     // Spacing, on a 4 px grid: margins, padding and gaps take one of these (modules/tests/lint-views.js
     // flags a literal off the scale). Radii and font sizes have their own tokens above.
@@ -276,10 +308,18 @@ QtObject {
 
     // Durations for what isn't the island's own morph (that is motionMs): state layers (hover, press, focus)
     // fade in durationFast, a control changing size or position in durationMedium.
-    readonly property int durationFast: 120
-    readonly property int durationMedium: 200
+    readonly property int durationFast: reduceMotion ? 0 : 120
+    readonly property int durationMedium: reduceMotion ? 0 : 200
     readonly property int durationPulse: 700     // one half of a looping pulse (recording dot, working indicator)
     readonly property int durationSweep: 1200    // a looping sweep across a bar
+
+    // the clock everywhere it shows, and the calendar's first day: -1 = the locale's, 0 Sunday, 1 Monday
+    property bool clock24: true
+    readonly property string timeFormat: clock24 ? "HH:mm" : "h:mm AP"
+    property int firstDay: -1
+    // the toasts that only echo a key: volume, brightness and the microphone; and the workspace switch
+    property bool levelToasts: true
+    property bool switcherToasts: true
 
     // the "Dark theme" tile: the dark palette to come back to from a light one
     property string lastDark: "teal"
@@ -290,11 +330,9 @@ QtObject {
     // True by default, so components used anywhere else always show them.
     property bool focusVisible: true
 
-    // The Dynamic Island (Registry's `dynamic` views, Compact and Expanded) is black in either mode, as
-    // Apple's is. What those views draw straight on it takes these inks: a light palette's are dark.
-    readonly property color dynamicSurface: "#000000"
-    readonly property color dynamicInk: dark ? text : "#f5f5f7"
-    readonly property color dynamicDim: dark ? dim : "#a1a1a6"
+    // Words drawn straight on a picture (the lock screen), lifted by a dark shadow: light in either mode.
+    readonly property color pictureInk: "#f5f5f7"
+    readonly property color pictureDim: "#c7c7cc"
 
     // privacy dots beside the island (fixed: they mean the same thing in every palette)
     readonly property color microphone: "#ff9f1a"
@@ -347,6 +385,17 @@ QtObject {
         property alias style: root.style
         property alias handle: root.handle
         property alias activateLinux: root.activateLinux
+        property alias surfaceFollows: root.surfaceFollows
+        property alias contrastLevel: root.contrastLevel
+        property alias outlines: root.outlines
+        property alias roundness: root.roundness
+        property alias islandOpacity: root.islandOpacity
+        property alias shadow: root.shadow
+        property alias reduceMotion: root.reduceMotion
+        property alias clock24: root.clock24
+        property alias firstDay: root.firstDay
+        property alias levelToasts: root.levelToasts
+        property alias switcherToasts: root.switcherToasts
         property alias lastDark: root.lastDark
     }
 }

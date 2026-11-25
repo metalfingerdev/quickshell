@@ -4,14 +4,14 @@ import qs.modules.island
 import qs.modules.components
 import qs.modules.services
 
+// A custom colour, in full: the map, a hex code, the eyedropper and the recent ones. Theme has the rest
+// (where the colours come from, the bars, the surfaces); choosing a colour here makes it the source.
 Item {
     id: root
 
     readonly property int pad: 24
     readonly property int contentW: 780
-    readonly property bool generated: Config.source !== "preset"
-    readonly property bool accent: Config.source === "accent"
-    readonly property bool wallpaper: Config.source === "wallpaper"
+    readonly property bool accent: true
 
     // The accent as the picker holds it (HSV). Kept apart from Config.accent because a colour forgets:
     // grey has no hue, black no saturation either, and a handle mustn't jump when it gets there.
@@ -27,6 +27,7 @@ Item {
     }
     function setAccent() {
         Config.accent = Qt.hsva(hue, saturation, value, 1)
+        Config.source = "accent"
         Engine.key()
     }
     Component.onCompleted: loadAccent()
@@ -52,12 +53,6 @@ Item {
     implicitWidth: contentW + 2 * pad
     implicitHeight: column.implicitHeight + 2 * pad
 
-    component Level: Slider {
-        id: level
-        property string title: ""
-        valueText: title + "  " + Math.round(level.shown * 100) + "%"
-    }
-
     Column {
         id: column
         x: root.pad
@@ -68,71 +63,9 @@ Item {
         Header {
             width: parent.width
             icon: Config.symbol.colours
-            title: "Colours"
-            subtitle: Config.source === "preset" ? Config.current.label
-                    : root.accent ? "From " + Config.hex(Config.accent) : "From the wallpaper"
+            title: "Custom colour"
+            subtitle: Config.hex(Config.accent) + (Config.source === "accent" ? "" : "  ·  not in use: choosing one makes it the theme's")
             onBack: Engine.back()
-        }
-
-        Segmented {
-            width: parent.width
-            options: [
-                { key: "preset",    label: "Presets",   icon: "palette",   shortcut: "p" },
-                { key: "accent",    label: "Accent",    icon: "colorize",  shortcut: "a" },
-                { key: "wallpaper", label: "Wallpaper", icon: "wallpaper", shortcut: "w" }
-            ]
-            current: Config.source
-            onPicked: key => Config.source = key
-        }
-
-        Grid {
-            visible: Config.source === "preset"
-            columns: 4
-            spacing: Config.spaceM
-
-            Repeater {
-                model: Config.names
-
-                Tile {
-                    id: card
-                    required property string modelData
-                    readonly property var p: Config.palettes[modelData]
-
-                    width: (column.width - 36) / 4
-                    height: 112
-                    padding: Config.spaceL
-                    tint: p.surface
-                    current: Config.name === modelData
-                    // a hairline, so a palette as dark as the island still has an edge
-                    border.width: current ? 2 : 1
-                    border.color: current ? Config.primary : Config.divider
-                    focus: current && Config.source === "preset"   // the keyboard starts on the palette in use
-                    onClicked: Config.name = modelData
-
-                    Label {
-                        anchors { left: parent.left; top: parent.top }
-                        text: card.p.label
-                        color: card.p.text
-                        font.weight: Font.DemiBold
-                    }
-                    Row {
-                        anchors { left: parent.left; bottom: parent.bottom }
-                        spacing: -6
-
-                        Repeater {
-                            model: [card.p.primary, card.p.secondary, card.p.container]
-
-                            Rectangle {
-                                required property string modelData
-                                width: 24; height: 24; radius: 12
-                                color: modelData
-                                border.width: 2
-                                border.color: card.p.surface
-                            }
-                        }
-                    }
-                }
-            }
         }
 
         ColourMap {
@@ -172,7 +105,7 @@ Item {
                         width: 32; height: 32
                         tone: modelData
                         chosen: Config.hex(Config.accent) === modelData
-                        onPicked: { Config.accent = modelData; Engine.key() }
+                        onPicked: { Config.accent = modelData; Config.source = "accent"; Engine.key() }
                     }
                 }
             }
@@ -211,129 +144,13 @@ Item {
         }
 
         Row {
-            visible: root.wallpaper
-            width: parent.width
-            spacing: Config.spaceL
-
-            ClippingRectangle {
-                width: 176
-                height: 110
-                radius: Config.innerRadius
-                color: Config.container
-
-                CoverImage {
-                    source: Wallpaper.current ? Wallpaper.fileUrl(Wallpaper.current) : ""
-                    sourceSize: Qt.size(352, 220)
-                }
-            }
-            // What the picture offers (Wallpaper.options), each circle the whole scheme it makes: accent,
-            // secondary and the tinted surface. Picking one (again, too) puts its surfaces in the Surface row.
-            Flow {
-                anchors.verticalCenter: parent.verticalCenter
-                width: parent.width - 176 - parent.spacing
-                spacing: Config.spaceL
-
-                Repeater {
-                    model: Wallpaper.options
-
-                    Column {
-                        id: option
-                        required property var modelData
-                        required property int index
-                        spacing: Config.spaceS
-
-                        PaletteDot {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            width: 48; height: 48
-                            palette: Config.wallpaperScheme(option.modelData)
-                            chosen: Wallpaper.optionIndex === option.index
-                            focus: chosen && root.wallpaper
-                            onPicked: {
-                                Wallpaper.pick(option.index)
-                                Config.takeSurface(Wallpaper.option, Wallpaper.optionKey, true)
-                                Engine.key()
-                            }
-                        }
-                        Label {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            text: option.modelData.name
-                            color: Wallpaper.optionIndex === option.index ? Config.text : Config.dim
-                            font.pixelSize: Config.small
-                        }
-                    }
-                }
-                Label {
-                    visible: Wallpaper.options.length === 0
-                    text: "No wallpaper colours yet"
-                    color: Config.dim
-                }
-            }
-        }
-
-        // the accent's saturation is the square's own; the wallpaper's colour gets sliders for it
-        Row {
-            id: levels
-            readonly property real each: (width - spacing) / 2
-
-            visible: root.wallpaper
-            width: parent.width
-            spacing: Config.spaceM
-
-            Level {
-                width: levels.each
-                title: "Saturation"
-                icon: "invert_colors"
-                value: Config.wallpaperSaturation
-                onMoved: v => { Config.wallpaperSaturation = v; Engine.key() }
-            }
-            Level {
-                width: levels.each
-                title: "Lightness"
-                icon: "brightness_6"
-                value: Config.wallpaperLightness
-                onMoved: v => { Config.setWallpaperLightness(v); Engine.key() }
-            }
-        }
-
-        // The surfaces' own tint, not the accent's: a hue of their own, and how much of it they take
-        // (none: grey). The accent and the wallpaper never reach them.
-        Row {
-            id: surfaceRow
-            visible: root.generated
-            width: parent.width
-            spacing: Config.spaceL
-
-            Label {
-                id: surfaceLabel
-                anchors.verticalCenter: parent.verticalCenter
-                text: "Surface"
-                color: Config.dim
-            }
-            HueStrip {
-                anchors.verticalCenter: parent.verticalCenter
-                width: parent.width - surfaceLabel.width - tintLevel.width - 2 * parent.spacing
-                hue: Config.surfaceHue
-                opacity: Config.tint > 0 ? 1 : 0.4              // no tint: the hue does nothing yet
-                onMoved: h => { Config.surfaceHue = h; Engine.key() }
-            }
-            Level {
-                id: tintLevel
-                width: 300
-                title: "Tint"
-                icon: "format_color_fill"
-                value: Config.tint
-                onMoved: v => { Config.tint = v; Engine.key() }
-            }
-        }
-
-        Row {
             width: parent.width
             spacing: Config.spaceM
 
             Rectangle {
                 visible: root.accent
-                width: parent.width - mode.width - parent.spacing - (eyedropper.visible ? eyedropper.width + parent.spacing : 0)
-                height: mode.height
+                width: parent.width - (eyedropper.visible ? eyedropper.width + parent.spacing : 0)
+                height: 48
                 radius: height / 2
                 color: Config.high
                 border.width: field.activeFocus ? 2 : 0
@@ -367,6 +184,7 @@ Item {
                     function apply() {
                         if (digits.length !== 6) return
                         Config.accent = "#" + digits
+                        Config.source = "accent"
                         Config.remember(Config.accent)
                         text = ""
                     }
@@ -387,25 +205,17 @@ Item {
             Pill {
                 id: eyedropper
                 visible: root.accent && Toggles.has("hyprpicker")
-                implicitHeight: mode.height
+                implicitHeight: 48
                 icon: "colorize"
                 text: "Pick"
                 shortcut: "e"
                 onClicked: root.pick()
             }
-            Segmented {
-                id: mode
-                width: root.accent ? 240 : parent.width
-                options: [{ key: "dark", label: "Dark", icon: "dark_mode" }, { key: "light", label: "Light", icon: "light_mode" }]
-                current: Config.dark ? "dark" : "light"
-                onPicked: key => { Config.setDark(key === "dark"); Toggles.colorScheme(Config.dark) }
-            }
         }
 
         KeyHints {
             width: parent.width
-            keys: root.accent ? [["← → ↑ ↓", "saturation, brightness"], ["Tab", "the hue, then on"], ["⌫", "back"], ["Esc", "close"]]
-                              : [["⌫", "back"], ["Esc", "close"]]
+            keys: [["← → ↑ ↓", "saturation, brightness"], ["Tab", "the hue, then on"], ["⌫", "back"], ["Esc", "close"]]
         }
     }
 }

@@ -74,7 +74,7 @@ Item {
         { col: 4, row: 2, letter: "l", title: "Night light", tool: "hyprsunset", icon: "nightlight", isOn: () => Toggles.nightLight,
           status: () => Toggles.nightLight ? Toggles.warmth + " K" : "Off", run: () => Toggles.nightLight = !Toggles.nightLight },
         { col: 5, row: 2, letter: "k", title: "Dark theme", icon: "dark_mode", isOn: () => Config.dark,
-          run: () => { Config.setDark(!Config.dark); Toggles.colorScheme(Config.dark) } },
+          run: () => Config.setDark(!Config.dark) },
         // attention and power: Do not disturb, and between it and Battery
         { col: 2, row: 3, title: "Notifications", icon: Config.symbol.notifications, count: () => Notifier.count,
           status: () => Notifier.count > 0 ? Notifier.count + " waiting" : "None", run: root.open(Engine.View.Notifications) },
@@ -297,7 +297,7 @@ Item {
                 anchors { left: back.right; leftMargin: Config.spaceL; verticalCenter: parent.verticalCenter }
 
                 Text {
-                    text: Qt.formatDateTime(clock.date, "HH:mm")
+                    text: Qt.formatDateTime(clock.date, Config.timeFormat)
                     color: Config.text
                     font.family: Config.font
                     font.pixelSize: 42

@@ -8,7 +8,7 @@ Item {
     property int month: new Date().getMonth()
     property date today: new Date()
     // 0 = Sunday ... 6 = Saturday, like Date.getDay() (Locale says 1 = Monday ... 7 = Sunday)
-    property int firstDay: Qt.locale().firstDayOfWeek % 7
+    property int firstDay: Config.firstDay >= 0 ? Config.firstDay : Qt.locale().firstDayOfWeek % 7
     property int cell: 30
     // optional: the days with something on (Date.toDateString() keys), a dot under each; a day
     // clicked is `picked` and ringed as `selected`

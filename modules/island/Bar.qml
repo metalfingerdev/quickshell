@@ -14,8 +14,8 @@ import qs.modules.services
 //
 // Every Bar shares the Engine, but only the one on Engine.activeScreen draws the island: a second copy
 // would load every view, and its text fields, twice. The others only keep their top-edge hot zone.
-// The glass is Hyprland's (hypr/modules/look.lua blurs layers named glass:*). The shadow isn't: Hyprland
-// only shadows windows, so the island casts its own.
+// The glass is Hyprland's (hypr/modules/look.lua blurs layers named glass:*), or hyprglass's. The shadow
+// isn't: Hyprland only shadows windows, so the island casts its own, from a window of its own.
 Scope {
     id: root
 
@@ -44,8 +44,8 @@ Scope {
     // from it (Lock.qml); unlocked, it shrinks back from there. A view open then closes first.
     readonly property bool covering: Session.covering && active
     onCoveringChanged: if (covering) Engine.close()
-    // the surface's colour follows the view as it swaps in, eased with the morph
-    property color fill: covering || Registry.get(shown)?.dynamic ? Config.dynamicSurface : Config.island
+    // covering the screen the island is solid, whatever its opacity: it hides the screen as the lock comes
+    property color fill: covering ? Qt.rgba(Config.surface.r, Config.surface.g, Config.surface.b, 1) : Config.island
     Behavior on fill { ColorAnimation { duration: Config.durationMedium } }
     onTargetChanged: swap.restart()
 
@@ -127,6 +127,44 @@ Scope {
             id: edge
             anchors.fill: parent
             HoverHandler { id: edgeHover }
+        }
+    }
+
+    // The island's shadow, in a window of its own on the top layer, under the island's (overlay): in the
+    // overlay its soft alpha would take the glass (Hyprland's blur, hyprglass) too, so their cut-off had
+    // to sit above it, and an island more see-through than that lost its glass. Takes no input. It fades
+    // out as the island goes see-through, where its dark core would show; over a fullscreen window
+    // (above the top layer) there is none.
+    PanelWindow {
+        screen: root.screen
+        visible: root.active && Config.shadow
+        anchors { top: true; bottom: true; left: true; right: true }
+        exclusionMode: ExclusionMode.Ignore
+        color: "transparent"
+        mask: Region {}
+        WlrLayershell.namespace: "quickshell:shadow"
+        WlrLayershell.layer: WlrLayer.Top
+        WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+
+        RectangularShadow {
+            readonly property bool open: !Engine.atRest
+            property real lift: open ? 16 : 5
+
+            // in a notch it carries on above the screen, so it doesn't thin out toward the top edge
+            x: root.sx
+            y: root.sy - (root.notch ? radius : 0)
+            width: root.sw
+            height: root.sh + (root.notch ? radius : 0)
+            radius: surface.r
+            offset: Qt.vector2d(0, lift)
+            blur: open ? 56 : 22
+            color: Qt.rgba(0, 0, 0, open ? 0.5 : 0.42)
+            opacity: Engine.hidden || root.covering ? 0 : Math.max(0, Math.min(1, (Config.islandAlpha - 0.3) / 0.5))
+
+            Behavior on lift    { Motion {} }
+            Behavior on blur    { Motion {} }
+            Behavior on color   { ColorAnimation { duration: Config.motionMs } }
+            Behavior on opacity { NumberAnimation { duration: 150 } }
         }
     }
 
@@ -229,29 +267,6 @@ Scope {
                 visible: root.debug
                 color: '#338aff30'
             }
-        }
-
-        // From the same animated rect, so it morphs with the island. Not part of the input mask, so it never
-        // takes a click. It stays under look.lua's `ignore_alpha`, which keeps the glass's blur from spreading into it.
-        RectangularShadow {
-            readonly property bool open: !Engine.atRest
-            property real lift: open ? 16 : 5
-
-            // in a notch it carries on above the screen, so it doesn't thin out toward the top edge
-            x: root.sx
-            y: root.sy - (root.notch ? radius : 0)
-            width: root.sw
-            height: root.sh + (root.notch ? radius : 0)
-            radius: surface.r
-            offset: Qt.vector2d(0, lift)
-            blur: open ? 56 : 22
-            color: Qt.rgba(0, 0, 0, open ? 0.5 : 0.42)
-            opacity: Engine.hidden ? 0 : 1
-
-            Behavior on lift    { Motion {} }
-            Behavior on blur    { Motion {} }
-            Behavior on color   { ColorAnimation { duration: Config.motionMs } }
-            Behavior on opacity { NumberAnimation { duration: 150 } }
         }
 
         // Drawn outside the surface (which clips), from the same animated rect.

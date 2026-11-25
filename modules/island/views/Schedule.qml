@@ -32,8 +32,8 @@ Item {
 
     function span(e) {
         if (e.allDay) return "All day"
-        if (e.start <= Calendar.now && Calendar.now < e.end) return "Now, until " + Qt.formatTime(new Date(e.end * 1000), "HH:mm")
-        return Qt.formatTime(new Date(e.start * 1000), "HH:mm") + " – " + Qt.formatTime(new Date(e.end * 1000), "HH:mm")
+        if (e.start <= Calendar.now && Calendar.now < e.end) return "Now, until " + Qt.formatTime(new Date(e.end * 1000), Config.timeFormat)
+        return Qt.formatTime(new Date(e.start * 1000), Config.timeFormat) + " – " + Qt.formatTime(new Date(e.end * 1000), Config.timeFormat)
     }
 
     implicitWidth: 560

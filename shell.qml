@@ -37,7 +37,10 @@ ShellRoot {
     Connections { target: Config; function onSourceChanged() { root.takeWallpaperSurface(true) } }
     Binding { target: Config; property: "windowOpacity"; value: Desktops.windowOpacity }
     Binding { target: Config; property: "curve"; value: Desktops.windowCurve; when: Desktops.windowCurve !== null }
-    Binding { target: Config; property: "motionMs"; value: Desktops.windowMs; when: Desktops.windowMs > 0 }
+    // Reduce motion (Settings): the island jumps where it would move
+    Binding { target: Config; property: "motionMs"; value: Config.reduceMotion ? 0 : Desktops.windowMs; when: Config.reduceMotion || Desktops.windowMs > 0 }
+    // light or dark, however it was asked (Theme, the dashboard's tile, IPC), so do the apps (gsettings)
+    Connections { target: Config; function onDarkChanged() { Toggles.colorScheme(Config.dark) } }
 
     Variants {
         model: Quickshell.screens

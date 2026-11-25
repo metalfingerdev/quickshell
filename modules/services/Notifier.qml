@@ -11,8 +11,10 @@ import qs.modules.components
 Singleton {
     id: root
 
-    property int lowMs: 10000
-    property int normalMs: 10000
+    // how long a popup stays when the app doesn't say (Settings' Alerts)
+    property string popupLength: "normal"
+    readonly property int normalMs: ({ short: 5000, normal: 10000, long: 20000 })[popupLength] ?? 10000
+    readonly property int lowMs: normalMs
     property int criticalMs: 0              // 0 = stays until closed
     property int maxPopups: 3               // the rest wait, shown as "+N more"
     property bool stackDuplicates: true
@@ -22,6 +24,7 @@ Singleton {
     property Store store: Store {
         category: "notifications"
         property alias dnd: root.dnd
+        property alias popupLength: root.popupLength
     }
 
     // true = popup countdowns are frozen. Set by whoever shows the popups (hovered, or not on screen).

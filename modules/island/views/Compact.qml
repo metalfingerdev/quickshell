@@ -54,7 +54,7 @@ Item {
                 width: Math.min(implicitWidth, 160)
                 elide: Text.ElideRight
                 text: Activities.label
-                color: Config.dynamicDim
+                color: Config.dim
             }
         }
 
@@ -147,8 +147,7 @@ Item {
 
         Label {
             anchors.verticalCenter: parent.verticalCenter
-            text: Qt.formatDateTime(clock.date, "HH:mm")
-            color: Config.dynamicInk
+            text: Qt.formatDateTime(clock.date, Config.timeFormat)
             font.pixelSize: Config.body + 1
             font.weight: Font.DemiBold
             font.features: { "tnum": 1 }
@@ -170,7 +169,7 @@ Item {
             name: "do_not_disturb_on"
             size: 16
             filled: true
-            color: Config.dynamicDim
+            color: Config.dim
         }
 
         Icon {

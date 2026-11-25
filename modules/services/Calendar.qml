@@ -3,6 +3,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import qs.modules.components
 import "Agenda.js" as Agenda
 
 // What's next in the calendars subscribed to by their secret iCal address, read by island-calendar
@@ -51,7 +52,7 @@ Singleton {
         if (!event.allDay && event.start <= now && now < event.end) return "Now"
         const away = Agenda.daysAway(event.start, now)
         const start = new Date(event.start * 1000)
-        const time = Qt.formatTime(start, "HH:mm")
+        const time = Qt.formatTime(start, Config.timeFormat)
         if (away <= 0) return event.allDay ? "Today" : time
         if (away === 1) return event.allDay ? "Tomorrow" : "Tomorrow " + time
         const day = Qt.formatDate(start, "ddd d")

@@ -29,9 +29,9 @@ Rectangle {
 		blurMax: 24
 	}
 
-	// The island's black: the lock comes in over the island that covered the screen, and leaves back
-	// to it (Lock.qml). It stays for good if there is no picture.
-	color: Config.dynamicSurface
+	// The island's own colour, solid: the lock comes in over the island that covered the screen, and
+	// leaves back to it (Lock.qml). It stays for good if there is no picture.
+	color: Config.surface
 
 	SystemClock {
 		id: clock
@@ -80,7 +80,7 @@ Rectangle {
 			layer.enabled: root.veil > 0
 			layer.effect: MultiEffect {
 				blurEnabled: true
-				blur: root.veil
+				blur: root.veil * LockConfig.blur
 				blurMax: 64
 				brightness: -0.18 * root.veil
 			}
@@ -98,14 +98,14 @@ Rectangle {
 			Label {
 				anchors.horizontalCenter: parent.horizontalCenter
 				text: Qt.formatDateTime(clock.date, "dddd d MMMM")
-				color: Config.dynamicInk
+				color: Config.pictureInk
 				font.pixelSize: Config.title
 				font.weight: Font.DemiBold
 			}
 			Label {
 				anchors.horizontalCenter: parent.horizontalCenter
-				text: Qt.formatDateTime(clock.date, "HH:mm")
-				color: Config.dynamicInk
+				text: Qt.formatDateTime(clock.date, Config.timeFormat)
+				color: Config.pictureInk
 				// Qt's default text renderer looks rough this big
 				renderType: Text.NativeRendering
 				font.pixelSize: Config.display * 2.5
@@ -167,7 +167,7 @@ Rectangle {
 					width: Math.min(implicitWidth, 480)
 					elide: Text.ElideRight
 					text: LockConfig.shownName
-					color: Config.dynamicInk
+					color: Config.pictureInk
 					font.pixelSize: Config.large
 					font.weight: Font.DemiBold
 				}
@@ -177,7 +177,7 @@ Rectangle {
 					width: Math.min(implicitWidth, 480)
 					elide: Text.ElideRight
 					text: LockConfig.shownInfo
-					color: Config.dynamicDim
+					color: Config.pictureDim
 				}
 			}
 
@@ -188,7 +188,7 @@ Rectangle {
 				height: 48
 				icon: ""
 				placeholder: "Enter Password"
-				fill: Qt.rgba(Config.dynamicInk.r, Config.dynamicInk.g, Config.dynamicInk.b, 0.18)
+				fill: Qt.rgba(Config.pictureInk.r, Config.pictureInk.g, Config.pictureInk.b, 0.18)
 				focus: true
 				enabled: !root.context.unlockInProgress
 				field.echoMode: TextInput.Password
@@ -216,7 +216,7 @@ Rectangle {
 				anchors.horizontalCenter: parent.horizontalCenter
 				text: root.context.unlockInProgress ? "Checking…" : "Incorrect password"
 				opacity: root.context.unlockInProgress || root.context.showFailure ? 1 : 0
-				color: root.context.unlockInProgress ? Config.dynamicDim : Config.bad
+				color: root.context.unlockInProgress ? Config.pictureDim : Config.bad
 				font.weight: Font.Medium
 				layer.enabled: true
 				layer.effect: Lifted {}

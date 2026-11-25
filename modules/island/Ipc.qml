@@ -61,7 +61,7 @@ IpcHandler {
     }
     function tint(percent: int): void    { Config.tint = Math.max(0, Math.min(1, percent / 100)) }
     function surface(degrees: int): void { Config.surfaceHue = (((degrees % 360) + 360) % 360) / 360 }
-    function mode(name: string): void    { if (name === "dark" || name === "light") Config.darkMode = name === "dark" }
+    function mode(name: string): void    { if (name === "dark" || name === "light") Config.setDark(name === "dark") }
     function size(percent: int): void    { Config.scale = Math.max(0.8, Math.min(1.4, percent / 100)) }
     function palettes(): string          { return Config.names.join("\n") }
     function style(name: string): void   { if (name === "pill" || name === "notch") Config.style = name }

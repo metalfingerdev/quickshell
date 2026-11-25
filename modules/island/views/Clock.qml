@@ -77,7 +77,7 @@ Item {
 
                     Label {
                         id: time
-                        text: Qt.formatDateTime(clock.date, "HH:mm")
+                        text: Qt.formatDateTime(clock.date, Config.timeFormat)
                         font.pixelSize: 88
                         font.weight: Font.Light
                         font.features: { "tnum": 1 }
@@ -122,7 +122,7 @@ Item {
                             required property var modelData
                             width: parent.width
                             elide: Text.ElideRight
-                            text: (modelData.allDay ? "All day" : Qt.formatDateTime(new Date(modelData.start * 1000), "HH:mm"))
+                            text: (modelData.allDay ? "All day" : Qt.formatDateTime(new Date(modelData.start * 1000), Config.timeFormat))
                                   + "   " + Calendar.title(modelData)
                         }
                     }
