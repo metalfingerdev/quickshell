@@ -180,16 +180,22 @@ Item {
             }
         }
 
-        Label {
+        Rectangle {
             visible: Agent.messages.count === 0
             width: parent.width
-            topPadding: Config.spaceS
-            bottomPadding: Config.spaceS
-            wrapMode: Text.Wrap
-            text: "Ask anything. The model runs on this computer: nothing leaves it unless Internet is on, "
-                + "when it may search the web and read pages. It can also look up this computer and open apps. "
-                + "The conversation is kept only until the shell stops. Try “?” in the launcher too."
-            color: Config.dim
+            height: intro.implicitHeight + 2 * Config.spaceM
+            radius: Config.innerRadius
+            color: Config.tile
+
+            Label {
+                id: intro
+                anchors { left: parent.left; right: parent.right; margins: Config.spaceM; verticalCenter: parent.verticalCenter }
+                wrapMode: Text.Wrap
+                text: "Ask anything. The model runs on this computer: nothing leaves it unless Internet is on, "
+                    + "when it may search the web and read pages. It can also look up this computer and open apps. "
+                    + "The conversation is kept only until the shell stops. Try “?” in the launcher too."
+                color: Config.dim
+            }
         }
 
         ListView {
@@ -224,7 +230,7 @@ Item {
                 readonly property var tools: { try { return JSON.parse(steps) } catch (e) { return [] } }
 
                 width: list.width
-                height: mine ? bubble.height : answer.implicitHeight
+                height: mine ? bubble.height : answer.implicitHeight + 2 * Config.spaceM
 
                 // the question, on the right
                 Rectangle {
@@ -248,11 +254,21 @@ Item {
                     }
                 }
 
+                // the answer on a card, so it reads on clear glass
+                Rectangle {
+                    visible: !msg.mine
+                    anchors.fill: parent
+                    radius: Config.cardRadius
+                    color: Config.tile
+                }
+
                 // the answer: what it thought, the tools it used, then the words, as Markdown
                 Column {
                     id: answer
                     visible: !msg.mine
-                    width: parent.width
+                    x: Config.spaceM
+                    y: Config.spaceM
+                    width: parent.width - 2 * Config.spaceM
                     spacing: Config.spaceS
 
                     // The thinking as the model wrote it, folded to its latest words while it goes on; a
@@ -308,7 +324,7 @@ Item {
                                 width: answer.width
                                 height: thoughts.implicitHeight + 24
                                 radius: Config.innerRadius
-                                color: Config.tile
+                                color: Config.raised
 
                                 Text {
                                     id: thoughts

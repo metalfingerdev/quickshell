@@ -639,14 +639,16 @@ Item {
         width: root.contentW
         spacing: Config.spaceL
 
-        // the time large, as Android's shade opens with it
-        Item {
+        // the time large, as Android's shade opens with it, on a capsule so it reads on clear glass
+        Rectangle {
             width: parent.width
-            height: 72
+            height: 80
+            radius: height / 2
+            color: Config.tile
 
             BackButton {
                 id: back
-                anchors.verticalCenter: parent.verticalCenter
+                anchors { left: parent.left; leftMargin: Config.spaceM; verticalCenter: parent.verticalCenter }
                 onClicked: root.editing ? root.edit(false) : Engine.back()
             }
             Column {
@@ -665,7 +667,7 @@ Item {
                 }
             }
             Row {
-                anchors { right: parent.right; verticalCenter: parent.verticalCenter }
+                anchors { right: parent.right; rightMargin: Config.spaceM; verticalCenter: parent.verticalCenter }
                 spacing: Config.spaceS
 
                 Pill {
@@ -754,16 +756,23 @@ Item {
         }
 
         // what the pointer is on, or what's on
-        Label {
+        Rectangle {
             visible: !root.editing
             width: parent.width
-            leftPadding: Config.spaceXs
-            elide: Text.ElideRight
-            color: root.pointed ? Config.text : Config.dim
-            text: root.pointed ? root.pointed.caption : (() => {
-                const lit = root.ids.map(id => root.defs[id]).filter(q => q?.isOn?.()).map(q => q.title)
-                return lit.length > 0 ? "On: " + lit.join(", ") : "Point at a tile for its name"
-            })()
+            height: 36
+            radius: height / 2
+            color: Config.tile
+
+            Label {
+                anchors { fill: parent; leftMargin: Config.spaceL; rightMargin: Config.spaceL }
+                verticalAlignment: Text.AlignVCenter
+                elide: Text.ElideRight
+                color: root.pointed ? Config.text : Config.dim
+                text: root.pointed ? root.pointed.caption : (() => {
+                    const lit = root.ids.map(id => root.defs[id]).filter(q => q?.isOn?.()).map(q => q.title)
+                    return lit.length > 0 ? "On: " + lit.join(", ") : "Point at a tile for its name"
+                })()
+            }
         }
 
         KeyHints {

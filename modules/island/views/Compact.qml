@@ -13,6 +13,13 @@ Item {
     implicitWidth: Math.max(120, row.implicitWidth + 32)
     implicitHeight: 36
 
+    // the glass may be clear: what the capsule shows sits on a capsule of its own
+    Rectangle {
+        anchors { fill: parent; margins: Config.spaceXs }
+        radius: height / 2
+        color: Config.tile
+    }
+
     SystemClock {
         id: clock
         precision: SystemClock.Minutes

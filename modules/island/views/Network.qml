@@ -93,17 +93,15 @@ Item {
             }
         }
 
-        Label {
-            visible: text !== ""
+        EmptyState {
+            visible: title !== ""
             width: parent.width
-            topPadding: Config.spaceS
-            bottomPadding: Config.spaceS
-            horizontalAlignment: Text.AlignHCenter
-            text: !Net.available ? "NetworkManager isn't running"
-                : Net.wifi === null ? "No Wi-Fi device"
-                : !Net.wifiEnabled ? "Turn Wi-Fi on to see networks"
-                : Net.networks.length === 0 ? "Searching…" : ""
-            color: Config.dim
+            compact: true
+            icon: !Net.wifiEnabled ? "wifi_off" : "wifi_find"
+            title: !Net.available ? "NetworkManager isn't running"
+                 : Net.wifi === null ? "No Wi-Fi device"
+                 : !Net.wifiEnabled ? "Turn Wi-Fi on to see networks"
+                 : Net.networks.length === 0 ? "Searching…" : ""
         }
 
         // known networks first, as System Settings has them; each row opens the panel below

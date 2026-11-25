@@ -14,6 +14,14 @@ Item {
     implicitWidth: Engine.pinned ? 560 : Math.max(300, toast.implicitWidth + 40)
     implicitHeight: Engine.pinned ? column.implicitHeight + 2 * pad : 72
 
+    // the glass may be clear: what the capsule shows sits on a capsule of its own
+    Rectangle {
+        visible: !Engine.pinned
+        anchors { fill: parent; margins: Config.spaceS }
+        radius: height / 2
+        color: Config.tile
+    }
+
     Row {
         id: toast
         visible: !Engine.pinned

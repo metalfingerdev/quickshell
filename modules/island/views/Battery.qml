@@ -62,49 +62,51 @@ Item {
             onBack: Engine.back()
         }
 
-        Item {
-            width: parent.width
-            height: 76
+        Card {
+            Item {
+                width: parent.width
+                height: 76
 
-            Rectangle {
-                id: badge
-                anchors.verticalCenter: parent.verticalCenter
-                width: 76; height: 76; radius: 38
-                color: Config.mix(Config.tile, root.levelColor, 0.22)
+                Rectangle {
+                    id: badge
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 76; height: 76; radius: 38
+                    color: Config.mix(Config.tile, root.levelColor, 0.22)
 
-                Icon {
-                    anchors.centerIn: parent
-                    name: Energy.glyph
-                    size: 38
-                    filled: true
-                    color: root.levelColor
+                    Icon {
+                        anchors.centerIn: parent
+                        name: Energy.glyph
+                        size: 38
+                        filled: true
+                        color: root.levelColor
+                    }
+                }
+                Column {
+                    anchors { left: badge.right; leftMargin: Config.spaceL; right: parent.right; verticalCenter: parent.verticalCenter }
+
+                    Label {
+                        text: Energy.present ? (Energy.percent >= 0 ? Energy.percent + "%" : "…") : "No battery"
+                        font.pixelSize: Config.display
+                        font.weight: Font.Normal
+                        font.features: { "tnum": 1 }
+                    }
+                    Label {
+                        visible: !Engine.pinned
+                        width: parent.width
+                        text: root.status
+                        elide: Text.ElideRight
+                        color: Config.dim
+                    }
                 }
             }
-            Column {
-                anchors { left: badge.right; leftMargin: Config.spaceL; right: parent.right; verticalCenter: parent.verticalCenter }
 
-                Label {
-                    text: Energy.present ? (Energy.percent >= 0 ? Energy.percent + "%" : "…") : "No battery"
-                    font.pixelSize: Config.display
-                    font.weight: Font.Normal
-                    font.features: { "tnum": 1 }
-                }
-                Label {
-                    visible: !Engine.pinned
-                    width: parent.width
-                    text: root.status
-                    elide: Text.ElideRight
-                    color: Config.dim
-                }
+            Progress {
+                visible: Energy.present
+                width: parent.width
+                thickness: 16
+                fraction: Energy.percent / 100
+                color: root.levelColor
             }
-        }
-
-        Progress {
-            visible: Energy.present
-            width: parent.width
-            thickness: 16
-            fraction: Energy.percent / 100
-            color: root.levelColor
         }
 
         Flow {

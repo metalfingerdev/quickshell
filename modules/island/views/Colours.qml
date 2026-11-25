@@ -256,13 +256,21 @@ Item {
                     shortcut: "u"
                     onClicked: root.reset()
                 }
-                Label {
+                Rectangle {
                     visible: root.accent && Config.keepReadable && Config.hex(Config.current.primary) !== Config.hex(Config.accent)
                     width: parent.width
-                    wrapMode: Text.WordWrap
-                    text: "Drawn " + (Config.dark ? "lighter" : "darker") + " to read on the island. Turn off “Keep colours readable” in Theme to draw it as picked."
-                    color: Config.dim
-                    font.pixelSize: Config.small
+                    height: readableNote.implicitHeight + 2 * Config.spaceM
+                    radius: Config.innerRadius
+                    color: Config.tile
+
+                    Label {
+                        id: readableNote
+                        anchors { left: parent.left; right: parent.right; margins: Config.spaceM; verticalCenter: parent.verticalCenter }
+                        wrapMode: Text.WordWrap
+                        text: "Drawn " + (Config.dark ? "lighter" : "darker") + " to read on the island. Turn off “Keep colours readable” in Theme to draw it as picked."
+                        color: Config.dim
+                        font.pixelSize: Config.small
+                    }
                 }
             }
         }

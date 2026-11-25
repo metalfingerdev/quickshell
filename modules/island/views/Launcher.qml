@@ -372,6 +372,17 @@ Item {
         onPicked: key => { root.filter = key; bar.forceActiveFocus() }
     }
 
+    // the results, the hint and the emoji's name, all on one card under the filters: the rows are clear
+    // until chosen, and the glass behind them may be too
+    Rectangle {
+        x: 12
+        y: root.listTop - Config.spaceXs
+        width: parent.width - 24
+        height: (root.results.length === 0 ? 56 : root.emojiMode ? grid.height + 44 : list.height) + Config.spaceS
+        radius: Config.cardRadius
+        color: Config.tile
+    }
+
     Label {
         visible: root.hint !== ""
         x: 36

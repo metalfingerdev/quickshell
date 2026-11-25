@@ -65,71 +65,79 @@ Item {
 
         Row {
             width: parent.width
-            spacing: Config.spaceXl
+            spacing: Config.spaceM
 
-            Column {
+            // the time and the day on a card of their own, as tall as the month beside them
+            Rectangle {
                 width: parent.width - card.width - parent.spacing
-                anchors.verticalCenter: card.verticalCenter
-                spacing: Config.spaceS
+                height: Math.max(card.height, today.implicitHeight + 2 * Config.spaceL)
+                radius: Config.cardRadius
+                color: Config.tile
 
-                Row {
+                Column {
+                    id: today
+                    anchors { left: parent.left; right: parent.right; margins: Config.spaceL; verticalCenter: parent.verticalCenter }
                     spacing: Config.spaceS
 
-                    Label {
-                        id: time
-                        text: Qt.formatDateTime(clock.date, Config.timeFormat)
-                        font.pixelSize: 88
-                        font.weight: Font.Light
-                        font.features: { "tnum": 1 }
-                    }
-                    Label {
-                        anchors.baseline: time.baseline
-                        text: Qt.formatDateTime(clock.date, "ss")
-                        color: Config.primary
-                        font.pixelSize: Config.headline
-                        font.features: { "tnum": 1 }
-                    }
-                }
-                Label {
-                    text: Qt.formatDateTime(clock.date, "dddd")
-                    font.pixelSize: Config.title
-                }
-                Label {
-                    text: Qt.formatDateTime(clock.date, "d MMMM yyyy") + "  ·  week " + root.week
-                    color: Config.dim
-                    font.pixelSize: Config.large
-                }
-
-                // the picked day's events (today's at first), when there are calendars to have them
-                Column {
-                    visible: Calendar.any
-                    width: parent.width
-                    topPadding: Config.spaceM
-                    spacing: Config.spaceXs
-
-                    SectionLabel {
-                        text: root.picked === null ? "Today" : Qt.formatDateTime(root.day, "dddd d MMMM")
-                    }
-                    Label {
-                        visible: root.dayEvents.length === 0
-                        text: "Nothing on"
-                        color: Config.dim
-                    }
-                    Repeater {
-                        model: root.dayEvents.slice(0, 3)
+                    Row {
+                        spacing: Config.spaceS
 
                         Label {
-                            required property var modelData
-                            width: parent.width
-                            elide: Text.ElideRight
-                            text: (modelData.allDay ? "All day" : Qt.formatDateTime(new Date(modelData.start * 1000), Config.timeFormat))
-                                  + "   " + Calendar.title(modelData)
+                            id: time
+                            text: Qt.formatDateTime(clock.date, Config.timeFormat)
+                            font.pixelSize: 88
+                            font.weight: Font.Light
+                            font.features: { "tnum": 1 }
+                        }
+                        Label {
+                            anchors.baseline: time.baseline
+                            text: Qt.formatDateTime(clock.date, "ss")
+                            color: Config.primary
+                            font.pixelSize: Config.headline
+                            font.features: { "tnum": 1 }
                         }
                     }
                     Label {
-                        visible: root.dayEvents.length > 3
-                        text: "and " + (root.dayEvents.length - 3) + " more"
+                        text: Qt.formatDateTime(clock.date, "dddd")
+                        font.pixelSize: Config.title
+                    }
+                    Label {
+                        text: Qt.formatDateTime(clock.date, "d MMMM yyyy") + "  ·  week " + root.week
                         color: Config.dim
+                        font.pixelSize: Config.large
+                    }
+
+                    // the picked day's events (today's at first), when there are calendars to have them
+                    Column {
+                        visible: Calendar.any
+                        width: parent.width
+                        topPadding: Config.spaceM
+                        spacing: Config.spaceXs
+
+                        SectionLabel {
+                            text: root.picked === null ? "Today" : Qt.formatDateTime(root.day, "dddd d MMMM")
+                        }
+                        Label {
+                            visible: root.dayEvents.length === 0
+                            text: "Nothing on"
+                            color: Config.dim
+                        }
+                        Repeater {
+                            model: root.dayEvents.slice(0, 3)
+
+                            Label {
+                                required property var modelData
+                                width: parent.width
+                                elide: Text.ElideRight
+                                text: (modelData.allDay ? "All day" : Qt.formatDateTime(new Date(modelData.start * 1000), Config.timeFormat))
+                                      + "   " + Calendar.title(modelData)
+                            }
+                        }
+                        Label {
+                            visible: root.dayEvents.length > 3
+                            text: "and " + (root.dayEvents.length - 3) + " more"
+                            color: Config.dim
+                        }
                     }
                 }
             }

@@ -264,18 +264,10 @@ Item {
             width: parent.width
             spacing: Config.spaceXl
 
-            Column {
+            ListSection {
+                title: "Output"
                 visible: Audio.sinks.length > 0
                 width: Players.list.length > 1 ? (parent.width - parent.spacing) / 2 : parent.width
-                spacing: Config.spaceS
-
-                Label {
-                    leftPadding: Config.spaceXs
-                    bottomPadding: Config.spaceXs
-                    text: "Output"
-                    font.pixelSize: Config.large
-                    font.weight: Font.Medium
-                }
                 Repeater {
                     model: Audio.sinks.slice(0, 4)
 
@@ -286,7 +278,7 @@ Item {
                         readonly property bool silent: Audio.isMuted(modelData)
                         function step(by) { Audio.setLevel(modelData, level + 5 * by) }
 
-                        width: parent.width
+                        flat: true
                         icon: Audio.glyph(modelData)
                         title: Audio.label(modelData)
                         active: modelData === Audio.sink
@@ -319,25 +311,17 @@ Item {
                 }
             }
 
-            Column {
+            ListSection {
+                title: "Players"
                 visible: Players.list.length > 1
                 width: (parent.width - parent.spacing) / 2
-                spacing: Config.spaceS
-
-                Label {
-                    leftPadding: Config.spaceXs
-                    bottomPadding: Config.spaceXs
-                    text: "Players"
-                    font.pixelSize: Config.large
-                    font.weight: Font.Medium
-                }
                 Repeater {
                     model: Players.list
 
                     ListEntry {
                         id: entry
                         required property var modelData
-                        width: parent.width
+                        flat: true
                         title: modelData.trackTitle || modelData.identity
                         subtitle: (modelData.trackArtist ? modelData.trackArtist + "  ·  " : "") + modelData.identity
                         active: modelData === Players.active
