@@ -73,6 +73,144 @@ Item {
     readonly property color see: Config.surface
     function seeThrough(alpha) { return Qt.rgba(see.r, see.g, see.b, alpha) }
 
+    // the Glass and blur page
+    readonly property bool liquid: Glass.available && Glass.enabled
+    Component.onCompleted: Glass.readDescriptions()
+    function hyprCurrent(key, fallback) { const o = Glass.descriptions.find(d => d.name === key); return o ? Number(o.current) : fallback }
+    function hl(key, fallback) { const v = Glass.hl?.shared?.[key]; return v !== undefined ? Number(v) : hyprCurrent(key, fallback) }
+    function setHl(key, value) {
+        const all = Object.assign({ shared: {}, dark: {}, light: {} }, Glass.hl)
+        all.shared = Object.assign({}, all.shared, { [key]: value })
+        Glass.hl = all
+    }
+    readonly property real windowBlurShown: Glass.windowBlur >= 0 ? Glass.windowBlur
+        : liquid ? Number(Glass.glassValue("windows", "blur_strength")) / 4 : hyprCurrent("decoration:blur:size", 8) / 16
+    // "#rrggbbaa", as hyprglass and the settings keep a colour, to a colour, and back
+    function parse(hex) {
+        const h = String(hex ?? "").replace("#", "")
+        const n = i => parseInt(h.substr(i, 2), 16) / 255
+        return h.length >= 6 ? Qt.rgba(n(0), n(2), n(4), h.length >= 8 ? n(6) : 1) : Qt.rgba(0, 0, 0, 0)
+    }
+    function hexa(c) { return Config.hex(c) + Math.round(c.a * 255).toString(16).padStart(2, "0") }
+
+    // one quantity: its name and value above, the slider across the row
+    component Amount: Item {
+        id: amount
+        property string text: ""
+        property real value: 0
+        property string valueText: Math.round(slider.shown * 100) + "%"
+        signal moved(real value)
+        signal committed(real value)
+        width: parent ? parent.width : 0
+        height: visible ? 72 : 0
+        opacity: enabled ? 1 : 0.38
+
+        Rectangle { visible: amount.y > 0.5; x: Config.spaceL; width: parent.width - x; height: 1; color: Config.fill2 }
+        Label { x: Config.spaceL; y: Config.spaceM; text: amount.text; font.pixelSize: Config.body + 1 }
+        Label {
+            anchors { right: parent.right; rightMargin: Config.spaceL }
+            y: Config.spaceM
+            text: amount.valueText
+            color: Config.label2
+            font.features: { "tnum": 1 }
+        }
+        ValueSlider {
+            id: slider
+            x: Config.spaceM; width: parent.width - 2 * Config.spaceM
+            anchors { bottom: parent.bottom; bottomMargin: Config.spaceS }
+            title: amount.text
+            enabled: amount.enabled
+            value: amount.value
+            onMoved: v => amount.moved(v)
+            onCommitted: v => amount.committed(v)
+        }
+    }
+
+    // a yes/no in a section
+    component SwitchRow: ListEntry {
+        id: row
+        property bool checked: false
+        signal toggled(bool on)
+        flat: true
+        onClicked: toggled(!checked)
+        Toggle { checked: row.checked; activeFocusOnTab: false; onToggled: on => row.toggled(on) }
+    }
+
+    // a colour quantity: its name, and a bar drawn in the colours it gives
+    component TintBar: Item {
+        id: bar
+        property string text: ""
+        property alias value: colours.value
+        property alias colourAt: colours.colourAt
+        signal moved(real value)
+        width: parent ? parent.width : 0
+        height: 56
+        Rectangle { x: Config.spaceL; width: parent.width - x; height: 1; color: Config.fill2 }
+        Label { x: Config.spaceL; anchors.verticalCenter: parent.verticalCenter; width: 120; text: bar.text; color: Config.label2 }
+        ColourBar {
+            id: colours
+            anchors { left: parent.left; leftMargin: 120 + Config.spaceL; right: parent.right; rightMargin: Config.spaceL; verticalCenter: parent.verticalCenter }
+            title: bar.text
+            onMoved: v => bar.moved(v)
+        }
+    }
+
+    // liquid glass's own settings for the island or the windows: the tint in full, the bend and the light
+    component GlassAmounts: Column {
+        id: glass
+        property string which: "windows"
+        readonly property color tint: root.parse(Glass.glassValue(which, "tint_color"))
+        function setTint(c) { Glass.setGlass(which, "tint_color", root.hexa(c)) }
+        width: parent ? parent.width : 0
+
+        Amount {
+            text: "Tint"
+            value: glass.tint.a
+            onCommitted: v => glass.setTint(Qt.rgba(glass.tint.r, glass.tint.g, glass.tint.b, v))
+        }
+        TintBar {
+            text: "Tint hue"
+            value: Math.max(0, glass.tint.hslHue)
+            colourAt: t => Qt.hsla(t, 0.7, 0.55, 1)
+            onMoved: v => glass.setTint(Qt.hsla(v, Math.max(0.01, glass.tint.hslSaturation), glass.tint.hslLightness, glass.tint.a))
+        }
+        TintBar {
+            text: "Tint saturation"
+            value: glass.tint.hslSaturation
+            colourAt: t => Qt.hsla(Math.max(0, glass.tint.hslHue), t, 0.5, 1)
+            onMoved: v => glass.setTint(Qt.hsla(Math.max(0, glass.tint.hslHue), v, glass.tint.hslLightness, glass.tint.a))
+        }
+        TintBar {
+            text: "Tint lightness"
+            value: glass.tint.hslLightness
+            colourAt: t => Qt.hsla(Math.max(0, glass.tint.hslHue), glass.tint.hslSaturation, t, 1)
+            onMoved: v => glass.setTint(Qt.hsla(Math.max(0, glass.tint.hslHue), glass.tint.hslSaturation, v, glass.tint.a))
+        }
+        Amount {
+            text: "Refraction"
+            value: Number(Glass.glassValue(glass.which, "refraction_strength")) / 10
+            valueText: Number(Glass.glassValue(glass.which, "refraction_strength")).toFixed(1)
+            onCommitted: v => Glass.setGlass(glass.which, "refraction_strength", Math.round(v * 100) / 10)
+        }
+        Amount {
+            text: "Highlight"
+            value: Number(Glass.glassValue(glass.which, "specular_strength"))
+            onCommitted: v => Glass.setGlass(glass.which, "specular_strength", Math.round(v * 100) / 100)
+        }
+        Amount {
+            text: "Edge glow"
+            value: Number(Glass.glassValue(glass.which, "fresnel_strength"))
+            onCommitted: v => Glass.setGlass(glass.which, "fresnel_strength", Math.round(v * 100) / 100)
+        }
+        ListEntry {
+            flat: true
+            icon: "restart_alt"
+            title: "Back to the look's own"
+            subtitle: "Tint, refraction, highlight and glow as " + (Glass.presets.find(p => p.key === Glass.preset)?.label ?? Glass.preset) + " has them"
+            onClicked: Glass.resetGlass(glass.which, ["tint_color", "refraction_strength", "specular_strength", "fresnel_strength", "blur_strength", "blur_iterations"])
+        }
+    }
+
     // the waits an idle step can have, in seconds; 0 = never, at the far end of the slider
     readonly property var stops: [30, 60, 120, 180, 300, 600, 900, 1200, 1800, 2700, 3600, 7200, 0]
     function stopOf(seconds) {
@@ -157,7 +295,7 @@ Item {
             title: "Settings"
             subtitle: root.section === "" ? "" : root.section === "look"
                       ? (Config.islandOpacity < 0 ? "Island like the windows" : "Island " + Math.round(Config.islandOpacity * 100) + " %")
-                        + "  ·  " + (Glass.blurs.find(b => b.key === Glass.blur)?.label ?? "Medium") + " blur"
+                        + "  ·  " + (root.liquid ? "Liquid glass" : "Blur")
                       : root.section === "alerts"
                       ? (Notifier.dnd ? "Do not disturb is on" : "Popups: " + Notifier.popupLength) + (Sounds.enabled ? "  ·  sounds" : "")
                       : root.section === "idle"
@@ -305,80 +443,131 @@ Item {
             }
         }
 
-        Column {
+        // Glass and blur: the island and the windows apart. A switch for a yes/no, a named choice for a kind,
+        // a slider for an amount; each footer says what Hyprland really does with it.
+        ScrollList {
             visible: root.section === "look"
             width: parent.width
+            maxHeight: 640
             spacing: Config.spaceL
 
-            SectionLabel { text: "Island"; topPadding: Config.spaceS }
-            // its own opacity, down to see-through (the glass still shows its edge), or the windows'
-            Level {
-                text: "Opacity"
-                valueText: Config.islandOpacity < 0 ? "Like the windows" : Math.round(Config.islandOpacity * 100) + "%"
-                value: Config.islandOpacity < 0 ? Config.windowOpacity : Config.islandOpacity
-                checker: true
-                colourAt: t => root.seeThrough(t)
-                onMoved: v => Config.islandOpacity = Math.round(v * 100) / 100
-            }
-            Pill {
-                visible: Config.islandOpacity >= 0
-                implicitHeight: 40
-                kind: "text"
-                icon: "link"
-                text: "Like the windows"
-                onClicked: Config.islandOpacity = -1
-            }
-            Switch {
-                text: "Shadow"
-                checked: Config.shadow
-                onToggled: on => Config.shadow = on
-            }
-
-            // Hyprland's own, the windows' and the island's alike (or, with liquid glass, the glass's)
-            SectionLabel { text: "Blur"; topPadding: Config.spaceXs }
-            Segmented {
-                width: parent.width
-                options: Glass.blurs
-                current: Glass.blur
-                onPicked: key => Glass.blur = key
-            }
-            Level {
-                text: "Windows"
-                valueText: Math.round(value * 100) + "%"
-                value: Glass.windows >= 0 ? Glass.windows : Config.windowOpacity
-                checker: true
-                colourAt: t => root.seeThrough(t)
-                onMoved: v => Glass.windows = Math.round(v * 100) / 100
+            ListSection {
+                title: "Material"
+                footer: !Glass.available ? "Liquid glass is the hyprglass plugin, which isn't loaded for this Hyprland: Hyprland's blur draws everything."
+                      : root.liquid ? "The look is where liquid glass starts; everything below changes it, for the island and the windows apart."
+                      : "Hyprland's blur. It has one blur for everything, so the island's follows the windows'."
+                Item {
+                    width: parent.width
+                    height: 60
+                    Segmented {
+                        x: Config.spaceM; width: parent.width - 2 * Config.spaceM
+                        anchors.verticalCenter: parent.verticalCenter
+                        height: 40
+                        enabled: Glass.available
+                        options: [{ key: "blur", label: "Blur", icon: "blur_on" }, { key: "glass", label: "Liquid glass", icon: "water_drop" }]
+                        current: root.liquid ? "glass" : "blur"
+                        onPicked: key => Glass.enabled = key === "glass"
+                    }
+                }
+                Item {
+                    visible: root.liquid
+                    width: parent.width
+                    height: visible ? 60 : 0
+                    Segmented {
+                        x: Config.spaceM; width: parent.width - 2 * Config.spaceM
+                        anchors.verticalCenter: parent.verticalCenter
+                        height: 40
+                        options: Glass.presets
+                        current: Glass.preset
+                        onPicked: key => Glass.preset = key
+                    }
+                }
             }
 
-            // hidden while Hyprland runs without the plugin (left out for another version): the blur above
-            SectionLabel { visible: Glass.available; text: "Liquid glass"; topPadding: Config.spaceXs }
-            Switch {
-                visible: Glass.available
-                text: "On windows and the island"
-                checked: Glass.enabled
-                onToggled: on => Glass.enabled = on
-            }
-            Segmented {
-                visible: Glass.available && Glass.enabled
-                width: parent.width
-                options: Glass.presets
-                current: Glass.preset
-                onPicked: key => Glass.preset = key
+            ListSection {
+                title: "Island"
+                footer: root.liquid ? "At 0% opacity the island draws nothing of its own: only the glass shows, and its tint below."
+                      : "At 0% opacity the island draws nothing, so the blur has no shape to fill either."
+                SwitchRow {
+                    title: "Opacity like the windows"
+                    checked: Config.islandOpacity < 0
+                    onToggled: on => Config.islandOpacity = on ? -1 : Math.round(Config.windowOpacity * 100) / 100
+                }
+                Amount {
+                    text: "Opacity"
+                    enabled: Config.islandOpacity >= 0
+                    value: Config.islandAlpha
+                    onMoved: v => Config.islandOpacity = Math.round(v * 100) / 100
+                }
+                Amount {
+                    text: "Blur"
+                    enabled: root.liquid
+                    value: Glass.islandBlur >= 0 ? Glass.islandBlur : root.windowBlurShown
+                    valueText: !root.liquid || Glass.islandBlur < 0 ? "Like the windows" : Math.round(value * 100) + "%"
+                    onCommitted: v => Glass.islandBlur = Math.round(v * 100) / 100
+                }
+                Amount {
+                    text: "Shadow"
+                    value: Config.shadowStrength
+                    onMoved: v => Config.shadowStrength = Math.round(v * 100) / 100
+                }
+                GlassAmounts { which: "island"; visible: root.liquid }
             }
 
-            SectionLabel { text: "Shape and motion"; topPadding: Config.spaceXs }
-            Slider {
-                width: parent.width
-                icon: "rounded_corner"
-                value: Config.roundness - 0.5
-                valueText: "Roundness  " + Math.round((0.5 + shown) * 100) + "%"
-                onMoved: v => Config.roundness = Math.round((0.5 + v) * 20) / 20
+            ListSection {
+                title: "Windows"
+                footer: "Video players, Firefox and qimgv stay opaque (hypr/modules/rules.lua), so opacity doesn't show on them."
+                Amount {
+                    text: "Opacity"
+                    value: Glass.activeOpacity >= 0 ? Glass.activeOpacity : Config.windowOpacity
+                    onCommitted: v => Glass.activeOpacity = Math.round(v * 100) / 100
+                }
+                Amount {
+                    text: "Opacity when inactive"
+                    value: Glass.inactiveOpacity >= 0 ? Glass.inactiveOpacity : root.hyprCurrent("decoration:inactive_opacity", Config.windowOpacity)
+                    onCommitted: v => Glass.inactiveOpacity = Math.round(v * 100) / 100
+                }
+                Amount {
+                    text: "Blur"
+                    value: root.windowBlurShown
+                    onCommitted: v => Glass.windowBlur = Math.round(v * 100) / 100
+                }
+                Amount {
+                    visible: !root.liquid
+                    text: "Vibrancy"
+                    value: root.hl("decoration:blur:vibrancy", 0.17)
+                    onCommitted: v => root.setHl("decoration:blur:vibrancy", Math.round(v * 100) / 100)
+                }
+                Amount {
+                    visible: !root.liquid
+                    text: "Brightness"
+                    value: root.hl("decoration:blur:brightness", 1) / 2
+                    valueText: Math.round(value * 200) + "%"
+                    onCommitted: v => root.setHl("decoration:blur:brightness", Math.round(v * 200) / 100)
+                }
+                Amount {
+                    visible: !root.liquid
+                    text: "Contrast"
+                    value: root.hl("decoration:blur:contrast", 0.9) / 2
+                    valueText: Math.round(value * 200) + "%"
+                    onCommitted: v => root.setHl("decoration:blur:contrast", Math.round(v * 200) / 100)
+                }
+                GlassAmounts { which: "windows"; visible: root.liquid }
             }
-            Switch {
-                text: "Reduce motion"
-                checked: Config.reduceMotion
-                onToggled: on => Config.reduceMotion = on
+
+            ListSection {
+                title: "Shape and motion"
+                Amount {
+                    text: "Roundness"
+                    value: Config.roundness - 0.5
+                    valueText: Math.round(Config.roundness * 100) + "%"
+                    onMoved: v => Config.roundness = Math.round((0.5 + v) * 20) / 20
+                }
+                SwitchRow {
+                    title: "Reduce motion"
+                    checked: Config.reduceMotion
+                    onToggled: on => Config.reduceMotion = on
+                }
             }
         }
 

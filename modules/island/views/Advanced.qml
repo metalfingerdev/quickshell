@@ -16,6 +16,7 @@ Item {
     property string page: "colours"
     property string query: ""
     property string mode: "shared"                    // the table the hyprglass and Hyprland pages edit
+    property string target: "windows"                 // liquid glass: the windows' settings, or the island's
     property bool armed: false
 
     readonly property var pages: [
@@ -37,18 +38,21 @@ Item {
     }
     // a member of a { shared, dark, light } table property of Glass (hg or hl)
     function ofTable(prop, key, kind, label, sub, def, lo, hi, step) {
-        const table = () => Glass[prop][root.mode] ?? {}
+        const which = root.target
+        const tables = () => prop === "hg" ? Glass.tables(which) : Glass[prop]
+        const table = () => tables()[root.mode] ?? {}
         const write = v => {
-            const all = Object.assign({}, Glass[prop])
-            const t = Object.assign({}, all[root.mode] ?? {})
+            const own = Object.assign({}, tables())
+            const t = Object.assign({}, own[root.mode] ?? {})
             if (v === undefined) delete t[key]; else t[key] = v
-            all[root.mode] = t
-            Glass[prop] = all
+            own[root.mode] = t
+            if (prop === "hg") Glass.hg = which === "island" ? { windows: Glass.tables("windows"), island: own } : { windows: own, island: Glass.tables("island") }
+            else Glass[prop] = own
         }
-        return { id: prop + root.mode + key, label: label, sub: sub, kind: kind, options: [], min: lo, max: hi, step: step,
-                 get: () => table()[key] ?? def, set: write, isSet: () => key in table(), reset: () => write(undefined), hint: "" }
+        return { id: prop + which + root.mode + key, label: label, sub: sub, kind: kind, options: [], min: lo, max: hi, step: step,
+                 get: () => table()[key] ?? (prop === "hg" ? Glass.glassValue(which, key) : def), set: write, isSet: () => key in table(), reset: () => write(undefined), hint: "" }
     }
-    function rowsFor(page, query) {
+    function rowsFor(page, query, target, mode) {
         const q = query.trim().toLowerCase()
         const hit = d => q === "" || (d.label + " " + d.sub).toLowerCase().includes(q)
         const plain = Schema.entries.filter(e => e.kind !== "object")
@@ -69,7 +73,7 @@ Item {
                            kind === "colour" ? "#" + o.default.slice(2) + o.default.slice(0, 2) : o.default, o.min ?? 0, o.max ?? 1, (o.max ?? 1) <= 1 ? 0.01 : 1)
         })
     }
-    readonly property var rows: rowsFor(page, query)
+    readonly property var rows: rowsFor(page, query, target, mode)
     readonly property bool tabled: query === "" && (page === "hyprglass" || page === "hyprland")
 
     component Field: TextInput {
@@ -213,6 +217,13 @@ Item {
                 model: root.pages
                 Chip { required property var modelData; text: modelData.label; selected: root.page === modelData.key; onClicked: root.page = modelData.key }
             }
+        }
+        Segmented {
+            visible: root.query === "" && root.page === "hyprglass"
+            width: parent.width
+            options: [{ key: "windows", label: "Windows" }, { key: "island", label: "Island" }]
+            current: root.target
+            onPicked: key => root.target = key
         }
         Segmented {
             visible: root.tabled || root.query !== ""

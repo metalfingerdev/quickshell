@@ -310,3 +310,20 @@ var entries = [
 ]
 
 var known = (function () { const k = {}; entries.forEach(e => { k[e.key] = e.kind }); return k })()
+
+// The built-in looks' own values (BuiltInPresets.hpp, v1.2.0), so a setting not yet touched shows what is
+// drawn. Colours as "#rrggbbaa", as the settings keep them.
+var looks = {
+    "default": { shared: {} },
+    high_contrast: { shared: {} },
+    subtle: { shared: { blur_strength: 1, refraction_strength: 0.3, chromatic_aberration: 0.2, fresnel_strength: 0.3, specular_strength: 0.4 } },
+    clear: { shared: { blur_strength: 0, noise_strength: 0, refraction_strength: 0.3, chromatic_aberration: 0.2, fresnel_strength: 0.3, specular_strength: 0.4 } },
+    glass: { shared: { blur_strength: 1, blur_iterations: 2, lens_distortion: 0.3, refraction_strength: 8, chromatic_aberration: 0.5, fresnel_strength: 0.4,
+                       specular_strength: 0.8, glass_opacity: 1, edge_thickness: 0.06, tint_color: "#ffffff00" },
+             dark: { adaptive_dim: 0.3 }, light: { adaptive_boost: 0.3 } },
+    pomme: { shared: { blur_strength: 1, blur_iterations: 2, refraction_strength: 2, refraction_flow: 1, refraction_spread: 1, chromatic_aberration: 0,
+                       fresnel_strength: 0.1, fresnel_tint: 0, specular_strength: 0.4, bevel_strength: 0.5, bevel_size: 4, bevel_tint: 0.5,
+                       glass_opacity: 1, edge_thickness: 0.024, lens_distortion: 0 },
+             dark: { brightness: 1.1, contrast: 0.9, tint_color: "#1a1a1a4a" },
+             light: { brightness: 0.8, contrast: 1, tint_color: "#ffffff6a" } }
+}

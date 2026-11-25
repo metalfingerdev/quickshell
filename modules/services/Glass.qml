@@ -20,19 +20,46 @@ Singleton {
 
     property bool enabled: true
     property string preset: "pomme"
-    property string blur: "medium"
-    property real windows: -1            // the windows' opacity; -1 = look.lua's
-    property var hg: ({ shared: {}, dark: {}, light: {} })
+    // The island and the windows apart. Blur is an amount, 0..1, for whichever blur is drawing (-1: as it
+    // is: look.lua's, or the liquid-glass look's own); the island's, -1, follows the windows'. Hyprland's own
+    // blur is one for everything, so the island's amount only counts under liquid glass.
+    property real windowBlur: -1
+    property real islandBlur: -1
+    property real activeOpacity: -1      // -1 = look.lua's
+    property real inactiveOpacity: -1
+    // hyprglass's settings, for the windows and for the island: each { shared, dark, light }
+    property var hg: ({ windows: { shared: {}, dark: {}, light: {} }, island: { shared: {}, dark: {}, light: {} } })
+    // an older settings.json had one { shared, dark, light } for everything: that was the windows'
+    function tables(which) { return hg?.[which] ?? (which === "windows" && hg?.shared ? hg : {}) }
     property var hl: ({ shared: {}, dark: {}, light: {} })
 
     readonly property var presets: [{ key: "pomme", label: "Liquid" }, { key: "glass", label: "Glass" },
                                     { key: "subtle", label: "Subtle" }, { key: "clear", label: "Clear" }]
-    readonly property var blurs: [{ key: "off", label: "Off" }, { key: "light", label: "Light" },
-                                  { key: "medium", label: "Medium" }, { key: "strong", label: "Strong" }]
-    // Each level: Hyprland's blur size and passes (medium is look.lua's own), and the glass's strength and
-    // passes. A preset sets its own blur, which beats the plugin's global one, so a level other than
-    // medium goes in through a preset of ours that inherits the look; medium leaves the look's own.
-    readonly property var levels: ({ off: [0, 1, 0, 1], light: [4, 2, 1, 2], medium: [8, 3, 0, 0], strong: [14, 4, 3.5, 4] })
+    // what a setting shows before it is set: the look's own value, else the plugin's
+    function glassValue(which, key) {
+        const own = tables(which), mode = Config.dark ? "dark" : "light"
+        const set = own[mode]?.[key] ?? own.shared?.[key]
+        if (set !== undefined) return set
+        if (which === "island") return glassValue("windows", key)
+        const look = GlassSchema.looks[preset] ?? {}
+        return look[mode]?.[key] ?? look.shared?.[key] ?? GlassSchema.entries.find(e => e.key === key)?.def
+    }
+    function setGlass(which, key, value) {
+        const all = { windows: Object.assign({}, tables("windows")), island: Object.assign({}, tables("island")) }
+        const shared = Object.assign({}, all[which].shared ?? {})
+        if (value === undefined) delete shared[key]; else shared[key] = value
+        all[which].shared = shared
+        hg = all
+    }
+    function resetGlass(which, keys) {
+        const all = { windows: Object.assign({}, tables("windows")), island: Object.assign({}, tables("island")) }
+        for (const mode of ["shared", "dark", "light"]) {
+            const t = Object.assign({}, all[which][mode] ?? {})
+            keys.forEach(k => delete t[k])
+            all[which][mode] = t
+        }
+        hg = all
+    }
     // Only a loaded plugin has its options: Hyprland answers anything else with "no such option", not JSON.
     property bool available: false
     // Hyprland's options as it lists them: [{ name, description, default, current, min, max, map }]
@@ -42,39 +69,40 @@ Singleton {
 
     function lua() {
         const dark = Config.dark
-        const level = levels[blur] ?? levels.medium
-        const decoration = [`blur = { enabled = ${blur !== "off"}, size = ${level[0]}, passes = ${level[1]} }`]
-        if (windows >= 0) decoration.push(`active_opacity = ${windows}, inactive_opacity = ${windows}`)
-        const out = [`hl.config({ decoration = { ${decoration.join(", ")} } })`]
+        const decoration = []
+        if (windowBlur >= 0) {
+            const b = HyprLua.blurHyprland(windowBlur)
+            decoration.push(`blur = { enabled = ${b.enabled}, size = ${b.size}, passes = ${b.passes} }`)
+        }
+        if (activeOpacity >= 0) decoration.push(`active_opacity = ${Number(activeOpacity)}`)
+        if (inactiveOpacity >= 0) decoration.push(`inactive_opacity = ${Number(inactiveOpacity)}`)
+        const out = decoration.length ? [`hl.config({ decoration = { ${decoration.join(", ")} } })`] : []
         if (descriptions.length > 0) { const extra = HyprLua.hyprland(hl, dark, defaults); if (extra !== "") out.push(extra) }
         if (available) {
-            const look = presets.some(p => p.key === preset) || ["default", "high_contrast"].includes(preset) ? preset : "pomme"
-            const own = HyprLua.glass(hg, dark, GlassSchema.known)
-            if (blur !== "medium") { own.blur_strength = own.blur_strength ?? level[2]; own.blur_iterations = own.blur_iterations ?? level[3] }
-            const fields = Object.keys(own).map(k => `${k} = ${own[k]}`)
-            let use = look
-            if (fields.length > 0) {
-                out.push(`hl.plugin.hyprglass.preset("island", { inherits = "${look}", ${fields.join(", ")} })`)
-                use = "island"
-            }
-            out.push(`hl.plugin.hyprglass.config({ enabled = ${enabled}, default_preset = "${use}", default_theme = "${dark ? "dark" : "light"}" })`)
+            const look = GlassSchema.looks[preset] ? preset : "pomme"
+            HyprLua.shellGlass({ look: look, enabled: enabled, dark: dark, known: GlassSchema.known,
+                                 windows: tables("windows"), island: tables("island"),
+                                 windowBlur: windowBlur, islandBlur: islandBlur }).forEach(l => out.push(l))
         }
         return out.join("; ")
     }
     // An eval may count as a reload: the one that follows our own is ours, and isn't answered again.
     property double applied: 0
     function apply() {
-        if (dry) return
+        const code = lua()
+        if (dry || code === "") return
         applied = Date.now()
-        setter.command = ["hyprctl", "eval", lua()]
+        setter.command = ["hyprctl", "eval", code]
         setter.running = true
     }
     function readDescriptions() { if (!dry && descriptions.length === 0) describe.running = true }
 
     onEnabledChanged: apply()
     onPresetChanged: apply()
-    onBlurChanged: apply()
-    onWindowsChanged: apply()
+    onWindowBlurChanged: apply()
+    onIslandBlurChanged: apply()
+    onActiveOpacityChanged: apply()
+    onInactiveOpacityChanged: apply()
     onHgChanged: apply()
     onHlChanged: { if (Object.keys(hl.shared).length + Object.keys(hl.dark).length + Object.keys(hl.light).length > 0) readDescriptions(); apply() }
     onDescriptionsChanged: apply()

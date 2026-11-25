@@ -70,6 +70,7 @@ Rectangle {
 
         Rectangle {
             readonly property bool square: root.tone.a > 0
+            visible: root.lead !== null || root.icon !== ""
             Layout.preferredWidth: root.leadSize
             Layout.preferredHeight: root.leadSize
             radius: square ? Math.round(root.leadSize * 0.25) : root.leadSize / 2

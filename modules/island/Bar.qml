@@ -1,5 +1,6 @@
 import Quickshell
 import Quickshell.Wayland
+import Quickshell.Hyprland
 import QtQuick
 import QtQuick.Effects
 import QtQuick.Shapes
@@ -30,7 +31,9 @@ Scope {
     readonly property bool debug: Engine.debug
     readonly property int space: gap + Math.ceil(36 * Config.scale)
 
-    readonly property bool strip: Engine.hidden && Config.handle === "strip"
+    // no handle over a fullscreen window: it would sit on the video or the game; the hot zone still reveals
+    readonly property bool fullscreen: Hyprland.monitorFor(screen)?.activeWorkspace?.hasFullscreen ?? false
+    readonly property bool strip: Engine.hidden && Config.handle === "strip" && !fullscreen
     readonly property real stripW: Config.tv("stripW", 96)
     readonly property real stripH: Config.tv("stripH", 5)
 
@@ -140,7 +143,7 @@ Scope {
     // (above the top layer) there is none.
     PanelWindow {
         screen: root.screen
-        visible: root.active && Config.shadow
+        visible: root.active && Config.shadowStrength > 0
         anchors { top: true; bottom: true; left: true; right: true }
         exclusionMode: ExclusionMode.Ignore
         color: "transparent"
@@ -162,7 +165,7 @@ Scope {
             offset: Qt.vector2d(0, lift)
             blur: open ? Config.tv("shadowBlurOpen", 56) : Config.tv("shadowBlur", 22)
             color: Qt.rgba(0, 0, 0, open ? Config.tv("shadowAlphaOpen", 0.5) : Config.tv("shadowAlpha", 0.42))
-            opacity: Engine.hidden || root.covering ? 0 : Math.max(0, Math.min(1, (Config.islandAlpha - 0.3) / 0.5))
+            opacity: Engine.hidden || root.covering ? 0 : Math.max(0, Math.min(1, (Config.islandAlpha - 0.3) / 0.5)) * Config.shadowStrength
 
             Behavior on lift    { Motion {} }
             Behavior on blur    { Motion {} }

@@ -136,129 +136,255 @@ var entries = [
   "ini": "theme/wallpaperTone"
  },
  {
-  "key": "colours.roles.surface",
+  "key": "colours.rolesDark.surface",
   "t": "Config",
-  "p": "roles",
+  "p": "rolesDark",
   "m": "surface",
   "kind": "colour",
-  "label": "Role: surface",
+  "label": "surface (dark)",
   "group": "roles"
  },
  {
-  "key": "colours.roles.container",
+  "key": "colours.rolesLight.surface",
   "t": "Config",
-  "p": "roles",
+  "p": "rolesLight",
+  "m": "surface",
+  "kind": "colour",
+  "label": "surface (light)",
+  "group": "roles"
+ },
+ {
+  "key": "colours.rolesDark.container",
+  "t": "Config",
+  "p": "rolesDark",
   "m": "container",
   "kind": "colour",
-  "label": "Role: container",
+  "label": "container (dark)",
   "group": "roles"
  },
  {
-  "key": "colours.roles.high",
+  "key": "colours.rolesLight.container",
   "t": "Config",
-  "p": "roles",
+  "p": "rolesLight",
+  "m": "container",
+  "kind": "colour",
+  "label": "container (light)",
+  "group": "roles"
+ },
+ {
+  "key": "colours.rolesDark.high",
+  "t": "Config",
+  "p": "rolesDark",
   "m": "high",
   "kind": "colour",
-  "label": "Role: high",
+  "label": "high (dark)",
   "group": "roles"
  },
  {
-  "key": "colours.roles.highest",
+  "key": "colours.rolesLight.high",
   "t": "Config",
-  "p": "roles",
+  "p": "rolesLight",
+  "m": "high",
+  "kind": "colour",
+  "label": "high (light)",
+  "group": "roles"
+ },
+ {
+  "key": "colours.rolesDark.highest",
+  "t": "Config",
+  "p": "rolesDark",
   "m": "highest",
   "kind": "colour",
-  "label": "Role: highest",
+  "label": "highest (dark)",
   "group": "roles"
  },
  {
-  "key": "colours.roles.primary",
+  "key": "colours.rolesLight.highest",
   "t": "Config",
-  "p": "roles",
+  "p": "rolesLight",
+  "m": "highest",
+  "kind": "colour",
+  "label": "highest (light)",
+  "group": "roles"
+ },
+ {
+  "key": "colours.rolesDark.primary",
+  "t": "Config",
+  "p": "rolesDark",
   "m": "primary",
   "kind": "colour",
-  "label": "Role: primary",
+  "label": "primary (dark)",
   "group": "roles"
  },
  {
-  "key": "colours.roles.onPrimary",
+  "key": "colours.rolesLight.primary",
   "t": "Config",
-  "p": "roles",
+  "p": "rolesLight",
+  "m": "primary",
+  "kind": "colour",
+  "label": "primary (light)",
+  "group": "roles"
+ },
+ {
+  "key": "colours.rolesDark.onPrimary",
+  "t": "Config",
+  "p": "rolesDark",
   "m": "onPrimary",
   "kind": "colour",
-  "label": "Role: onPrimary",
+  "label": "onPrimary (dark)",
   "group": "roles"
  },
  {
-  "key": "colours.roles.secondary",
+  "key": "colours.rolesLight.onPrimary",
   "t": "Config",
-  "p": "roles",
+  "p": "rolesLight",
+  "m": "onPrimary",
+  "kind": "colour",
+  "label": "onPrimary (light)",
+  "group": "roles"
+ },
+ {
+  "key": "colours.rolesDark.secondary",
+  "t": "Config",
+  "p": "rolesDark",
   "m": "secondary",
   "kind": "colour",
-  "label": "Role: secondary",
+  "label": "secondary (dark)",
   "group": "roles"
  },
  {
-  "key": "colours.roles.onSecondary",
+  "key": "colours.rolesLight.secondary",
   "t": "Config",
-  "p": "roles",
+  "p": "rolesLight",
+  "m": "secondary",
+  "kind": "colour",
+  "label": "secondary (light)",
+  "group": "roles"
+ },
+ {
+  "key": "colours.rolesDark.onSecondary",
+  "t": "Config",
+  "p": "rolesDark",
   "m": "onSecondary",
   "kind": "colour",
-  "label": "Role: onSecondary",
+  "label": "onSecondary (dark)",
   "group": "roles"
  },
  {
-  "key": "colours.roles.text",
+  "key": "colours.rolesLight.onSecondary",
   "t": "Config",
-  "p": "roles",
+  "p": "rolesLight",
+  "m": "onSecondary",
+  "kind": "colour",
+  "label": "onSecondary (light)",
+  "group": "roles"
+ },
+ {
+  "key": "colours.rolesDark.text",
+  "t": "Config",
+  "p": "rolesDark",
   "m": "text",
   "kind": "colour",
-  "label": "Role: text",
+  "label": "text (dark)",
   "group": "roles"
  },
  {
-  "key": "colours.roles.dim",
+  "key": "colours.rolesLight.text",
   "t": "Config",
-  "p": "roles",
+  "p": "rolesLight",
+  "m": "text",
+  "kind": "colour",
+  "label": "text (light)",
+  "group": "roles"
+ },
+ {
+  "key": "colours.rolesDark.dim",
+  "t": "Config",
+  "p": "rolesDark",
   "m": "dim",
   "kind": "colour",
-  "label": "Role: dim",
+  "label": "dim (dark)",
   "group": "roles"
  },
  {
-  "key": "colours.roles.outline",
+  "key": "colours.rolesLight.dim",
   "t": "Config",
-  "p": "roles",
+  "p": "rolesLight",
+  "m": "dim",
+  "kind": "colour",
+  "label": "dim (light)",
+  "group": "roles"
+ },
+ {
+  "key": "colours.rolesDark.outline",
+  "t": "Config",
+  "p": "rolesDark",
   "m": "outline",
   "kind": "colour",
-  "label": "Role: outline",
+  "label": "outline (dark)",
   "group": "roles"
  },
  {
-  "key": "colours.roles.good",
+  "key": "colours.rolesLight.outline",
   "t": "Config",
-  "p": "roles",
+  "p": "rolesLight",
+  "m": "outline",
+  "kind": "colour",
+  "label": "outline (light)",
+  "group": "roles"
+ },
+ {
+  "key": "colours.rolesDark.good",
+  "t": "Config",
+  "p": "rolesDark",
   "m": "good",
   "kind": "colour",
-  "label": "Role: good",
+  "label": "good (dark)",
   "group": "roles"
  },
  {
-  "key": "colours.roles.warn",
+  "key": "colours.rolesLight.good",
   "t": "Config",
-  "p": "roles",
+  "p": "rolesLight",
+  "m": "good",
+  "kind": "colour",
+  "label": "good (light)",
+  "group": "roles"
+ },
+ {
+  "key": "colours.rolesDark.warn",
+  "t": "Config",
+  "p": "rolesDark",
   "m": "warn",
   "kind": "colour",
-  "label": "Role: warn",
+  "label": "warn (dark)",
   "group": "roles"
  },
  {
-  "key": "colours.roles.bad",
+  "key": "colours.rolesLight.warn",
   "t": "Config",
-  "p": "roles",
+  "p": "rolesLight",
+  "m": "warn",
+  "kind": "colour",
+  "label": "warn (light)",
+  "group": "roles"
+ },
+ {
+  "key": "colours.rolesDark.bad",
+  "t": "Config",
+  "p": "rolesDark",
   "m": "bad",
   "kind": "colour",
-  "label": "Role: bad",
+  "label": "bad (dark)",
+  "group": "roles"
+ },
+ {
+  "key": "colours.rolesLight.bad",
+  "t": "Config",
+  "p": "rolesLight",
+  "m": "bad",
+  "kind": "colour",
+  "label": "bad (light)",
   "group": "roles"
  },
  {
@@ -578,12 +704,14 @@ var entries = [
  {
   "key": "island.shadow",
   "t": "Config",
-  "p": "shadow",
+  "p": "shadowStrength",
   "m": "",
-  "kind": "bool",
+  "kind": "number",
   "label": "Shadow",
   "group": "island",
-  "ini": "theme/shadow"
+  "min": 0,
+  "max": 1,
+  "step": 0.01
  },
  {
   "key": "island.roundness",
@@ -992,33 +1120,52 @@ var entries = [
   "ini": "glass/preset"
  },
  {
-  "key": "glass.blur",
+  "key": "glass.windowBlur",
   "t": "Glass",
-  "p": "blur",
-  "m": "",
-  "kind": "choice",
-  "label": "Blur level",
-  "group": "glass",
-  "options": [
-   "off",
-   "light",
-   "medium",
-   "strong"
-  ],
-  "ini": "glass/blur"
- },
- {
-  "key": "glass.windows",
-  "t": "Glass",
-  "p": "windows",
+  "p": "windowBlur",
   "m": "",
   "kind": "number",
-  "label": "Windows' opacity (-1: as look.lua)",
+  "label": "Windows' blur (-1: as it is)",
   "group": "glass",
   "min": -1,
   "max": 1,
-  "step": 0.01,
-  "ini": "glass/windows"
+  "step": 0.01
+ },
+ {
+  "key": "glass.islandBlur",
+  "t": "Glass",
+  "p": "islandBlur",
+  "m": "",
+  "kind": "number",
+  "label": "Island's blur (-1: the windows')",
+  "group": "glass",
+  "min": -1,
+  "max": 1,
+  "step": 0.01
+ },
+ {
+  "key": "glass.activeOpacity",
+  "t": "Glass",
+  "p": "activeOpacity",
+  "m": "",
+  "kind": "number",
+  "label": "Active windows' opacity (-1: look.lua's)",
+  "group": "glass",
+  "min": -1,
+  "max": 1,
+  "step": 0.01
+ },
+ {
+  "key": "glass.inactiveOpacity",
+  "t": "Glass",
+  "p": "inactiveOpacity",
+  "m": "",
+  "kind": "number",
+  "label": "Inactive windows' opacity (-1: look.lua's)",
+  "group": "glass",
+  "min": -1,
+  "max": 1,
+  "step": 0.01
  },
  {
   "key": "glass.hyprglass",

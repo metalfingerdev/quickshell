@@ -33,10 +33,15 @@ Item {
     implicitWidth: player ? 780 : 520
     implicitHeight: (player ? column.implicitHeight : empty.implicitHeight) + 2 * pad
 
-    Item {
+    // clipped to the island's own corners (a notch's top ones are square): unclipped, the blur's square
+    // corners stood out past the island's round ones
+    ClippingRectangle {
         visible: root.player !== null && backdrop.status === Image.Ready
-        width: parent.width
-        height: Math.min(parent.height, 320)
+        anchors.fill: parent
+        color: "transparent"
+        radius: Config.radius
+        topLeftRadius: Config.style === "notch" ? 0 : Config.radius
+        topRightRadius: Config.style === "notch" ? 0 : Config.radius
 
         CoverImage {
             id: backdrop

@@ -67,8 +67,10 @@ QtObject {
     // Off: nothing is adjusted for you. A picked colour is drawn as picked, light on light or not.
     property bool keepReadable: true
     // A role set here is exactly that colour, over whatever the scheme made: { surface: "#101010", text: ... }
-    // (the names of the palette roles). Applied last, so the contrast option doesn't touch them either.
-    property var roles: ({})
+    // (the names of the palette roles), for dark and for light apart. Applied last, so the contrast option
+    // doesn't touch them either.
+    property var rolesDark: ({})
+    property var rolesLight: ({})
     // The scheme's own numbers, for tinkering: a key missing here is its default (levelDefaults).
     readonly property var levelDefaults: ({
         surfDark: 0.065, surfLight: 0.975, surfStep: 0.04, tintMax: 0.32,
@@ -80,6 +82,7 @@ QtObject {
     function lv(k) { return levels[k] ?? levelDefaults[k] }
     readonly property var current: withRoles(withContrast(source === "preset" ? (palettes[name] ?? palettes.teal) : generated(source)))
     function withRoles(p) {
+        const roles = p.dark ? rolesDark : rolesLight
         const keys = Object.keys(roles).filter(k => roles[k] !== "" && roles[k] !== undefined)
         if (keys.length === 0) return p
         const out = Object.assign({}, p)
@@ -320,7 +323,8 @@ QtObject {
     property real islandOpacity: -1
     readonly property real islandAlpha: Math.max(0, Math.min(1, islandOpacity < 0 ? windowOpacity : islandOpacity))
     readonly property color island: Qt.rgba(surface.r, surface.g, surface.b, islandAlpha)
-    property bool shadow: true
+    // the island's shadow, 0 (none) .. 1 (as drawn), and more if wanted
+    property real shadowStrength: 1
 
     // Hyprland's windows animation (its curve, "Glide" in hypr/modules/look.lua, and its speed: 3.5 = 350 ms),
     // read from Hyprland itself (services/Desktops.qml, kept in step by shell.qml), so the shell and the

@@ -23,6 +23,14 @@
 
 ## Done
 
+- [x] Glass and blur, redone (2026-11-26): the island and the windows apart. Material is Blur or Liquid glass; the
+      island has its opacity (or the windows'), blur, shadow, and under liquid glass its own tint (strength, hue,
+      saturation, lightness, all to 0), refraction, highlight and glow, in a preset of its own on its layer
+      (`shell_island`, on top of the windows' `shell_windows`); the windows have active and inactive opacity, blur,
+      Hyprland's vibrancy, brightness and contrast or the same glass settings. Amounts are sliders (ValueSlider),
+      blur one 0..100 amount for whichever blur draws. The handle hides over a fullscreen window; Media's backdrop
+      keeps the island's corners.
+
 - [x] The redesign, batch 4 (2026-11-26): Settings as System Settings has it (a home page of categories with
       coloured square icons, each opening its page, Back and Backspace coming home, Advanced last); Theme's
       light and dark as tiles drawn as they look; Power asks with a countdown sheet and Restart into is a menu.
