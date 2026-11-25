@@ -30,7 +30,8 @@ Item {
         return [h && h + " h", m && m + " min", s && s + " s"].filter(Boolean).join(" ")
     }
 
-    component Delay: Row {
+    // a name and its slider, on a tile of their own
+    component Delay: Rectangle {
         id: delay
         property string text: ""
         property alias icon: wait.icon
@@ -38,12 +39,14 @@ Item {
         signal picked(int seconds)
 
         width: parent.width
-        spacing: Config.spaceM
+        height: wait.implicitHeight + 2 * Config.spaceS
+        radius: height / 2
+        color: Config.tile
 
         Label {
             id: caption
+            x: Config.spaceL
             width: 104
-            leftPadding: Config.spaceXs
             anchors.verticalCenter: parent.verticalCenter
             text: delay.text
             font.pixelSize: Config.body + 1
@@ -51,7 +54,7 @@ Item {
         Slider {
             id: wait
             readonly property int last: root.stops.length - 1
-            width: parent.width - caption.width - parent.spacing
+            anchors { left: caption.right; leftMargin: Config.spaceM; right: parent.right; rightMargin: Config.spaceS; verticalCenter: parent.verticalCenter }
             value: root.stopOf(delay.seconds) / last
             // the real value, which may be no stop (the defaults, or one set over IPC)
             valueText: root.spoken(dragging ? root.stops[Math.round(shown * last)] : delay.seconds)

@@ -55,7 +55,6 @@ Item {
                     id: reset
                     visible: Math.abs(Config.scale - 1) > 0.001
                     implicitHeight: 52
-                    kind: "text"
                     text: "Reset"
                     onClicked: Config.scale = 1
                 }
@@ -107,23 +106,23 @@ Item {
                 checked: Config.activateLinux
                 onFlipped: on => Config.activateLinux = on
             }
-            Row {
+            Rectangle {
                 visible: Tray.hidden !== ""
                 width: parent.width
-                spacing: Config.spaceM
+                height: 56
+                radius: height / 2
+                color: Config.tile
 
                 Label {
-                    width: parent.width - showTray.width - parent.spacing
-                    leftPadding: Config.spaceXs
-                    anchors.verticalCenter: parent.verticalCenter
+                    anchors { left: parent.left; leftMargin: Config.spaceL; right: showTray.left; rightMargin: Config.spaceM; verticalCenter: parent.verticalCenter }
                     elide: Text.ElideRight
                     text: "Hidden from the tray: " + Tray.patterns.join(", ")
                     font.pixelSize: Config.body + 1
                 }
                 Pill {
                     id: showTray
+                    anchors { right: parent.right; rightMargin: Config.spaceS; verticalCenter: parent.verticalCenter }
                     implicitHeight: 40
-                    kind: "text"
                     text: "Show all"
                     onClicked: Tray.hidden = ""
                 }

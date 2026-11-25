@@ -87,14 +87,21 @@ Item {
                 current: LockConfig.avatarShape
                 onPicked: key => LockConfig.avatarShape = key
             }
-            Label {
+            Rectangle {
                 visible: root.pathError !== ""
                 width: parent.width
-                leftPadding: Config.spaceXs
-                elide: Text.ElideMiddle
-                text: root.pathError
-                color: Config.bad
-                font.pixelSize: Config.small
+                height: pathNote.implicitHeight + 2 * Config.spaceS
+                radius: Math.min(height / 2, Config.innerRadius)
+                color: Config.tile
+
+                Label {
+                    id: pathNote
+                    anchors { left: parent.left; right: parent.right; margins: Config.spaceM; verticalCenter: parent.verticalCenter }
+                    elide: Text.ElideMiddle
+                    text: root.pathError
+                    color: Config.bad
+                    font.pixelSize: Config.small
+                }
             }
 
             // how far the picture softens once the sign-in comes up

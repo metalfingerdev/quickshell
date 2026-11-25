@@ -40,12 +40,20 @@ Item {
             }
         }
 
-        Label {
+        Rectangle {
             visible: root.more > 0
-            leftPadding: Config.spaceM
-            text: "+" + root.more + " more"
-            color: Config.dim
-            font.pixelSize: Config.small + 1
+            width: parent.width
+            height: moreNote.implicitHeight + 2 * Config.spaceS
+            radius: Math.min(height / 2, Config.innerRadius)
+            color: Config.tile
+
+            Label {
+                id: moreNote
+                anchors { left: parent.left; right: parent.right; margins: Config.spaceM; verticalCenter: parent.verticalCenter }
+                text: "+" + root.more + " more"
+                color: Config.dim
+                font.pixelSize: Config.small + 1
+            }
         }
     }
 
@@ -112,24 +120,11 @@ Item {
             }
         }
 
-        Column {
+        EmptyState {
             visible: Notifier.count === 0
             width: parent.width
-            topPadding: Config.spaceM
-            bottomPadding: Config.spaceM
-            spacing: Config.spaceS
-
-            Icon {
-                anchors.horizontalCenter: parent.horizontalCenter
-                name: Notifier.dnd ? "notifications_off" : "notifications_none"
-                size: 36
-                color: Config.outline
-            }
-            Label {
-                anchors.horizontalCenter: parent.horizontalCenter
-                text: Notifier.dnd ? "Do not disturb is on" : "No notifications"
-                color: Config.dim
-            }
+            icon: Notifier.dnd ? "notifications_off" : "notifications_none"
+            title: Notifier.dnd ? "Do not disturb is on" : "No notifications"
         }
 
         KeyHints {

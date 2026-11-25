@@ -240,18 +240,35 @@ Item {
             current: root.mode
             onPicked: key => root.mode = key
         }
-        Label {
+        Rectangle {
             visible: root.query === "" && root.page === "hyprland" && Glass.descriptions.length === 0
-            text: "Reading Hyprland's options…"
-            color: Config.dim
+            width: parent.width
+            height: readingNote.implicitHeight + 2 * Config.spaceS
+            radius: Math.min(height / 2, Config.innerRadius)
+            color: Config.tile
+
+            Label {
+                id: readingNote
+                anchors { left: parent.left; right: parent.right; margins: Config.spaceM; verticalCenter: parent.verticalCenter }
+                text: "Reading Hyprland's options…"
+                color: Config.dim
+            }
         }
-        Label {
+        Rectangle {
             visible: root.query === "" && root.page === "colours"
             width: parent.width
-            wrapMode: Text.Wrap
-            text: "With “Keep colours readable” off nothing is adjusted: a colour is drawn as you set it, readable or not."
-            color: Config.dim
-            font.pixelSize: Config.small + 1
+            height: rolesNote.implicitHeight + 2 * Config.spaceS
+            radius: Math.min(height / 2, Config.innerRadius)
+            color: Config.tile
+
+            Label {
+                id: rolesNote
+                anchors { left: parent.left; right: parent.right; margins: Config.spaceM; verticalCenter: parent.verticalCenter }
+                wrapMode: Text.Wrap
+                text: "With “Keep colours readable” off nothing is adjusted: a colour is drawn as you set it, readable or not."
+                color: Config.dim
+                font.pixelSize: Config.small + 1
+            }
         }
 
         ScrollList {

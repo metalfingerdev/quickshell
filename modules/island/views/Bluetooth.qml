@@ -68,16 +68,14 @@ Item {
             }
         }
 
-        Label {
-            visible: text !== ""
+        EmptyState {
+            visible: title !== ""
             width: parent.width
-            topPadding: Config.spaceS
-            bottomPadding: Config.spaceS
-            horizontalAlignment: Text.AlignHCenter
-            text: !Bluez.available ? "No Bluetooth adapter"
-                : !Bluez.enabled ? "Turn Bluetooth on to see devices"
-                : Bluez.devices.length === 0 ? (Bluez.scanning ? "Searching…" : "No devices yet: Search to find some") : ""
-            color: Config.dim
+            compact: true
+            icon: Bluez.enabled ? "bluetooth_searching" : "bluetooth_disabled"
+            title: !Bluez.available ? "No Bluetooth adapter"
+                 : !Bluez.enabled ? "Turn Bluetooth on to see devices"
+                 : Bluez.devices.length === 0 ? (Bluez.scanning ? "Searching…" : "No devices yet: Search to find some") : ""
         }
 
         ScrollList {
