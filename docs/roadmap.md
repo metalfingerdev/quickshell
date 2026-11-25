@@ -23,6 +23,12 @@
 
 ## Done
 
+- [x] Containers (2026-11-26): nothing sits on the bare glass, so the island reads at any opacity over any
+      wallpaper. `Card`, Header as a capsule, ListSection's title and footer as pieces of its list, SectionLabel,
+      KeyHints and EmptyState on capsules and cards, then every view brought onto them. Theme rehauled after
+      Android's Wallpaper & style: Appearance, Colours (one row of whole-scheme circles for every source, Other for
+      any colour, a note when colours set by hand override), Fine-tune, Wallpaper.
+
 - [x] Compact, Expanded and Tabs as one (2026-11-26): the same content, less of it on top of itself. Expanded's
       sections sit on the island apart by hairlines, not on cards; media's transport is bare glyphs; the system is
       one quiet line; the status group is bare glyphs (the network its glyph alone), on a platter only in Tabs,

@@ -105,6 +105,7 @@ modules/
     Slider.qml                a thick pill slider (the fill carries the icon)
     Segmented.qml Chip.qml SearchBar.qml Toggle.qml (switch) Header.qml (top app bar)
     Icon.qml                  a Material Symbols glyph
+    Card.qml                  a container: what sits on the island sits on this (docs/design.md)
     Swatch.qml                a round colour to pick (or a palette: its surface around its primary)
     ColourMap.qml             every colour: hue and lightness on a map, washed by a saturation
     ListEntry Tile ScrollList Progress Equalizer CalendarGrid

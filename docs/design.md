@@ -1,42 +1,53 @@
 # The island's design language
 
-After Apple's: Liquid Glass, the Human Interface Guidelines, the Dynamic Island, Control Centre, System Settings. The
-tokens are in `components/Config.qml`; every number is a setting (`docs/ipc.md`, Settings).
+Apple's philosophy (hierarchy, restraint, grouping, progressive disclosure), drawn in the Control Centre's own look:
+one tonal family, icons in the text colour on raised circles, the accent only for what is on or chosen. Android's
+patterns where they are clearer (whole-scheme colour circles, accent section titles). The tokens are in
+`components/Config.qml`; every number is a setting (`docs/ipc.md`, Settings).
 
 ## Principles
 
-- **Deference.** Content first, chrome recedes: no boxed headers, no outlines. Things are grouped by spacing and platters.
-- **Glass, and fills that survive it.** The island is glass at any opacity, even none. What sits on it is the text
-  colour at low alpha (`fill1`..`fill4`: 0.20, 0.16, 0.12, 0.08), never an opaque surface colour, so a platter reads
-  on any island. Text is `label1`..`label4`: full, 0.6, 0.3, 0.18.
-- **One tint.** The accent (`primary`) marks what can be acted on or is on: a switch, a selection, a link.
+- **Nothing on the bare glass.** The island can be any material at any opacity, even none, over any wallpaper.
+  Everything on it sits in a container: a tile (`Config.tile`) under anything you read or press, `Config.raised`
+  for what sits on a tile (an icon's circle, a slider's track, a control inside a `Card`). Never tile on tile:
+  inside a container, step up. Both follow "Cards and controls" (`Config.surfaceAlpha`).
+- **One tint.** The accent (`primary`) marks what can be acted on or is on: a switch, a selection, a heading.
   Meaning has its own colours (`good`, `warn`, `bad`).
 - **Concentric corners.** A radius inside another is the outer one minus the padding between them
-  (`Config.radius` > `cardRadius` > `innerRadius` > `smallRadius`).
-- **Progressive disclosure.** A panel shows the common case. The rest is one level down: a chevron, an info button,
-  a menu. Never more rows.
-- **Motion that settles.** The island's own curve, never overshooting (no springs). Reduce motion removes it.
+  (`Config.radius` > `cardRadius` > `innerRadius` > `smallRadius`); capsules where a shape is low.
+- **Progressive disclosure.** A panel shows the common case. The rest is one level down, as a registered view
+  (Back and IPC work), never more rows or a section swapped inside a view.
+- **Honest.** A control shows what it will really do: a colour circle is the scheme it makes, as drawn
+  (`Config.readable`); when something set elsewhere wins (a colour set by hand), the view says so.
+- **Motion that settles.** The island's own curve, never overshooting. Reduce motion removes it.
 
-## Type
-
-Inter, digits tabular: large title 28 bold, title 22 semibold, headline 15 semibold, body 15, callout 14, footnote 13,
-caption 12. Symbols are Material Symbols Rounded; filled only for an "on" state.
-
-## Components
+## Containers
 
 | | |
 |---|---|
-| `Header` | A navigation bar: a glass back button, the title, glass action buttons. No card. |
-| `ListSection` | A titled platter (`fill3`) of rows, hairlines between them inset past the icon, an optional footer. |
-| `ListEntry` | A row: a coloured square icon, title, subtitle, a value, a chevron. `flat` inside a section; alone it is its own platter. |
-| `Menu` | A pop-up list: checkmarks, destructive items in red, separators. Replaces rows of chips. |
-| `Sheet` | A panel that rises inside the view over a scrim, for a confirmation or a short form. |
-| `Toggle` | A switch: the accent when on, a fill when off, a round white knob. |
-| `Segmented` | A fill track with one sliding thumb. |
-| `Pill` | `tonal`: a glass capsule or circle. `filled`: the one main action. `text`: plain accent text. |
+| `Card` | A tile holding a group, with an optional accent title (and a trailing link) inside it. Not focusable. |
+| `Header` | The navigation bar as a capsule: back, the title and subtitle, actions on `raised`. |
+| `ListSection` | A connected list of tiles; its title and footer are pieces of the same list. |
+| `ListEntry` | A row tile; `flat` inside a ListSection, `lit` (the accent) when on or connected. |
+| `SectionLabel` | A heading on a capsule of its own, for a group of tiles that isn't a Card. |
+| `EmptyState` | A card saying what is missing and why; `compact` inside a Card (give it `color: Config.raised`). |
+| `KeyHints` | The keys on a capsule, while the keyboard is in use. |
+| `Tile`, `QuickTile`, `SettingTile` | Tiles you press. |
 
-## Island states
+Compact, the switcher and the toasts put their content on a capsule inset from the island's edge.
 
-Compact is leading, clock, trailing. Expanded is one live activity's expanded layout. Toasts are HUD capsules.
-A tray app appears in Compact only when it needs attention, and as a strip of glass circles in Expanded.
-Each panel is a title, grouped sections and chevron drill-downs (see the plan: one template for all).
+## Type
+
+Inter, digits tabular: `Config.small` 12, `body` 14, `large` 17, `title` 22, `headline` 30, `display` 56. Symbols are
+Material Symbols Rounded; filled only for an "on" state.
+
+## Controls
+
+| | |
+|---|---|
+| `Pill` | `tonal`: a raised capsule or circle. `filled`: the one main action. `text`: only inside a container. |
+| `Segmented` | The Control Centre's connected group, the chosen one in the accent. |
+| `Toggle` | A switch. |
+| `Slider`, `ColourBar` | A thick pill slider; a bar drawn in the colours it gives. |
+| `PaletteDot` | A whole scheme as a circle: accent on top, secondary and surface below. |
+| `Menu`, `Sheet` | A pop-up list; a panel rising over a scrim for a confirmation. |
