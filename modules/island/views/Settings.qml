@@ -334,7 +334,6 @@ Item {
             ListEntry {
                 flat: true
                 focus: true
-                tone: Config.tintBlue
                 icon: Config.symbol.theme
                 title: "Appearance"
                 subtitle: "Light or dark, colours, wallpaper"
@@ -342,17 +341,16 @@ Item {
                 onClicked: Engine.open(Engine.View.Theme)
                 Icon { name: "chevron_right"; size: 22; color: Config.label3 }
             }
-            Category { page: "shell"; tone: Config.tintOrange; icon: "dock_to_bottom"; title: "Island"; subtitle: "Size, shape, hiding, clock"; shortcut: "s" }
-            Category { page: "look"; tone: Config.tintBlue; icon: "blur_on"; title: "Glass and blur"; subtitle: "Opacity, blur, liquid glass, motion"; shortcut: "k" }
-            Category { page: "alerts"; tone: Config.tintRed; icon: "notifications"; title: "Notifications"; subtitle: "Popups, sounds, toasts"; shortcut: "a" }
-            Category { page: "idle"; tone: Config.tintGreen; icon: "bolt"; title: "Energy"; subtitle: "Dim, lock and sleep when idle"; shortcut: "i" }
-            Category { page: "lock"; tone: Config.tintOrange; icon: "lock"; title: "Lock screen"; subtitle: "Picture, profile"; shortcut: "l" }
+            Category { page: "shell"; icon: "dock_to_bottom"; title: "Island"; subtitle: "Size, shape, hiding, clock"; shortcut: "s" }
+            Category { page: "look"; icon: "blur_on"; title: "Glass and blur"; subtitle: "Opacity, blur, liquid glass, motion"; shortcut: "k" }
+            Category { page: "alerts"; icon: "notifications"; title: "Notifications"; subtitle: "Popups, sounds, toasts"; shortcut: "a" }
+            Category { page: "idle"; icon: "bolt"; title: "Energy"; subtitle: "Dim, lock and sleep when idle"; shortcut: "i" }
+            Category { page: "lock"; icon: "lock"; title: "Lock screen"; subtitle: "Picture, profile"; shortcut: "l" }
         }
         ListSection {
             visible: root.section === ""
             ListEntry {
                 flat: true
-                tone: Config.tintBlue
                 icon: "tune"
                 title: "Advanced"
                 subtitle: "Every setting, hand-editable"

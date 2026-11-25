@@ -411,10 +411,11 @@ Scope {
         WlrLayershell.layer: WlrLayer.Overlay
         WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
 
-        // hidden with the island, and while a view is open (its click-outside covers the screen)
+        // beside the island whatever it shows, as the lights are; this window takes its own clicks, so a
+        // view's click-outside doesn't reach it
         Row {
             id: tray
-            visible: Tray.strip.length > 0 && !Engine.hidden && !Engine.pinned
+            visible: Tray.strip.length > 0 && !Engine.hidden
             x: root.sx - width - (root.notch ? 14 : 8)
             y: Math.max(4, root.sy + Math.min(root.sh, 36) / 2 - height / 2)
             spacing: Config.spaceXs

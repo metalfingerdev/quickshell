@@ -2,7 +2,8 @@ import QtQuick
 import QtQuick.Layouts
 
 // A row. Alone it is a platter of its own (`filled`); inside a ListSection it is `flat`, and the section
-// draws the platter and the hairlines. `tone` makes its icon a coloured rounded square, as in System Settings.
+// draws the platter and the gaps. Its icon sits in a circle as the Control Centre's tiles have it: the text
+// colour on a raised tone, the accent when `lit` (on, connected).
 Rectangle {
     id: root
 
@@ -21,7 +22,7 @@ Rectangle {
     // alone, a platter of its own, so a list that is the view reads as cells; in a ListSection, the section's
     property bool filled: false
     property bool flat: false
-    property color tone: "transparent"
+    property bool lit: false
     signal clicked()
     signal scrolled(int step)
 
@@ -69,12 +70,12 @@ Rectangle {
         spacing: Config.spaceM
 
         Rectangle {
-            readonly property bool square: root.tone.a > 0
+            readonly property bool on: root.lit || root.active
             visible: root.lead !== null || root.icon !== ""
             Layout.preferredWidth: root.leadSize
             Layout.preferredHeight: root.leadSize
-            radius: square ? Math.round(root.leadSize * 0.25) : root.leadSize / 2
-            color: root.lead !== null ? "transparent" : square ? root.tone : root.active ? Config.primary : Config.fill2
+            radius: root.leadSize / 2
+            color: root.lead !== null ? "transparent" : on ? Config.primary : Config.fill2
 
             Loader {
                 anchors.centerIn: parent
@@ -86,8 +87,8 @@ Rectangle {
                 visible: root.lead === null && root.icon !== ""
                 name: root.icon
                 size: root.flat ? 20 : 22
-                filled: root.active
-                color: parent.square ? "white" : root.active ? Config.primaryInk : Config.text
+                filled: parent.on
+                color: parent.on ? Config.primaryInk : Config.text
             }
         }
 

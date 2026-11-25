@@ -72,7 +72,7 @@ Item {
             ListEntry {
                 flat: true
                 focus: !Net.wifiEnabled || Net.networks.length === 0
-                tone: Net.wifiEnabled ? Config.tintBlue : Config.outline
+                lit: Net.wifiEnabled
                 icon: Net.wifiEnabled ? "wifi" : "wifi_off"
                 title: "Wi-Fi"
                 subtitle: Net.wifiBlocked ? "Blocked by a hardware switch or rfkill"
@@ -87,7 +87,7 @@ Item {
                 visible: Net.ethernet
                 height: visible ? implicitHeight : 0
                 activeFocusOnTab: false
-                tone: Config.tintGreen
+                lit: Net.ethernet
                 icon: "lan"
                 title: "Ethernet"
                 subtitle: Net.linkSpeed > 0 ? "Connected  ·  " + Net.linkSpeed + " Mb/s" : "Connected"
@@ -124,7 +124,7 @@ Item {
                     required property int number
                     flat: true
                     focus: number === 0
-                    tone: net.connected ? Config.tintBlue : Config.outline
+                    lit: net.connected
                     icon: Net.glyph(net.signalStrength)
                     title: net.name
                     subtitle: root.status(net)

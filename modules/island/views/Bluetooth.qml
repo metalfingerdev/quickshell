@@ -58,7 +58,7 @@ Item {
             ListEntry {
                 flat: true
                 focus: !Bluez.enabled || Bluez.devices.length === 0
-                tone: Bluez.enabled ? Config.tintBlue : Config.outline
+                lit: Bluez.enabled
                 icon: Bluez.icon
                 title: "Bluetooth"
                 subtitle: !Bluez.available ? "No adapter" : Bluez.blocked ? "Blocked by rfkill" : !Bluez.enabled ? "Off" : Bluez.summary
@@ -96,7 +96,7 @@ Item {
                     required property int number
                     flat: true
                     focus: number === 0                         // the keyboard starts on the list
-                    tone: device.connected ? Config.tintBlue : Config.outline
+                    lit: device.connected
                     icon: root.glyph(device)
                     title: device.name || device.address
                     subtitle: Bluez.status(device)
