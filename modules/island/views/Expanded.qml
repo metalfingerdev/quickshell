@@ -113,16 +113,5 @@ Item {
 
         Rule {}
         GlanceCard { width: parent.width }
-
-        // the tray, as Apple's menu bar extras: glass circles, in one colour, the ones that need you first
-        Row {
-            visible: Tray.strip.length > 0
-            spacing: Config.spaceS
-            leftPadding: Config.spaceXs
-            Repeater {
-                model: Tray.strip
-                TrayIcon { required property var modelData; app: modelData }
-            }
-        }
     }
 }

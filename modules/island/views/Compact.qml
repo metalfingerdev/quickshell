@@ -173,21 +173,6 @@ Item {
             color: Config.dim
         }
 
-        // an app that needs attention, the only tray app Compact shows: its icon and, past one, a count
-        Row {
-            visible: Tray.attention.length > 0
-            anchors.verticalCenter: parent.verticalCenter
-            spacing: Config.spaceXs
-            TrayIcon { size: 22; app: Tray.attention[0] ?? null; visible: app !== null }
-            Label {
-                visible: Tray.attention.length > 1
-                anchors.verticalCenter: parent.verticalCenter
-                text: Tray.attention.length
-                color: Config.label2
-                font.pixelSize: Config.small
-            }
-        }
-
         Icon {
             visible: Energy.charging
             anchors.verticalCenter: parent.verticalCenter

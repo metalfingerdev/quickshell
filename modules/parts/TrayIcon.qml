@@ -13,6 +13,7 @@ Rectangle {
 
     required property var app
     property int size: 28
+    property bool bare: false           // beside the island, on the wallpaper: no circle until hovered
     readonly property bool urgent: app?.status === Status.NeedsAttention
     readonly property bool keyboardSelected: activeFocus && Config.focusVisible
 
@@ -26,7 +27,7 @@ Rectangle {
     Accessible.onPressAction: activate()
 
     width: size; height: size; radius: size / 2
-    color: Config.state(Config.fill3, Config.text, area.containsMouse, area.pressed || keyboardSelected)
+    color: Config.state(bare ? "transparent" : Config.fill3, Config.text, area.containsMouse, area.pressed || keyboardSelected)
     Behavior on color { ColorAnimation { duration: Config.durationFast } }
 
     IconImage {

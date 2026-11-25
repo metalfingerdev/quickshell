@@ -8,6 +8,7 @@ import QtQuick.Shapes
 import qs.modules.island
 import qs.modules.components
 import qs.modules.services
+import qs.modules.parts
 
 //   Loader item ──implicit size──► proxy (invisible, snaps instantly, the truth)
 //                                    └──► sx/sy/sw/sh (eased) ──► surface (visible)
@@ -390,6 +391,36 @@ Scope {
 
         }
 
+    }
+
+    // Beside the island, not on it: the tray to its left, the camera and microphone lights to its right. A
+    // window of its own, off the glass layer, so neither takes a glass edge of its own.
+    PanelWindow {
+        screen: root.screen
+        visible: root.active && !root.covering
+        anchors { top: true; left: true; right: true }
+        implicitHeight: 64
+        exclusionMode: ExclusionMode.Ignore
+        color: "transparent"
+        mask: Region { item: tray.visible ? tray : null }
+        WlrLayershell.namespace: "quickshell:beside"
+        WlrLayershell.layer: WlrLayer.Overlay
+        WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+
+        // hidden with the island, and while a view is open (its click-outside covers the screen)
+        Row {
+            id: tray
+            visible: Tray.strip.length > 0 && !Engine.hidden && !Engine.pinned
+            x: root.sx - width - (root.notch ? 14 : 8)
+            y: Math.max(4, root.sy + Math.min(root.sh, 36) / 2 - height / 2)
+            spacing: Config.spaceXs
+            layoutDirection: Qt.RightToLeft      // the first, the one that needs you most, nearest the island
+            Repeater {
+                model: Tray.strip
+                TrayIcon { required property var modelData; app: modelData; size: 24; bare: true }
+            }
+        }
+
         Row {
             id: privacy
             readonly property bool small: Engine.hidden
@@ -410,16 +441,9 @@ Scope {
                     id: light
                     required property var modelData
                     visible: modelData.on
-                    width: privacy.small ? privacy.dot : 16
+                    width: privacy.dot
                     height: width
 
-                    Rectangle {
-                        anchors.centerIn: parent
-                        visible: !privacy.small
-                        width: 16; height: 16; radius: 8
-                        color: light.modelData.color
-                        opacity: 0.2
-                    }
                     Rectangle {
                         anchors.centerIn: parent
                         width: privacy.dot; height: width; radius: width / 2
