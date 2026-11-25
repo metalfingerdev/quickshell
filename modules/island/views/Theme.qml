@@ -139,12 +139,43 @@ Item {
             spacing: Config.spaceM
             readonly property real each: (width - spacing) / 2
 
-            Segmented {
+            // each mode drawn as it looks, the way macOS's Appearance shows them
+            Row {
                 width: parent.each
-                options: [{ key: "dark", label: "Dark", icon: "dark_mode", shortcut: "d" },
-                          { key: "light", label: "Light", icon: "light_mode", shortcut: "l" }]
-                current: Config.dark ? "dark" : "light"
-                onPicked: key => Config.setDark(key === "dark")
+                spacing: Config.spaceM
+
+                Repeater {
+                    model: [{ key: "dark", label: "Dark", shortcut: "d", palette: Config.palettes[Config.lastDark] ?? Config.palettes.teal },
+                            { key: "light", label: "Light", shortcut: "l", palette: Config.palettes.paper }]
+
+                    Tile {
+                        id: mode
+                        required property var modelData
+                        width: (parent.width - Config.spaceM) / 2
+                        height: 72
+                        padding: Config.spaceM
+                        shortcut: modelData.shortcut
+                        tint: modelData.palette.surface
+                        current: Config.dark === (modelData.key === "dark")
+                        Accessible.name: modelData.label
+                        onClicked: Config.setDark(modelData.key === "dark")
+
+                        Label {
+                            anchors { left: parent.left; top: parent.top }
+                            text: modelData.label
+                            color: modelData.palette.text
+                            font.weight: Font.DemiBold
+                        }
+                        Row {
+                            anchors { left: parent.left; bottom: parent.bottom }
+                            spacing: Config.spaceXs
+                            Repeater {
+                                model: [mode.modelData.palette.primary, mode.modelData.palette.secondary, mode.modelData.palette.high]
+                                Rectangle { required property string modelData; width: 16; height: 16; radius: 8; color: modelData }
+                            }
+                        }
+                    }
+                }
             }
             Segmented {
                 width: parent.each

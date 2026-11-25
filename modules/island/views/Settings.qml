@@ -9,7 +9,14 @@ Item {
 
     readonly property int pad: 24
     readonly property int colW: 520
-    property string section: "shell"
+    // "" is the home page: System Settings' list of categories; a category opens its page, and Back comes home
+    property string section: ""
+    function back() { Engine.key(); if (section !== "") section = ""; else Engine.back() }
+
+    Keys.onPressed: event => {
+        if (event.key === Qt.Key_Backspace && root.section !== "") { root.back(); event.accepted = true }
+        else event.accepted = false
+    }
 
     implicitWidth: colW + 2 * pad
     implicitHeight: column.implicitHeight + 2 * pad
@@ -148,7 +155,7 @@ Item {
             width: parent.width
             icon: Config.symbol.settings
             title: "Settings"
-            subtitle: root.section === "look"
+            subtitle: root.section === "" ? "" : root.section === "look"
                       ? (Config.islandOpacity < 0 ? "Island like the windows" : "Island " + Math.round(Config.islandOpacity * 100) + " %")
                         + "  ·  " + (Glass.blurs.find(b => b.key === Glass.blur)?.label ?? "Medium") + " blur"
                       : root.section === "alerts"
@@ -159,20 +166,49 @@ Item {
                       : root.section === "lock" ? LockConfig.shownName + "  ·  " + LockConfig.shownInfo
                       : (Config.style === "notch" ? "Notch" : "Floating") + "  ·  " + Math.round(Config.scale * 100) + " %"
                         + (Engine.autoHide ? "  ·  Hides when not in use" : "")
-            onBack: Engine.back()
+            onBack: root.back()
 
             Pill { kind: "text"; icon: Config.symbol.theme; iconSize: 22; shortcut: "t"; onClicked: Engine.open(Engine.View.Theme) }
         }
 
-        Segmented {
-            width: parent.width
-            options: [{ key: "shell", label: "Shell", shortcut: "s" },
-                      { key: "look", label: "Look", shortcut: "k" },
-                      { key: "alerts", label: "Alerts", shortcut: "a" },
-                      { key: "idle", label: "Idle", shortcut: "i" },
-                      { key: "lock", label: "Lock", shortcut: "l" }]
-            current: root.section
-            onPicked: key => root.section = key
+        ListSection {
+            visible: root.section === ""
+
+            component Category: ListEntry {
+                property string page: ""
+                flat: true
+                onClicked: root.section = page
+                Icon { name: "chevron_right"; size: 22; color: Config.label3 }
+            }
+            ListEntry {
+                flat: true
+                focus: true
+                tone: Config.tintBlue
+                icon: Config.symbol.theme
+                title: "Appearance"
+                subtitle: "Light or dark, colours, wallpaper"
+                shortcut: "t"
+                onClicked: Engine.open(Engine.View.Theme)
+                Icon { name: "chevron_right"; size: 22; color: Config.label3 }
+            }
+            Category { page: "shell"; tone: Config.tintOrange; icon: "dock_to_bottom"; title: "Island"; subtitle: "Size, shape, hiding, clock"; shortcut: "s" }
+            Category { page: "look"; tone: Config.tintBlue; icon: "blur_on"; title: "Glass and blur"; subtitle: "Opacity, blur, liquid glass, motion"; shortcut: "k" }
+            Category { page: "alerts"; tone: Config.tintRed; icon: "notifications"; title: "Notifications"; subtitle: "Popups, sounds, toasts"; shortcut: "a" }
+            Category { page: "idle"; tone: Config.tintGreen; icon: "bolt"; title: "Energy"; subtitle: "Dim, lock and sleep when idle"; shortcut: "i" }
+            Category { page: "lock"; tone: Config.tintOrange; icon: "lock"; title: "Lock screen"; subtitle: "Picture, profile"; shortcut: "l" }
+        }
+        ListSection {
+            visible: root.section === ""
+            ListEntry {
+                flat: true
+                tone: Config.tintBlue
+                icon: "tune"
+                title: "Advanced"
+                subtitle: "Every setting, hand-editable"
+                shortcut: "v"
+                onClicked: Engine.open(Engine.View.Advanced)
+                Icon { name: "chevron_right"; size: 22; color: Config.label3 }
+            }
         }
 
         Column {
@@ -238,14 +274,6 @@ Item {
                 options: [{ key: "-1", label: "Week as the locale" }, { key: "1", label: "Monday" }, { key: "0", label: "Sunday" }]
                 current: String(Config.firstDay)
                 onPicked: key => Config.firstDay = Number(key)
-            }
-
-            Pill {
-                icon: "tune"
-                text: "Advanced: every setting"
-                implicitHeight: 52
-                shortcut: "v"
-                onClicked: Engine.open(Engine.View.Advanced)
             }
 
             SectionLabel { text: "Desktop"; topPadding: Config.spaceXs }
@@ -493,7 +521,8 @@ Item {
 
         KeyHints {
             width: parent.width
-            keys: root.section === "lock" ? [["⏎", "apply"], ["Esc", "close"]]
+            keys: root.section === "" ? [["⏎", "open"], ["⌫", "back"], ["Esc", "close"]]
+                : root.section === "lock" ? [["⏎", "apply"], ["Esc", "close"]]
                 : root.section === "alerts" ? [["⏎", "switch"], ["⌫", "back"], ["Esc", "close"]]
                 : [["← →", root.section === "idle" ? "wait" : root.section === "look" ? "adjust" : "size"], ["⌫", "back"], ["Esc", "close"]]
         }

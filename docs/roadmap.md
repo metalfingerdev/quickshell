@@ -23,6 +23,11 @@
 
 ## Done
 
+- [x] The redesign, batch 4 (2026-11-26): Settings as System Settings has it (a home page of categories with
+      coloured square icons, each opening its page, Back and Backspace coming home, Advanced last); Theme's
+      light and dark as tiles drawn as they look; Power asks with a countdown sheet and Restart into is a menu.
+      Open: the launcher as Spotlight, the wallpaper pane, Auto light/dark by sunrise.
+
 - [x] The redesign, batch 3 (2026-11-26): Network and Bluetooth as System Settings' grouped lists (the switch
       in a section of its own, My networks / My devices and Other, a lock and a check in each row, coloured
       square icons). Open: the Control Centre's module grid with Edit Controls, Now Playing and the Mixer's
