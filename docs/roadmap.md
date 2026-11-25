@@ -23,6 +23,11 @@
 
 ## Done
 
+- [x] Compact, Expanded and Tabs as one (2026-11-26): the same content, less of it on top of itself. Expanded's
+      sections sit on the island apart by hairlines, not on cards; media's transport is bare glyphs; the system is
+      one quiet line; the status group is bare glyphs (the network its glyph alone), on a platter only in Tabs,
+      whose groups are the same fills.
+
 - [x] Colours, every one (2026-11-26): the Colours view edits the custom colour and each role of the palette, for
       dark and for light apart (`Config.rolesDark` / `rolesLight`, "#aarrggbb"), with a map, hue, opacity and an
       8-digit hex, and gives a role back to the theme; Theme has Keep colours readable and Every colour.

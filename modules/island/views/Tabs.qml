@@ -47,7 +47,7 @@ Item {
         width: inner.implicitWidth + 2 * root.pad
         height: root.control + 2 * root.pad
         radius: height / 2
-        color: Config.container
+        color: Config.fill3
 
         Row {
             id: inner
@@ -108,6 +108,7 @@ Item {
 
         StatusGroup {
             id: status
+            platter: true
             anchors.verticalCenter: parent.verticalCenter
             maxText: 100
             onClicked: (view, x) => Engine.open(view, x)

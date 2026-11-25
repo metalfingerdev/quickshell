@@ -18,7 +18,8 @@ Rectangle {
     implicitWidth: 420
     implicitHeight: column.implicitHeight + 24
     radius: Config.cardRadius
-    color: Config.container
+    // one quiet line in the peek: no card, no bars, the readings in the secondary colour
+    color: "transparent"
 
     // a reading: its icon, its value, and under them how full, when that says something
     component Meter: Column {
@@ -45,21 +46,6 @@ Rectangle {
                 font.pixelSize: Config.small + 1
                 font.weight: Font.Medium
                 font.features: { "tnum": 1 }
-            }
-        }
-        Rectangle {
-            visible: meter.fraction >= 0
-            width: parent.width
-            height: 4
-            radius: 2
-            color: Config.high
-
-            Rectangle {
-                width: parent.width * Math.max(0, Math.min(1, meter.fraction))
-                height: parent.height
-                radius: 2
-                color: meter.tone
-                Behavior on width { NumberAnimation { duration: Config.motionMs; easing.type: Easing.OutCubic } }
             }
         }
     }

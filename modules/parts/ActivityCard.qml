@@ -10,7 +10,7 @@ Rectangle {
     implicitWidth: 420
     implicitHeight: list.implicitHeight + 24
     radius: Config.cardRadius
-    color: Config.container
+    color: "transparent"
 
     Column {
         id: list

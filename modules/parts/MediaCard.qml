@@ -16,9 +16,10 @@ ClippingRectangle {
     Component.onDestruction: Players.watch(false)
 
     implicitWidth: 420
-    implicitHeight: compact ? 84 : 164
+    implicitHeight: compact ? 68 : 164
     radius: Config.cardRadius
-    color: Config.container
+    // compact (Expanded) it sits on the island as the rest of the peek does: no card, no backdrop
+    color: compact ? "transparent" : Config.container
 
     // the scrim keeps the text readable over the art
     CoverImage {
@@ -30,7 +31,7 @@ ClippingRectangle {
     MultiEffect {
         anchors.fill: parent
         source: backdrop
-        visible: backdrop.status === Image.Ready
+        visible: backdrop.status === Image.Ready && !root.compact
         blurEnabled: true
         blur: 1.0
         blurMax: 40
@@ -39,7 +40,7 @@ ClippingRectangle {
     }
     Rectangle {
         anchors.fill: parent
-        visible: backdrop.status === Image.Ready
+        visible: backdrop.status === Image.Ready && !root.compact
         gradient: Gradient {
             orientation: Gradient.Horizontal
             GradientStop { position: 0.0; color: Qt.rgba(Config.container.r, Config.container.g, Config.container.b, 0.88) }
@@ -53,10 +54,10 @@ ClippingRectangle {
 
         ClippingRectangle {
             id: thumb
-            x: 14
+            x: Config.spaceXs
             anchors.verticalCenter: parent.verticalCenter
-            width: 56
-            height: 56
+            width: 52
+            height: 52
             radius: Config.smallRadius
             color: Config.high
 
@@ -104,11 +105,12 @@ ClippingRectangle {
             spacing: Config.spaceHair
 
             Pill { kind: "text"; icon: "skip_previous"; iconSize: 22; enabled: root.player?.canGoPrevious ?? false; onClicked: Players.previous() }
+            // bare glyphs, the middle one larger, as Apple's transport is
             Pill {
                 implicitHeight: 48
-                kind: "filled"
+                kind: "text"
                 icon: Players.playing ? "pause" : "play_arrow"
-                iconSize: 22
+                iconSize: 30
                 enabled: Players.canToggle
                 onClicked: Players.toggle()
             }
