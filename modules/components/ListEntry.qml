@@ -34,6 +34,7 @@ Rectangle {
 
     readonly property int leadSize: flat ? 32 : 44
     implicitWidth: 320
+    width: flat && parent ? parent.width : implicitWidth
     implicitHeight: flat ? (subtitle !== "" ? 60 : 48) : subtitle !== "" ? 64 : 52
     radius: flat ? 0 : Config.innerRadius + 4
     color: {

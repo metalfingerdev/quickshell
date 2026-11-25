@@ -68,33 +68,29 @@ Item {
             onBack: Engine.back()
         }
 
-        Row {
-            width: parent.width
-            spacing: Config.spaceM
-
-            QuickTile {
-                width: Net.ethernet ? (parent.width - 12) / 2 : parent.width
-                implicitHeight: 80
+        ListSection {
+            ListEntry {
+                flat: true
                 focus: !Net.wifiEnabled || Net.networks.length === 0
+                tone: Net.wifiEnabled ? Config.tintBlue : Config.outline
                 icon: Net.wifiEnabled ? "wifi" : "wifi_off"
                 title: "Wi-Fi"
                 subtitle: Net.wifiBlocked ? "Blocked by a hardware switch or rfkill"
                         : !Net.wifiEnabled ? "Off" : Net.current ? Net.current.name : "On"
-                on: Net.wifiEnabled
-                showSwitch: true
                 shortcut: "w"
                 enabled: Net.available && !Net.wifiBlocked
-                onToggled: Net.setWifi(!Net.wifiEnabled)
+                onClicked: Net.setWifi(!Net.wifiEnabled)
+                Toggle { checked: Net.wifiEnabled; activeFocusOnTab: false; enabled: parent.enabled; onToggled: Net.setWifi(!Net.wifiEnabled) }
             }
-            QuickTile {
+            ListEntry {
+                flat: true
                 visible: Net.ethernet
-                width: (parent.width - 12) / 2
-                implicitHeight: 80
+                height: visible ? implicitHeight : 0
                 activeFocusOnTab: false
+                tone: Config.tintGreen
                 icon: "lan"
                 title: "Ethernet"
                 subtitle: Net.linkSpeed > 0 ? "Connected  ·  " + Net.linkSpeed + " Mb/s" : "Connected"
-                on: true
             }
         }
 
@@ -111,39 +107,51 @@ Item {
             color: Config.dim
         }
 
+        // known networks first, as System Settings has them; each row opens the panel below
         ScrollList {
             id: list
             visible: Net.wifiEnabled && root.shown.length > 0
             width: parent.width
-            maxHeight: root.maxRows * (root.tileH + 12) + 2 * inset
+            maxHeight: 6 * 60 + 2 * 48 + 2 * inset
 
-            Grid {
-                id: grid
+            Column {
                 width: list.innerWidth
-                columns: 2
                 spacing: Config.spaceM
 
-                Repeater {
-                    // ScriptModel: an update (a scan, a signal change) moves, adds and removes tiles
-                    // instead of rebuilding them all (a stall while the island morphs in)
-                    model: ScriptModel { values: Net.wifiEnabled ? root.shown : [] }
+                component NetworkRow: ListEntry {
+                    id: row
+                    required property var net
+                    required property int number
+                    flat: true
+                    focus: number === 0
+                    tone: net.connected ? Config.tintBlue : Config.outline
+                    icon: Net.glyph(net.signalStrength)
+                    title: net.name
+                    subtitle: root.status(net)
+                    shortcut: number < 9 ? String(number + 1) : ""
+                    active: root.selected === net
+                    onClicked: root.choose(net)
 
-                    QuickTile {
-                        id: tile
-                        required property var modelData
-                        required property int index
-                        readonly property var net: modelData
+                    Icon { visible: net.connected; name: "check"; size: 20; color: Config.primary }
+                    Icon { visible: Net.secured(net); name: "lock"; size: 16; color: Config.label2 }
+                }
 
-                        width: (grid.width - 12) / 2
-                        implicitHeight: root.tileH
-                        // the keyboard starts on the list, not on the Wi-Fi tile above it
-                        focus: index === 0
-                        icon: Net.glyph(net.signalStrength)
-                        title: net.name
-                        subtitle: root.status(net)
-                        on: net.connected || root.selected === net
-                        shortcut: index < 9 ? String(index + 1) : ""
-                        onToggled: root.choose(net)
+                ListSection {
+                    title: "My networks"
+                    visible: mine.count > 0
+                    Repeater {
+                        id: mine
+                        model: ScriptModel { values: Net.wifiEnabled ? root.shown.filter(n => n.known || n.connected) : []; objectProp: "name" }
+                        NetworkRow { required property var modelData; required property int index; net: modelData; number: index }
+                    }
+                }
+                ListSection {
+                    title: "Other networks"
+                    visible: other.count > 0
+                    Repeater {
+                        id: other
+                        model: ScriptModel { values: Net.wifiEnabled ? root.shown.filter(n => !(n.known || n.connected)) : []; objectProp: "name" }
+                        NetworkRow { required property var modelData; required property int index; net: modelData; number: index + mine.count }
                     }
                 }
             }

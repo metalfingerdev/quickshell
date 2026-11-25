@@ -23,6 +23,11 @@
 
 ## Done
 
+- [x] The redesign, batch 3 (2026-11-26): Network and Bluetooth as System Settings' grouped lists (the switch
+      in a section of its own, My networks / My devices and Other, a lock and a check in each row, coloured
+      square icons). Open: the Control Centre's module grid with Edit Controls, Now Playing and the Mixer's
+      Sound page as the plan has them (batches 4 to 6 follow).
+
 - [x] The redesign, batch 1 (2026-11-26): docs/design.md; Header as a navigation bar, Toggle as a switch,
       Segmented with a sliding thumb, controls on alpha fills (no outlines anywhere), ListEntry and the new
       ListSection (grouped rows with coloured square icons), Menu and Sheet (Mixer's device picker is the first Menu).

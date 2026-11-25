@@ -369,6 +369,12 @@ QtObject {
     readonly property color pictureInk: "#f5f5f7"
     readonly property color pictureDim: "#c7c7cc"
 
+    // The system tints, for the square behind a row's icon (a kind of thing, not a state): the same in every palette
+    readonly property color tintBlue: "#0a84ff"
+    readonly property color tintGreen: "#30d158"
+    readonly property color tintOrange: "#ff9f0a"
+    readonly property color tintRed: "#ff453a"
+
     // privacy dots beside the island (fixed: they mean the same thing in every palette)
     readonly property color microphone: "#ff9f1a"
     readonly property color camera: "#35ff72"

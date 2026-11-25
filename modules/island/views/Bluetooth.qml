@@ -54,18 +54,19 @@ Item {
             }
         }
 
-        QuickTile {
-            width: parent.width
-            implicitHeight: 80
-            focus: !Bluez.enabled || Bluez.devices.length === 0
-            icon: Bluez.icon
-            title: "Bluetooth"
-            subtitle: !Bluez.available ? "No adapter" : Bluez.blocked ? "Blocked by rfkill" : !Bluez.enabled ? "Off" : Bluez.summary
-            on: Bluez.enabled
-            showSwitch: true
-            shortcut: "b"
-            enabled: Bluez.available && !Bluez.blocked
-            onToggled: Bluez.setEnabled(!Bluez.enabled)
+        ListSection {
+            ListEntry {
+                flat: true
+                focus: !Bluez.enabled || Bluez.devices.length === 0
+                tone: Bluez.enabled ? Config.tintBlue : Config.outline
+                icon: Bluez.icon
+                title: "Bluetooth"
+                subtitle: !Bluez.available ? "No adapter" : Bluez.blocked ? "Blocked by rfkill" : !Bluez.enabled ? "Off" : Bluez.summary
+                shortcut: "b"
+                enabled: Bluez.available && !Bluez.blocked
+                onClicked: Bluez.setEnabled(!Bluez.enabled)
+                Toggle { checked: Bluez.enabled; activeFocusOnTab: false; enabled: parent.enabled; onToggled: Bluez.setEnabled(!Bluez.enabled) }
+            }
         }
 
         Label {
@@ -84,29 +85,42 @@ Item {
             id: list
             visible: Bluez.enabled && Bluez.devices.length > 0
             width: parent.width
-            maxHeight: root.maxRows * (root.tileH + 12) + 2 * inset
+            maxHeight: 6 * 60 + 2 * 48 + 2 * inset
 
-            Grid {
-                id: grid
+            Column {
                 width: list.innerWidth
-                columns: 2
                 spacing: Config.spaceM
 
-                Repeater {
-                    model: Bluez.enabled ? Bluez.devices : []
+                component DeviceRow: ListEntry {
+                    required property var device
+                    required property int number
+                    flat: true
+                    focus: number === 0                         // the keyboard starts on the list
+                    tone: device.connected ? Config.tintBlue : Config.outline
+                    icon: root.glyph(device)
+                    title: device.name || device.address
+                    subtitle: Bluez.status(device)
+                    shortcut: number < 9 ? String(number + 1) : ""
+                    onClicked: Bluez.activate(device)
+                    Icon { visible: device.connected; name: "check"; size: 20; color: Config.primary }
+                }
 
-                    QuickTile {
-                        required property var modelData
-                        required property int index
-                        width: (grid.width - 12) / 2
-                        implicitHeight: root.tileH
-                        focus: index === 0                     // the keyboard starts on the list
-                        icon: root.glyph(modelData)
-                        title: modelData.name || modelData.address
-                        subtitle: Bluez.status(modelData)
-                        on: modelData.connected
-                        shortcut: index < 9 ? String(index + 1) : ""
-                        onToggled: Bluez.activate(modelData)
+                ListSection {
+                    title: "My devices"
+                    visible: mine.count > 0
+                    Repeater {
+                        id: mine
+                        model: Bluez.enabled ? Bluez.devices.filter(d => d.paired || d.connected) : []
+                        DeviceRow { required property var modelData; required property int index; device: modelData; number: index }
+                    }
+                }
+                ListSection {
+                    title: "Other devices"
+                    visible: other.count > 0
+                    Repeater {
+                        id: other
+                        model: Bluez.enabled ? Bluez.devices.filter(d => !(d.paired || d.connected)) : []
+                        DeviceRow { required property var modelData; required property int index; device: modelData; number: index + mine.count }
                     }
                 }
             }
