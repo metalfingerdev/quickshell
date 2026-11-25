@@ -46,7 +46,7 @@ QtObject {
     // the filter the launcher opens on (IPC `launch <filter>`); it reads it as it opens, and puts "all" back
     property string launcherFilter: "all"
 
-    property var snapshot: Machine.initial(restView, true)
+    property var snapshot: Machine.initial(restView, false)
 
     readonly property bool   autoHide: snapshot.autoHide
     readonly property bool   hidden:   snapshot.phase === Machine.Phase.Hidden

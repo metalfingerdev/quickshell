@@ -1,6 +1,5 @@
 import Quickshell
 import Quickshell.Wayland
-import Quickshell.Hyprland
 import QtQuick
 import QtQuick.Effects
 import QtQuick.Shapes
@@ -31,11 +30,7 @@ Scope {
     readonly property bool debug: Engine.debug
     readonly property int space: gap + Math.ceil(36 * Config.scale)
 
-    // Auto-hide with a fullscreen window on this screen: no handle and no hot zone, so a game or a
-    // video has the whole screen. A toast or the peek key still brings the island up.
-    readonly property bool fullscreen: Engine.autoHide && (Hyprland.monitorFor(screen)?.activeWorkspace?.hasFullscreen ?? false)
-
-    readonly property bool strip: Engine.hidden && Config.handle === "strip" && !fullscreen
+    readonly property bool strip: Engine.hidden && Config.handle === "strip"
     readonly property real stripW: 96
     readonly property real stripH: 5
 
@@ -113,7 +108,7 @@ Scope {
         id: spacer
 
         screen: root.screen
-        visible: (root.active || Engine.autoHide) && !root.fullscreen
+        visible: root.active || Engine.autoHide
         anchors { top: true; left: true; right: true }
         implicitHeight: Engine.autoHide ? root.hotZone : root.space
         exclusionMode: Engine.autoHide ? ExclusionMode.Ignore : ExclusionMode.Auto

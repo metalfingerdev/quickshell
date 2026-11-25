@@ -39,6 +39,16 @@ Scope {
         }
     }
 
+    // A fullscreen window on the island's screen turns auto-hide on, and its end turns it back off, so
+    // the island isn't drawn over a game or a video (it's on the overlay layer). Only undone if it was
+    // turned on here: auto-hide chosen in Settings stays.
+    readonly property bool fullscreen: (Engine.screen ? Hyprland.monitorFor(Engine.screen) : null)?.activeWorkspace?.hasFullscreen ?? false
+    property bool hidForFullscreen: false
+    onFullscreenChanged: {
+        if (fullscreen && !Engine.autoHide) { hidForFullscreen = true; Engine.setAutoHide(true) }
+        else if (!fullscreen && hidForFullscreen) { hidForFullscreen = false; Engine.setAutoHide(false) }
+    }
+
     // Priority 1 and queue: false (Registry), so it never interrupts a view and is never kept. Not over
     // Expanded either: at Peek any alert would replace it under the pointer.
     Connections {
