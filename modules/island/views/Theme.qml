@@ -5,22 +5,22 @@ import qs.modules.parts
 import qs.modules.components
 import qs.modules.services
 
-// Every colour choice in one place, top to bottom: light or dark, where the colours come from, then
-// what to adjust for that source. Each bar is drawn in the colours it gives (ColourBar), so it says what
-// it does. The full picker for a custom colour is Colours.
+// Android's Wallpaper & style, grouped the Apple way: what it looks like, light or dark, where the colours
+// come from as one row of whole schemes, then the fine-tuning for that source. Every circle is the scheme
+// it would really make (through Config.readable, as the island draws it), and the view says when colours
+// set by hand in Colours win over all of it.
 Item {
     id: root
 
     readonly property int pad: 24
-    readonly property int contentW: 840
-    readonly property int thumbW: 200
-    readonly property int thumbH: 125
-    readonly property int gap: 12
-    readonly property int labelW: 150
+    readonly property int contentW: 820
+    readonly property int labelW: 132
 
     readonly property bool custom: Config.source === "accent"
     readonly property bool wallpaper: Config.source === "wallpaper"
     readonly property bool generated: Config.source !== "preset"
+    // the roles Colours set by hand for the mode showing: they override whatever is picked here
+    readonly property int overrides: Object.values(Config.dark ? Config.rolesDark : Config.rolesLight).filter(v => v !== "" && v !== undefined).length
 
     // The custom colour as its bars hold it (HSV), apart from Config.accent: grey forgets its hue,
     // black its saturation too, and a knob mustn't jump when it gets there (as in Colours).
@@ -42,16 +42,59 @@ Item {
         }
     }
 
-    // ten even steps round the wheel, and the recent ones after
+    // the colour in use first (it is always there to see), ten even steps round the wheel, then the recent ones
+    readonly property var quickNames: ["Red", "Orange", "Amber", "Green", "Mint", "Cyan", "Blue", "Indigo", "Violet", "Pink"]
     readonly property var quick: [0, 0.07, 0.12, 0.3, 0.45, 0.53, 0.6, 0.7, 0.78, 0.9].map(h => Qt.hsla(h, 0.65, 0.62, 1))
-    // the wallpaper's primary hue, which its two bars are drawn in
+    readonly property var customChoices: {
+        const all = quick.map((c, i) => ({ colour: c, name: quickNames[i] }))
+        const seen = all.map(q => Config.hex(q.colour))
+        const add = (h, name) => { if (!seen.includes(h)) { seen.push(h); all.push({ colour: Qt.color(h), name: name }) } }
+        add(Config.hex(Config.accent), "Yours")
+        Config.recentAccents.forEach(h => add(h, h.toUpperCase()))
+        const yours = all.findIndex(c => c.name === "Yours")
+        if (yours > 0) all.unshift(all.splice(yours, 1)[0])
+        return all.slice(0, 12)
+    }
+    function customScheme(c) {
+        return Config.scheme(c, Config.surfaceFollows ? Math.max(0, c.hslHue) : Config.surfaceHue, Config.tint, Config.dark)
+    }
     readonly property real seedHue: Math.max(0, Config.wallpaperSeed.hslHue)
     readonly property real surfaceHueShown: root.custom && Config.surfaceFollows ? Math.max(0, Config.accent.hslHue) : Config.surfaceHue
 
     implicitWidth: contentW + 2 * pad
     implicitHeight: column.implicitHeight + 2 * pad
 
-    // a bar with its name and value: what Theme adjusts, each in the colours it gives
+    // a scheme to pick, named under its circle
+    component Choice: Column {
+        id: choice
+        property var scheme: null
+        property string name: ""
+        property bool chosen: false
+        signal picked()
+        width: 64
+        spacing: Config.spaceXs
+
+        PaletteDot {
+            anchors.horizontalCenter: parent.horizontalCenter
+            width: 52; height: 52
+            palette: choice.scheme
+            chosen: choice.chosen
+            focus: choice.chosen
+            Accessible.name: choice.name
+            onPicked: { choice.picked(); Engine.key() }
+        }
+        Label {
+            width: parent.width
+            horizontalAlignment: Text.AlignHCenter
+            elide: Text.ElideRight
+            text: choice.name
+            color: choice.chosen ? Config.text : Config.dim
+            font.pixelSize: Config.small
+            font.weight: choice.chosen ? Font.DemiBold : Font.Normal
+        }
+    }
+
+    // a bar with its name and value, drawn in the colours it gives
     component Adjust: Item {
         id: adjust
         property string text: ""
@@ -63,7 +106,7 @@ Item {
         height: 32
 
         Label {
-            anchors.verticalCenter: parent.verticalCenter
+            anchors { left: parent.left; leftMargin: Config.spaceXs; verticalCenter: parent.verticalCenter }
             width: root.labelW
             text: adjust.text
             color: Config.dim
@@ -76,36 +119,11 @@ Item {
         }
         Label {
             id: shown
-            anchors { right: parent.right; verticalCenter: parent.verticalCenter }
+            anchors { right: parent.right; rightMargin: Config.spaceXs; verticalCenter: parent.verticalCenter }
             width: 48
             horizontalAlignment: Text.AlignRight
             text: adjust.valueText
             font.features: { "tnum": 1 }
-        }
-    }
-
-    component Section: Item {
-        id: section
-        property string title: ""
-        property string letter: ""                  // the arrow's shortcut
-        property int view: -1
-        property string action: ""
-        width: parent.width
-        height: 40
-
-        SectionLabel {
-            anchors { left: parent.left; verticalCenter: parent.verticalCenter }
-            text: section.title
-        }
-        Pill {
-            visible: section.view >= 0
-            anchors { right: parent.right; verticalCenter: parent.verticalCenter }
-            implicitHeight: 40
-            kind: "text"
-            text: section.action
-            icon: Config.symbol.open
-            shortcut: section.letter
-            onClicked: Engine.open(section.view)
         }
     }
 
@@ -124,241 +142,202 @@ Item {
                      : root.wallpaper ? "From the wallpaper" + (Wallpaper.option ? ", " + Wallpaper.option.name : "")
                      : Config.current.label)
                     + (Config.contrastLevel === "high" ? "  ·  High contrast" : "")
+                    + (root.overrides > 0 ? "  ·  " + root.overrides + " set by hand" : "")
             onBack: Engine.back()
 
             Pill {
                 icon: Config.symbol.settings
-                implicitHeight: 48
                 Accessible.name: "Settings"
                 onClicked: Engine.open(Engine.View.Settings)
             }
         }
 
-        Row {
-            width: parent.width
-            spacing: Config.spaceM
-            readonly property real each: (width - spacing) / 2
+        // Light or dark, each drawn as it will look (the scheme of that mode, for the colours picked
+        // now), and how strongly things stand apart.
+        Card {
+            title: "Appearance"
 
-            // each mode drawn as it looks, the way macOS's Appearance shows them
             Row {
-                width: parent.each
-                spacing: Config.spaceM
+                width: parent.width
+                spacing: Config.spaceS
 
-                Repeater {
-                    model: [{ key: "dark", label: "Dark", shortcut: "d", palette: Config.palettes[Config.lastDark] ?? Config.palettes.teal },
-                            { key: "light", label: "Light", shortcut: "l", palette: Config.palettes.paper }]
+                Row {
+                    width: (parent.width - Config.spaceS) * 0.62
+                    spacing: Config.spaceS
 
-                    Tile {
-                        id: mode
-                        required property var modelData
-                        width: (parent.width - Config.spaceM) / 2
-                        height: 72
-                        padding: Config.spaceM
-                        shortcut: modelData.shortcut
-                        tint: modelData.palette.surface
-                        current: Config.dark === (modelData.key === "dark")
-                        Accessible.name: modelData.label
-                        onClicked: Config.setDark(modelData.key === "dark")
+                    Repeater {
+                        model: [{ dark: true, label: "Dark", shortcut: "d" }, { dark: false, label: "Light", shortcut: "l" }]
 
-                        Label {
-                            anchors { left: parent.left; top: parent.top }
-                            text: modelData.label
-                            color: modelData.palette.text
-                            font.weight: Font.DemiBold
-                        }
-                        Row {
-                            anchors { left: parent.left; bottom: parent.bottom }
-                            spacing: Config.spaceXs
-                            Repeater {
-                                model: [mode.modelData.palette.primary, mode.modelData.palette.secondary, mode.modelData.palette.high]
-                                Rectangle { required property string modelData; width: 16; height: 16; radius: 8; color: modelData }
+                        Tile {
+                            id: mode
+                            required property var modelData
+                            readonly property var p: Config.paletteFor(modelData.dark)
+                            width: (parent.width - Config.spaceS) / 2
+                            height: 76
+                            padding: Config.spaceM
+                            shortcut: modelData.shortcut
+                            tint: p.surface
+                            current: Config.dark === modelData.dark
+                            border.width: current ? 2 : 1
+                            border.color: current ? Config.primary : Config.divider
+                            Accessible.name: modelData.label
+                            onClicked: Config.setDark(modelData.dark)
+
+                            Label {
+                                anchors { left: parent.left; top: parent.top }
+                                text: mode.modelData.label
+                                color: mode.p.text
+                                font.weight: Font.DemiBold
+                            }
+                            // a little panel in that mode: a tile with a line of text, a switch in the accent
+                            Rectangle {
+                                anchors { right: parent.right; verticalCenter: parent.verticalCenter }
+                                width: 96; height: 36; radius: 18
+                                color: mode.p.container
+                                Rectangle { x: 12; anchors.verticalCenter: parent.verticalCenter; width: 28; height: 6; radius: 3; color: mode.p.dim }
+                                Rectangle {
+                                    anchors { right: parent.right; rightMargin: Config.spaceS; verticalCenter: parent.verticalCenter }
+                                    width: 36; height: 20; radius: 10
+                                    color: mode.p.primary
+                                    Rectangle { x: 19; y: 3; width: 14; height: 14; radius: 7; color: mode.p.onPrimary }
+                                }
+                            }
+                            Row {
+                                anchors { left: parent.left; bottom: parent.bottom }
+                                spacing: Config.spaceXs
+                                Repeater {
+                                    model: [mode.p.primary, mode.p.secondary, mode.p.high]
+                                    Rectangle { required property color modelData; width: 14; height: 14; radius: 7; color: modelData }
+                                }
                             }
                         }
                     }
                 }
-            }
-            Segmented {
-                width: parent.each
-                options: [{ key: "standard", label: "Standard", icon: "contrast" },
-                          { key: "high", label: "High contrast", icon: "visibility", shortcut: "h" }]
-                current: Config.contrastLevel
-                onPicked: key => Config.contrastLevel = key
-            }
-        }
-
-        // off: nothing is adjusted for you, a colour is drawn as picked (Colours sets every one of them)
-        ListSection {
-            SettingTile {
-                width: parent.width
-                icon: "contrast"
-                title: "Keep colours readable"
-                detail: Config.keepReadable ? "A colour too close to the surface is drawn lighter or darker" : "Every colour is drawn exactly as set"
-                checked: Config.keepReadable
-                onFlipped: on => Config.keepReadable = on
-            }
-            ListEntry {
-                flat: true
-                icon: "palette"
-                title: "Every colour"
-                subtitle: "Each role of the palette, for dark and for light"
-                shortcut: "c"
-                onClicked: Engine.open(Engine.View.Colours)
-                Icon { name: "chevron_right"; size: 22; color: Config.outline }
-            }
-        }
-
-        SectionLabel { text: "Colours from"; topPadding: Config.spaceS }
-        Segmented {
-            width: parent.width
-            options: [{ key: "wallpaper", label: "Wallpaper", icon: Config.symbol.wallpaper },
-                      { key: "accent", label: "Custom colour", icon: "colorize" },
-                      { key: "preset", label: "Presets", icon: "palette" }]
-            current: Config.source
-            onPicked: key => Config.source = key
-        }
-
-        // what the picture offers (Wallpaper.options): each circle the whole scheme it makes
-        Row {
-            visible: root.wallpaper
-            width: parent.width
-            spacing: Config.spaceL
-
-            ClippingRectangle {
-                width: 176
-                height: 110
-                radius: Config.innerRadius
-                color: Config.tile
-                CoverImage {
-                    source: Wallpaper.current ? Wallpaper.fileUrl(Wallpaper.current) : ""
-                    sourceSize: Qt.size(352, 220)
+                // how strongly things stand apart
+                Segmented {
+                    width: (parent.width - Config.spaceS) * 0.38
+                    height: 76
+                    options: [{ key: "standard", label: "Standard", icon: "contrast" },
+                              { key: "high", label: "High", icon: "visibility", shortcut: "h" }]
+                    current: Config.contrastLevel
+                    onPicked: key => Config.contrastLevel = key
                 }
             }
+        }
+
+        // Every source the same way: a row of the schemes it offers, and Other for any colour at all
+        Card {
+            title: "Colours"
+            action: "Every colour"
+            actionShortcut: "c"
+            onActionClicked: Engine.open(Engine.View.Colours)
+
+            Segmented {
+                width: parent.width
+                options: [{ key: "wallpaper", label: "Wallpaper", icon: Config.symbol.wallpaper, shortcut: "w" },
+                          { key: "accent", label: "Custom", icon: "colorize", shortcut: "u" },
+                          { key: "preset", label: "Presets", icon: "palette", shortcut: "p" }]
+                current: Config.source
+                onPicked: key => Config.source = key
+            }
+
             Flow {
-                anchors.verticalCenter: parent.verticalCenter
-                width: parent.width - 176 - parent.spacing
-                spacing: Config.spaceL
+                width: parent.width
+                spacing: Config.spaceS
+                topPadding: Config.spaceXs
 
                 Repeater {
-                    model: Wallpaper.options
-
-                    Column {
-                        id: option
+                    model: root.wallpaper ? Wallpaper.options : []
+                    Choice {
                         required property var modelData
                         required property int index
-                        spacing: Config.spaceS
-
-                        PaletteDot {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            width: 48; height: 48
-                            palette: Config.wallpaperScheme(option.modelData)
-                            chosen: Wallpaper.optionIndex === option.index
-                            focus: chosen && root.wallpaper
-                            onPicked: {
-                                Wallpaper.pick(option.index)
-                                Config.takeSurface(Wallpaper.option, Wallpaper.optionKey, true)
-                                Engine.key()
-                            }
-                        }
-                        Label {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            text: option.modelData.name
-                            color: Wallpaper.optionIndex === option.index ? Config.text : Config.dim
-                            font.pixelSize: Config.small
+                        scheme: Config.wallpaperScheme(modelData)
+                        name: modelData.name
+                        chosen: Wallpaper.optionIndex === index
+                        onPicked: {
+                            Wallpaper.pick(index)
+                            Config.takeSurface(Wallpaper.option, Wallpaper.optionKey, true)
                         }
                     }
                 }
-                Label {
-                    visible: Wallpaper.options.length === 0
-                    text: "No wallpaper colours yet"
-                    color: Config.dim
+                Repeater {
+                    model: root.custom ? root.customChoices : []
+                    Choice {
+                        required property var modelData
+                        scheme: root.customScheme(modelData.colour)
+                        name: modelData.name
+                        chosen: Config.hex(Config.accent) === Config.hex(modelData.colour)
+                        onPicked: { Config.accent = modelData.colour; Config.remember(Config.accent) }
+                    }
                 }
-            }
-        }
-
-        // ten to start from, the recent ones, and the full picker
-        Flow {
-            visible: root.custom
-            width: parent.width
-            spacing: Config.spaceS
-
-            Repeater {
-                model: root.quick.concat(Config.recentAccents.filter(c => !root.quick.some(q => Config.hex(q) === c)))
-
-                Swatch {
-                    required property var modelData
-                    width: 40; height: 40
-                    tone: modelData
-                    chosen: Config.hex(Config.accent) === Config.hex(modelData)
-                    focus: chosen && root.custom
-                    onPicked: { Config.accent = modelData; Config.remember(Config.accent); Engine.key() }
+                Repeater {
+                    model: root.generated ? [] : Config.names
+                    Choice {
+                        required property string modelData
+                        scheme: Config.palettes[modelData]
+                        name: Config.palettes[modelData].label
+                        chosen: Config.name === modelData
+                        onPicked: Config.name = modelData
+                    }
                 }
-            }
-            Pill {
-                implicitHeight: 40
-                kind: "text"
-                icon: "colorize"
-                text: "More colours"
-                onClicked: Engine.open(Engine.View.Colours)
-            }
-        }
 
-        Grid {
-            visible: Config.source === "preset"
-            columns: 4
-            spacing: Config.spaceM
-
-            Repeater {
-                model: Config.names
-
-                Tile {
-                    id: card
-                    required property string modelData
-                    readonly property var p: Config.palettes[modelData]
-
-                    width: (column.width - 3 * Config.spaceM) / 4
-                    height: 88
-                    padding: Config.spaceL
-                    tint: p.surface
-                    current: Config.name === modelData
-                    // a hairline, so a palette as dark as the island still has an edge
-                    border.width: current ? 2 : 1
-                    border.color: current ? Config.primary : Config.divider
-                    focus: current && Config.source === "preset"
-                    onClicked: Config.name = modelData
-
+                // any colour: the full picker, where the custom colour and every role are set
+                Column {
+                    visible: !root.wallpaper || Wallpaper.options.length > 0
+                    width: 64
+                    spacing: Config.spaceXs
+                    Pill {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        implicitHeight: 52
+                        icon: "add"
+                        iconSize: 24
+                        Accessible.name: "Other colours"
+                        onClicked: { if (!root.custom) Config.source = "accent"; Engine.open(Engine.View.Colours) }
+                    }
                     Label {
-                        anchors { left: parent.left; top: parent.top }
-                        text: card.p.label
-                        color: card.p.text
-                        font.weight: Font.DemiBold
+                        width: parent.width
+                        horizontalAlignment: Text.AlignHCenter
+                        text: "Other"
+                        color: Config.dim
+                        font.pixelSize: Config.small
                     }
-                    Row {
-                        anchors { left: parent.left; bottom: parent.bottom }
-                        spacing: -6
+                }
+            }
+            EmptyState {
+                visible: root.wallpaper && Wallpaper.options.length === 0
+                width: parent.width
+                compact: true
+                icon: Config.symbol.wallpaper
+                title: "No colours from this wallpaper yet"
+                hint: "They are read once the picture has loaded"
+                color: Config.raised
+            }
 
-                        Repeater {
-                            model: [card.p.primary, card.p.secondary, card.p.container]
-
-                            Rectangle {
-                                required property string modelData
-                                width: 22; height: 22; radius: 11
-                                color: modelData
-                                border.width: 2
-                                border.color: card.p.surface
-                            }
-                        }
+            // honest about what wins: a role set by hand is drawn as set, whatever is picked above
+            Rectangle {
+                visible: root.overrides > 0
+                width: parent.width
+                height: 44
+                radius: height / 2
+                color: Config.raised
+                Row {
+                    anchors { left: parent.left; leftMargin: Config.spaceL; verticalCenter: parent.verticalCenter }
+                    spacing: Config.spaceS
+                    Icon { anchors.verticalCenter: parent.verticalCenter; name: "info"; size: 18; color: Config.primary }
+                    Label {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: root.overrides + (root.overrides === 1 ? " colour is" : " colours are")
+                              + " set by hand for " + (Config.dark ? "dark" : "light") + " and drawn as set, over what is picked here"
+                        font.pixelSize: Config.small + 1
                     }
                 }
             }
         }
 
-        // The bars for the source in use. The accent's and the wallpaper's are sampled through
-        // Config.readable, as the primary is: the colours the island will really draw.
-        Column {
+        // The bars for the source in use, sampled through Config.readable as the primary is
+        Card {
             visible: root.generated
-            width: parent.width
-            spacing: Config.spaceS
-            topPadding: Config.spaceS
+            title: root.custom ? "Fine-tune the colour" : "Fine-tune the wallpaper's colour"
 
             Adjust {
                 visible: root.custom
@@ -389,14 +368,14 @@ Item {
                 }
             }
 
-            // the surfaces: the accent's hue (Android's way), a hue of their own, or grey
+            // the surfaces: the colour's hue (Android's way), a hue of their own, or grey
             Item {
                 visible: root.custom
                 width: parent.width
                 height: 48
 
                 Label {
-                    anchors.verticalCenter: parent.verticalCenter
+                    anchors { left: parent.left; leftMargin: Config.spaceXs; verticalCenter: parent.verticalCenter }
                     text: "Surfaces"
                     color: Config.dim
                 }
@@ -429,53 +408,61 @@ Item {
             }
         }
 
-        Section { title: "Wallpaper"; action: "All"; letter: "w"; view: Engine.View.Wallpapers }
-        ListView {
-            id: strip
-            visible: Wallpaper.files.length > 0
-            width: parent.width
-            height: root.thumbH
-            orientation: ListView.Horizontal
-            spacing: root.gap
-            clip: true
-            boundsBehavior: Flickable.StopAtBounds
-            model: Wallpaper.files
-            currentIndex: Math.max(0, Wallpaper.currentIndex)
-            highlightMoveDuration: 0                     // follow the selection at once, not at 400 px/s
-            activeFocusOnTab: true
-            Component.onCompleted: positionViewAtIndex(currentIndex, ListView.Center)
-            // the row moves its own selection with Left/Right (off its ends it lets them go, and
-            // ViewLoader moves focus out); report every key, so the countdown restarts
-            Keys.onPressed: event => { Engine.key(); event.accepted = false }
-            WheelHandler {
-                target: null
-                onWheel: event => {
-                    const d = event.angleDelta.y !== 0 ? event.angleDelta.y : event.angleDelta.x
-                    strip.contentX = Math.max(strip.originX,
-                                     Math.min(strip.originX + strip.contentWidth - strip.width, strip.contentX - d))
+        Card {
+            title: "Wallpaper"
+            action: "All"
+            actionShortcut: "a"
+            onActionClicked: Engine.open(Engine.View.Wallpapers)
+
+            ListView {
+                id: strip
+                visible: Wallpaper.files.length > 0
+                width: parent.width
+                height: 100
+                orientation: ListView.Horizontal
+                spacing: Config.spaceS
+                clip: true
+                boundsBehavior: Flickable.StopAtBounds
+                model: Wallpaper.files
+                currentIndex: Math.max(0, Wallpaper.currentIndex)
+                highlightMoveDuration: 0                     // follow the selection at once, not at 400 px/s
+                activeFocusOnTab: true
+                Component.onCompleted: positionViewAtIndex(currentIndex, ListView.Center)
+                // the row moves its own selection with Left/Right (off its ends it lets them go, and
+                // ViewLoader moves focus out); report every key, so the countdown restarts
+                Keys.onPressed: event => { Engine.key(); event.accepted = false }
+                WheelHandler {
+                    target: null
+                    onWheel: event => {
+                        const d = event.angleDelta.y !== 0 ? event.angleDelta.y : event.angleDelta.x
+                        strip.contentX = Math.max(strip.originX,
+                                         Math.min(strip.originX + strip.contentWidth - strip.width, strip.contentX - d))
+                    }
+                }
+                // the current delegate holds the active focus, not the row, so Enter activates the thumb
+                delegate: WallpaperThumb {
+                    required property string modelData
+                    required property int index
+                    width: 160
+                    height: 100
+                    path: modelData
+                    picked: strip.activeFocus && ListView.isCurrentItem
+                    onClicked: { strip.currentIndex = index; Wallpaper.set(modelData) }
                 }
             }
-            // the current delegate holds the active focus, not the row, so Enter activates the thumb
-            delegate: WallpaperThumb {
-                required property string modelData
-                required property int index
-                width: root.thumbW
-                height: root.thumbH
-                path: modelData
-                picked: strip.activeFocus && ListView.isCurrentItem
-                onClicked: { strip.currentIndex = index; Wallpaper.set(modelData) }
+            EmptyState {
+                visible: Wallpaper.files.length === 0
+                width: parent.width
+                compact: true
+                icon: Config.symbol.wallpaper
+                title: "No images in " + Wallpaper.dir
+                color: Config.raised
             }
-        }
-        Label {
-            visible: Wallpaper.files.length === 0
-            leftPadding: Config.spaceXs
-            text: "No images in " + Wallpaper.dir
-            color: Config.dim
         }
 
         KeyHints {
             width: parent.width
-            keys: [["D L", "dark, light"], ["← →", "adjust a bar"], ["C", "more colours"], ["⌫", "back"]]
+            keys: [["D L", "dark, light"], ["W U P", "source"], ["← →", "adjust a bar"], ["⌫", "back"]]
         }
     }
 }
