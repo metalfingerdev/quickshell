@@ -129,9 +129,13 @@ Scope {
         mask: Region { item: Engine.autoHide ? edge : null }
         WlrLayershell.layer: WlrLayer.Overlay       // or the hot zone is under a fullscreen window
 
+        // only over the island, so the rest of the edge stays the app's (Firefox's tabs in fullscreen)
         Item {
             id: edge
-            anchors.fill: parent
+            readonly property real w: Math.max(proxy.width, root.stripW) + (root.notch ? 2 * cornerL.width : 0)
+            x: proxy.x + proxy.width / 2 - w / 2
+            width: w
+            height: parent.height
             HoverHandler { id: edgeHover }
         }
     }
