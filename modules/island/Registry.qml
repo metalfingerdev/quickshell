@@ -6,8 +6,9 @@ QtObject {
     id: registry
 
     readonly property var entries: [
-        { name: "compact",    priority: 0, timeout: 0,    view: Engine.View.Compact,    url: Qt.resolvedUrl("views/Compact.qml") },
-        { name: "expanded",   priority: 2, timeout: 6000, view: Engine.View.Expanded,   url: Qt.resolvedUrl("views/Expanded.qml") },
+        // `dynamic`: drawn as Apple's Dynamic Island, opaque black, where the panels are the windows' glass
+        { name: "compact",    priority: 0, timeout: 0,    view: Engine.View.Compact,    url: Qt.resolvedUrl("views/Compact.qml"), dynamic: true },
+        { name: "expanded",   priority: 2, timeout: 6000, view: Engine.View.Expanded,   url: Qt.resolvedUrl("views/Expanded.qml"), dynamic: true },
         { name: "tabs",       priority: 2, timeout: 8000, view: Engine.View.Tabs,       url: Qt.resolvedUrl("views/Tabs.qml") },
         { name: "dashboard",  priority: 2, timeout: 12000, view: Engine.View.Dashboard, url: Qt.resolvedUrl("views/Dashboard.qml") },
         { name: "network",    priority: 2, timeout: 5000, view: Engine.View.Network,    url: Qt.resolvedUrl("views/Network.qml") },

@@ -56,6 +56,7 @@ Item {
         Header {
             visible: Engine.pinned
             width: parent.width
+            icon: Config.symbol.battery
             title: "Battery"
             subtitle: root.status
             onBack: Engine.back()

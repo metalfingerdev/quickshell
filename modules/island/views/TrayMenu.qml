@@ -74,7 +74,7 @@ Item {
 
         Header {
             width: parent.width
-            icon: root.item ? "" : "widgets"
+            icon: root.item ? "menu_open" : "widgets"
             title: !root.item ? "Tray"
                  : root.trail.length > 0 ? root.plain(root.trail[root.trail.length - 1].text) : Tray.name(root.item)
             subtitle: !root.item ? (Tray.items.length === 1 ? "1 app" : Tray.items.length + " apps")
@@ -103,8 +103,8 @@ Item {
         ScrollList {
             width: parent.width
             visible: root.shown > 0
-            maxHeight: 7 * 54 + 14
-            spacing: Config.spaceHair
+            maxHeight: 7 * 56 + 14
+            spacing: Config.spaceXs
 
             Repeater {
                 model: root.item ? [] : Tray.items
@@ -114,14 +114,16 @@ Item {
                     required property int index
 
                     width: parent.width
+                    filled: true
                     focus: index === 0
                     title: Tray.name(modelData)
                     subtitle: modelData.tooltipDescription
-                    trailing: modelData.hasMenu ? "›" : ""
                     lead: Component {
                         IconImage { implicitSize: 28; asynchronous: true; source: modelData.icon }
                     }
                     onClicked: root.open(modelData)
+
+                    Icon { visible: modelData.hasMenu; name: "chevron_right"; color: Config.dim }
                 }
             }
 
@@ -135,16 +137,8 @@ Item {
                     required property int index
 
                     width: parent.width
-                    height: modelData.isSeparator ? Config.spaceM : entry.height
-
-                    Rectangle {
-                        visible: slot.modelData.isSeparator
-                        anchors.verticalCenter: parent.verticalCenter
-                        x: Config.spaceM
-                        width: parent.width - 2 * Config.spaceM
-                        height: 1
-                        color: Config.divider
-                    }
+                    // a separator is a wider gap between the tiles, not a line across one
+                    height: modelData.isSeparator ? Config.spaceS : entry.height
 
                     ListEntry {
                         id: entry
@@ -152,18 +146,20 @@ Item {
                         activeFocusOnTab: visible && enabled
                         focus: slot.index === 0
                         width: parent.width
+                        filled: true
                         enabled: slot.modelData.enabled
                         opacity: enabled ? 1 : 0.38
                         icon: root.glyph(slot.modelData)
                         active: slot.modelData.checkState === Qt.Checked
                         title: root.plain(slot.modelData.text)
-                        trailing: slot.modelData.hasChildren ? "›" : ""
                         lead: slot.modelData.icon !== "" && slot.modelData.buttonType === QsMenuButtonType.None ? picture : null
                         onClicked: root.choose(slot.modelData)
 
                         property Component picture: Component {
                             IconImage { implicitSize: 24; asynchronous: true; source: slot.modelData.icon }
                         }
+
+                        Icon { visible: slot.modelData.hasChildren; name: "chevron_right"; color: Config.dim }
                     }
                 }
             }

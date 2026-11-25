@@ -1,8 +1,9 @@
 import QtQuick
 import QtQuick.Layouts
 
-// Components don't know the Engine: wire onBack yourself.
-Item {
+// A panel's title on a card of its own, after Noctalia's: the panel's glyph in the primary colour, its
+// name, and its actions at the far end. Components don't know the Engine: wire onBack yourself.
+Rectangle {
     id: root
 
     property string icon: ""
@@ -12,10 +13,14 @@ Item {
     default property alias actions: tools.data
     signal back()
 
-    implicitHeight: 52
+    implicitHeight: 64
+    radius: Config.cardRadius
+    color: Config.container
+    border.color: Config.border
+    border.width: 1
 
     RowLayout {
-        anchors.fill: parent
+        anchors { fill: parent; leftMargin: Config.spaceS; rightMargin: Config.spaceS }
         spacing: Config.spaceM
 
         BackButton {
@@ -26,10 +31,10 @@ Item {
 
         Icon {
             visible: root.icon !== ""
+            Layout.leftMargin: root.showBack ? 0 : Config.spaceS
             name: root.icon
-            size: 22
-            color: Config.dim
-            Layout.preferredWidth: 24
+            size: 26
+            color: Config.primary
         }
 
         Column {
@@ -41,8 +46,8 @@ Item {
                 width: parent.width
                 text: root.title
                 elide: Text.ElideRight
-                font.pixelSize: Config.title
-                font.weight: Font.Normal
+                font.pixelSize: Config.large
+                font.weight: Font.DemiBold
             }
             Label {
                 width: parent.width

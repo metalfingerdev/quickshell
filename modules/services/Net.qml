@@ -3,6 +3,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Networking
+import Quickshell.Io
 
 // Networks sort by signal in quarters, which keeps the order from reshuffling on every scan.
 // Scanning costs power, so it only runs while someone holds a scan(true).
@@ -32,6 +33,36 @@ Singleton {
 
     readonly property bool ethernet: wired?.connected ?? false
     readonly property int linkSpeed: wired?.linkSpeed ?? 0                // Mb/s
+
+    // What each connected device is on the network: Quickshell.Networking has no addresses, so nmcli,
+    // read when the Network view asks. In terse mode nmcli escapes the colons inside a value.
+    property var details: []
+    function readDetails() { detailsProc.running = true }
+    onSummaryChanged: if (details.length > 0) readDetails()
+    Process {
+        id: detailsProc
+        command: ["nmcli", "-t", "-f", "GENERAL.DEVICE,GENERAL.TYPE,GENERAL.CONNECTION,GENERAL.HWADDR,IP4.ADDRESS,IP4.GATEWAY,IP4.DNS",
+                  "device", "show"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const out = []
+                for (const block of text.split("\n\n")) {
+                    const f = {}
+                    for (const line of block.split("\n")) {
+                        const i = line.indexOf(":")
+                        if (i < 0) continue
+                        const key = line.slice(0, i).replace(/\[\d+\]$/, ""), value = line.slice(i + 1).replace(/\\:/g, ":")
+                        if (value !== "") f[key] = f[key] ? f[key] + ", " + value : value
+                    }
+                    if (f["IP4.ADDRESS"] && f["GENERAL.TYPE"] !== "loopback")
+                        out.push({ device: f["GENERAL.DEVICE"], connection: f["GENERAL.CONNECTION"] ?? "",
+                                   facts: [["Address", f["IP4.ADDRESS"]], ["Gateway", f["IP4.GATEWAY"] ?? ""],
+                                           ["DNS", f["IP4.DNS"] ?? ""], ["Hardware", f["GENERAL.HWADDR"] ?? ""]].filter(x => x[1] !== "") })
+                }
+                root.details = out
+            }
+        }
+    }
 
     readonly property string summary: {
         if (!available) return "NetworkManager isn't running"

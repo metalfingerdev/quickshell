@@ -34,3 +34,4 @@ ClickArea    1.0 ClickArea.qml
 CoverImage   1.0 CoverImage.qml
 Store        1.0 Store.qml
 EmptyState   1.0 EmptyState.qml
+Sparkline    1.0 Sparkline.qml

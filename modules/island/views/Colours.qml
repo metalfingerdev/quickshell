@@ -67,6 +67,7 @@ Item {
 
         Header {
             width: parent.width
+            icon: Config.symbol.colours
             title: "Colours"
             subtitle: Config.source === "preset" ? Config.current.label
                     : root.accent ? "From " + Config.hex(Config.accent) : "From the wallpaper"

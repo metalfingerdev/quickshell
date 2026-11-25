@@ -9,6 +9,9 @@ Rectangle {
     property string subtitle: ""
     property string trailing: ""
     property bool active: false
+    // a tile of its own, for a list that is the view (Tray, NixOS, Clipboard); off where rows sit
+    // beside other controls (Media's outputs), which a fill on every row would crowd
+    property bool filled: false
     property string shortcut: ""
     property bool keyboardSelected: activeFocus && Config.focusVisible
     readonly property bool hovered: area.containsMouse
@@ -30,11 +33,13 @@ Rectangle {
     implicitHeight: subtitle !== "" ? 64 : 52
     radius: Config.innerRadius + 4
     color: {
-        const base = active ? Config.secondary : Qt.rgba(Config.container.r, Config.container.g, Config.container.b, 0)
+        const base = active ? Config.secondary : Qt.rgba(Config.container.r, Config.container.g, Config.container.b, filled ? 1 : 0)
         return keyboardSelected || area.pressed ? Config.mix(active ? base : Config.container, Config.text, 0.10)
              : area.containsMouse ? Config.mix(active ? base : Config.container, Config.text, 0.05)
              : base
     }
+    border.color: Config.border
+    border.width: filled && !active ? 1 : 0
     Behavior on color { ColorAnimation { duration: Config.durationFast } }
 
     // under the children, so buttons in the row still get their own clicks

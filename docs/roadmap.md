@@ -2,6 +2,19 @@
 
 ## Open
 
+- [ ] The views brought to one standard (2026-11-25), after Noctalia (its QML version, `legacy-v4`): what
+      each lacks next to Noctalia's panel for the same thing, kept small, a control on the panel only
+      for what is used often:
+  - [x] Power: restart into Windows or into the firmware setup, for one boot (logind's
+        `BootLoaderEntries` and `CanRebootToFirmwareSetup`; shown only where they exist)
+  - [x] Network: the connection's details (address, gateway, DNS, hardware address) behind a row
+        that opens, a value copied with a click
+  - [x] Calendar: the days that have events marked, and the chosen day's events under the month
+  - [x] Notifications: grouped Today, Yesterday, Earlier
+  - [x] Mixer: pick the output and the input device, when there is more than one
+  - [x] Wallpapers: a search field
+  - [x] Favourites: which pinned apps are running
+
 - [ ] Battery: charge limit and power profiles, for hardware that has them (see old-shell-notes.md).
 - [ ] Power profiles: the dashboard's segmented row shows once power-profiles-daemon runs
       (`services.power-profiles-daemon.enable`); it is hidden until then.
@@ -9,6 +22,14 @@
 - [ ] Keyboard, next steps: give each view real keyboard rules as it gets real content.
 
 ## Done
+
+- [x] Two looks and a lock (2026-11-25): the panels after Noctalia (a header card with the panel's glyph
+      in the primary colour, outlined cards and tiles, list rows as tiles; System as cards with a graph
+      of the last minute), Compact and Expanded as Apple's Dynamic Island (opaque black, Registry
+      `dynamic`); liquid glass by hyprglass (a flake input built for the Hyprland it names, switched and
+      its look picked in Settings); the lock screen after Apple's (the picture and the time until a key or
+      the pointer, then the sign-in over a softened picture), and the island growing over the screen as
+      it locks and shrinking back as it unlocks.
 
 - [x] More from Nihil-Shell (2026-11-25): the system tray, a view of its own and not in Tabs, which
       stays uncluttered (the dashboard's More, the launcher, `open tray`): each app, its menu drawn in the

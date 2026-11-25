@@ -91,6 +91,15 @@ Loader item ──implicit size──► proxy (invisible, snaps instantly, the 
   full view, the Registry's `opens` (the workspace dots open the overview, the volume and brightness
   toasts the dashboard), or else its own view, Pinned; the clock (Compact, at rest) and Expanded (the
   peek) pin the hub, `Tabs`. Elsewhere it does nothing.
+- **Two looks**: the panels are the windows' glass (`Config.island`, under hyprglass when the plugin is
+  loaded: hypr/modules/plugins.lua, `services/Glass.qml`), after Noctalia: a `Header` card with the panel's
+  glyph, content on outlined cards (`Config.border`). Compact and Expanded (Registry `dynamic`) are Apple's
+  Dynamic Island instead: opaque black. Bar's `fill` eases between the two as a view swaps in.
+- **Locking**: `Session.covering` (set by `lock/Lock.qml`) makes the proxy the whole screen, the input mask
+  the whole screen and the keyboard exclusive, so the island grows over everything and takes every input;
+  the session lock engages once it has (a lock someone asked for), or at once (idle, logind before sleep).
+  It stays under the lock, so unlocking (the picture fades to black first) shows the island shrinking back.
+  A lock the compositor never confirms gives the screen back after 3 s.
 - **Shadow**: a `RectangularShadow` under the surface, from the same animated rect, close and light at Rest,
   wider and deeper once the island opens. Bar draws it because Hyprland only shadows windows, not layers. It
   isn't in the input mask, and its alpha stays under the `glass` layer rule's `ignore_alpha` (look.lua), so

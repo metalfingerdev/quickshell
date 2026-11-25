@@ -3,6 +3,7 @@ module qs.modules.services
 singleton Audio      1.0 Audio.qml
 singleton Backlight  1.0 Backlight.qml
 singleton Notifier   1.0 Notifier.qml
+singleton Glass      1.0 Glass.qml
 singleton Net        1.0 Net.qml
 singleton Bluez      1.0 Bluez.qml
 singleton Players    1.0 Players.qml

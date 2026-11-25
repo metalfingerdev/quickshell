@@ -19,7 +19,15 @@ Item {
     implicitWidth: Math.max(480, Math.min(Pins.apps.length, perRow) * (cell + Config.spaceS) - Config.spaceS + 2 * pad)
     implicitHeight: column.implicitHeight + 2 * pad
 
+    // As a dock does: an app already open is brought up rather than started again. A window can't take
+    // the keyboard while the island holds it, hence closeThen.
+    function windowOf(app) {
+        const ids = [app.id, app.startupClass].filter(Boolean).map(s => s.toLowerCase().replace(/\.desktop$/, ""))
+        return Toplevels.list.find(t => ids.includes((t.appId ?? "").toLowerCase())) ?? null
+    }
     function run(app) {
+        const open = windowOf(app)
+        if (open) { Engine.closeThen(() => open.activate()); return }
         Pins.run(app)
         Engine.close()
     }
@@ -61,6 +69,7 @@ Item {
                     required property int index
                     readonly property bool keyboardSelected: activeFocus && Config.focusVisible
                     readonly property string shortcut: index < 9 ? String(index + 1) : ""
+                    readonly property bool running: root.windowOf(modelData) !== null
 
                     width: root.cell
                     height: root.cell
@@ -105,6 +114,14 @@ Item {
                             text: tile.modelData.name
                             font.pixelSize: Config.small + 1
                         }
+                    }
+
+                    // running: a dot under the name, as in a dock
+                    Rectangle {
+                        anchors { horizontalCenter: parent.horizontalCenter; bottom: parent.bottom; bottomMargin: Config.spaceS }
+                        visible: tile.running
+                        width: 6; height: 6; radius: 3
+                        color: Config.primary
                     }
 
                     ClickArea {

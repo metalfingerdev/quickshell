@@ -64,6 +64,7 @@ Item {
 
         Header {
             width: parent.width
+            icon: Config.symbol.media
             title: "Media"
             subtitle: "Nothing is playing"
             onBack: Engine.back()
@@ -87,6 +88,7 @@ Item {
 
         Header {
             width: parent.width
+            icon: Config.symbol.media
             title: "Now playing"
             subtitle: (root.player?.identity ?? "") + "  ·  " + Audio.label(Audio.sink)
             onBack: Engine.back()

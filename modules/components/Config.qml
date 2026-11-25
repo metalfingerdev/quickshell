@@ -223,6 +223,8 @@ QtObject {
     readonly property color bad:         current.bad
     readonly property bool  dark:        current.dark
     readonly property color divider:     mix(surface, outline, 0.35)
+    // the hairline round a panel's cards and resting tiles (Noctalia's box border): there, but quieter than outline
+    readonly property color border:      mix(container, outline, 0.4)
     readonly property color primaryDeep: mix(primary, primaryInk, 0.16)
 
     function mix(a, b, t) {
@@ -287,6 +289,12 @@ QtObject {
     // this when a key moves focus in a view and clears it when the pointer moves over the island.
     // True by default, so components used anywhere else always show them.
     property bool focusVisible: true
+
+    // The Dynamic Island (Registry's `dynamic` views, Compact and Expanded) is black in either mode, as
+    // Apple's is. What those views draw straight on it takes these inks: a light palette's are dark.
+    readonly property color dynamicSurface: "#000000"
+    readonly property color dynamicInk: dark ? text : "#f5f5f7"
+    readonly property color dynamicDim: dark ? dim : "#a1a1a6"
 
     // privacy dots beside the island (fixed: they mean the same thing in every palette)
     readonly property color microphone: "#ff9f1a"

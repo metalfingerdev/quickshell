@@ -38,6 +38,7 @@ Item {
 
         Header {
             width: parent.width
+            icon: "bluetooth"
             title: "Bluetooth"
             subtitle: Bluez.summary
             onBack: Engine.back()

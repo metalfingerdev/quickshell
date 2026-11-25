@@ -20,8 +20,8 @@ Rectangle {
 
     radius: Config.cardRadius
     color: Config.state(tint.a > 0 ? tint : Config.container, Config.text, area.containsMouse, area.pressed || keyboardSelected)
-    border.width: current ? 2 : 0
-    border.color: Config.primary
+    border.width: current ? 2 : tint.a > 0 ? 0 : 1
+    border.color: current ? Config.primary : Config.border
     Behavior on color { ColorAnimation { duration: Config.durationFast } }
 
     ClickArea {

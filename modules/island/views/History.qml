@@ -43,6 +43,7 @@ Item {
 
         Header {
             width: parent.width
+            icon: "history"
             title: "NixOS"
             subtitle: root.section === "updates"
                 ? (Generations.checking ? "Asking upstream…"
@@ -74,8 +75,8 @@ Item {
         ScrollList {
             width: parent.width
             visible: root.section === "generations" && Generations.found
-            maxHeight: (root.picked ? 3 : 6) * 66 + 14
-            spacing: Config.spaceHair
+            maxHeight: (root.picked ? 3 : 6) * 68 + 14
+            spacing: Config.spaceXs
 
             Repeater {
                 model: root.section === "generations" ? Generations.list : []
@@ -85,6 +86,7 @@ Item {
                     required property int index
 
                     width: parent.width
+                    filled: true
                     focus: index === 0
                     active: root.picked?.id === modelData.id
                     icon: modelData.current ? "check_circle" : modelData.booted ? "restart_alt" : "history"
@@ -104,8 +106,8 @@ Item {
         ScrollList {
             width: parent.width
             visible: root.section === "generations" && (root.rows?.length ?? 0) > 0
-            maxHeight: 4 * 66 + 14
-            spacing: Config.spaceHair
+            maxHeight: 4 * 68 + 14
+            spacing: Config.spaceXs
 
             Repeater {
                 model: root.section === "generations" ? root.rows ?? [] : []
@@ -113,6 +115,7 @@ Item {
                 ListEntry {
                     required property var modelData
                     width: parent.width
+                    filled: true
                     icon: root.glyph(modelData.kind)
                     title: modelData.name
                     subtitle: modelData.change
@@ -133,8 +136,8 @@ Item {
         ScrollList {
             width: parent.width
             visible: root.section === "updates" && Generations.inputs.length > 0
-            maxHeight: 6 * 66 + 14
-            spacing: Config.spaceHair
+            maxHeight: 6 * 68 + 14
+            spacing: Config.spaceXs
 
             Repeater {
                 model: root.section === "updates" ? Generations.inputs : []
@@ -145,6 +148,7 @@ Item {
                     readonly property var standing: Generations.standing(modelData)
 
                     width: parent.width
+                    filled: true
                     focus: index === 0
                     active: standing.attention
                     icon: standing.attention ? "upgrade" : standing.text !== "" ? "check_circle" : "deployed_code"

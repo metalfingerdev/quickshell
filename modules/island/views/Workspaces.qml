@@ -91,7 +91,7 @@ Item {
     readonly property real gridH: visibleRowCount * tileH + (visibleRowCount - 1) * gap
     readonly property real stripGap: gap * 2.8
 
-    readonly property real headerH: 52 + 12
+    readonly property real headerH: header.implicitHeight + Config.spaceM
 
     implicitWidth: content.width + pad * 2
     readonly property real footerH: 36
@@ -206,9 +206,11 @@ Item {
     }
 
     Header {
+        id: header
         x: root.pad
         y: root.pad
         width: content.width
+        icon: Config.symbol.overview
         title: "Workspaces"
         subtitle: "Click to go · drag a window to move it · middle-click closes it"
         onBack: Engine.back()

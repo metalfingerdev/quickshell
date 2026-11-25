@@ -62,6 +62,7 @@ Item {
 
         Header {
             width: parent.width
+            icon: "pending_actions"
             title: "Activities"
             subtitle: Activities.working ? Activities.list.length + " running" : "Nothing running"
             onBack: Engine.back()
@@ -78,7 +79,8 @@ Item {
         ScrollList {
             width: parent.width
             visible: Activities.working
-            maxHeight: 4 * 64 + 14
+            maxHeight: 4 * (64 + spacing) + 14
+            spacing: Config.spaceXs
 
             Repeater {
                 model: Activities.list
@@ -86,6 +88,7 @@ Item {
                 ListEntry {
                     required property var modelData
                     width: parent.width
+                    filled: true
                     icon: modelData.id === "downloads" ? "download" : "pending"
                     title: modelData.label
                     subtitle: modelData.fraction >= 0 ? Math.round(modelData.fraction * 100) + " %" : "Working…"

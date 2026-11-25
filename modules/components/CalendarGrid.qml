@@ -10,6 +10,11 @@ Item {
     // 0 = Sunday ... 6 = Saturday, like Date.getDay() (Locale says 1 = Monday ... 7 = Sunday)
     property int firstDay: Qt.locale().firstDayOfWeek % 7
     property int cell: 30
+    // optional: the days with something on (Date.toDateString() keys), a dot under each; a day
+    // clicked is `picked` and ringed as `selected`
+    property var marked: ({})
+    property var selected: null
+    signal picked(date day)
 
     readonly property int offset: (new Date(year, month, 1).getDay() - firstDay + 7) % 7
 
@@ -62,12 +67,36 @@ Item {
                     color: Config.primary
                 }
 
+                Rectangle {
+                    anchors.centerIn: parent
+                    width: root.cell - 4
+                    height: width
+                    radius: width / 2
+                    visible: !day.isToday && root.selected !== null && root.sameDay(day.date, root.selected)
+                    color: "transparent"
+                    border.color: Config.primary
+                    border.width: 2
+                }
+
                 Label {
                     anchors.centerIn: parent
                     text: day.date.getDate()
                     color: day.isToday ? Config.primaryInk : day.inMonth ? Config.text : Config.outline
                     opacity: day.inMonth ? 1 : 0.6
                     font.weight: day.isToday ? Font.Bold : Font.Normal
+                }
+
+                Rectangle {
+                    anchors { horizontalCenter: parent.horizontalCenter; bottom: parent.bottom; bottomMargin: Math.round(root.cell * 0.14) }
+                    visible: root.marked[day.date.toDateString()] === true
+                    width: 4; height: 4; radius: 2
+                    color: day.isToday ? Config.primaryInk : Config.primary
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.picked(day.date)
                 }
             }
         }

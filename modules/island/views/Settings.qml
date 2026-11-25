@@ -14,23 +14,28 @@ Item {
     implicitWidth: colW + 2 * pad
     implicitHeight: column.implicitHeight + 2 * pad
 
-    component Switch: Item {
+    // a tile like a list row's, so a switch reads as one thing with its words rather than floating apart
+    component Switch: Rectangle {
         id: line
         property string text: ""
         property alias checked: toggle.checked
         signal toggled(bool on)
 
         width: parent.width
-        height: 40
+        height: 56
+        radius: Config.innerRadius + 4
+        color: Config.container
+        border.color: Config.border
+        border.width: 1
 
         Label {
-            anchors { left: parent.left; leftMargin: Config.spaceXs; verticalCenter: parent.verticalCenter }
+            anchors { left: parent.left; leftMargin: Config.spaceL; verticalCenter: parent.verticalCenter }
             text: line.text
             font.pixelSize: Config.body + 1
         }
         Toggle {
             id: toggle
-            anchors { right: parent.right; rightMargin: Config.spaceXs; verticalCenter: parent.verticalCenter }
+            anchors { right: parent.right; rightMargin: Config.spaceM; verticalCenter: parent.verticalCenter }
             onToggled: on => line.toggled(on)
         }
     }
@@ -115,6 +120,7 @@ Item {
 
         Header {
             width: parent.width
+            icon: Config.symbol.settings
             title: "Settings"
             subtitle: root.section === "idle"
                       ? (!Idle.enabled ? "Stays on" : Toggles.caffeine ? "Caffeine: stays on"
@@ -192,6 +198,22 @@ Item {
                 text: "Light along the edge"
                 checked: Glyph.enabled
                 onToggled: on => Glyph.enabled = on
+            }
+
+            // hidden while Hyprland runs without the plugin (left out for another version): look.lua's blur
+            SectionLabel { visible: Glass.available; text: "Glass"; topPadding: Config.spaceXs }
+            Switch {
+                visible: Glass.available
+                text: "Liquid glass on windows and the island"
+                checked: Glass.enabled
+                onToggled: on => Glass.enabled = on
+            }
+            Segmented {
+                visible: Glass.available && Glass.enabled
+                width: parent.width
+                options: Glass.presets
+                current: Glass.preset
+                onPicked: key => Glass.preset = key
             }
 
             SectionLabel { text: "Desktop"; topPadding: Config.spaceXs }

@@ -17,6 +17,7 @@ Singleton {
     readonly property bool micMuted: isMuted(source)
 
     readonly property var sinks: Array.from(Pipewire.nodes.values).filter(n => n.isSink && !n.isStream && n.audio)
+    readonly property var sources: Array.from(Pipewire.nodes.values).filter(n => !n.isSink && !n.isStream && n.audio)
     // apps' playback streams. To PipeWire a playback stream is a sink as well (sound goes into it),
     // so isSink is true for these too; a recording (a mic stream) isn't one
     readonly property var streams: Array.from(Pipewire.nodes.values).filter(n => n.isSink && n.isStream && n.audio)
@@ -52,6 +53,7 @@ Singleton {
     function toggleMute() { toggleMuted(sink) }
     function toggleMic()  { toggleMuted(source) }
     function setSink(node) { if (node) Pipewire.preferredDefaultAudioSink = node }
+    function setSource(node) { if (node) Pipewire.preferredDefaultAudioSource = node }
     function label(node) { return node ? (node.nickname || node.description || node.name || "Output") : "No output" }
     function glyph(node) {
         const n = ((node?.name ?? "") + " " + (node?.description ?? "")).toLowerCase()

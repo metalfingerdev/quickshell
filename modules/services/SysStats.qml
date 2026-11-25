@@ -25,6 +25,20 @@ Singleton {
     property real diskUsedGB: 0     // the root filesystem
     property real diskTotalGB: 0    // 0: not read yet
 
+    // The last minute of readings, for the System view's graphs. Kept only while watched, like the
+    // readings: a graph spanning a time nothing was read would draw a line through the gap.
+    readonly property int keep: 60
+    property var history: ({ cpu: [], mem: [], temp: [], rx: [], tx: [] })
+    // The first tick after opening has nothing to take a rate from yet, and a temperature of 0 is no
+    // sensor read: neither is a reading.
+    property int ticks: 0
+    function record() {
+        if (ticks++ === 0) return
+        const now = { cpu: cpu, mem: mem, temp: temp, rx: rx, tx: tx }, next = {}
+        for (const k in now) next[k] = k === "temp" && temp <= 0 ? history[k] : history[k].concat([now[k]]).slice(-keep)
+        history = next
+    }
+
     property var lastCpu: null
     property real lastRx: -1
     property real lastTx: -1
@@ -88,6 +102,8 @@ Singleton {
 
     onShownChanged: {
         if (shown) {
+            history = { cpu: [], mem: [], temp: [], rx: [], tx: [] }
+            ticks = 0
             if (!tempPath && !findTemp.running) findTemp.running = true
             return
         }
@@ -163,7 +179,7 @@ Singleton {
         running: root.shown
         repeat: true
         triggeredOnStart: true
-        onTriggered: root.tick()
+        onTriggered: { root.tick(); root.record() }
     }
     Timer {
         interval: 30000

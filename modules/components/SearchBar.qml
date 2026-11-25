@@ -21,6 +21,8 @@ FocusScope {
     // copy otherwise, and the field keeps it, so it never reaches the view
     property var controlKeys: []
     property int fieldSize: 16
+    // the capsule's colour: the lock screen's is see-through, over its picture
+    property color fill: Config.high
     default property alias trailing: side.data
 
     signal key()
@@ -40,8 +42,8 @@ FocusScope {
     Rectangle {
         anchors.fill: parent
         radius: height / 2
-        color: Config.state(Config.high, Config.text, area.containsMouse && root.readOnly, false)
-        border.width: field.activeFocus && !root.readOnly ? 2 : 0
+        color: Config.state(root.fill, Config.text, area.containsMouse && root.readOnly, false)
+        border.width: field.activeFocus && !root.readOnly && root.fill.a === 1 ? 2 : 0
         border.color: Config.primary
         Behavior on color { ColorAnimation { duration: Config.durationFast } }
     }
@@ -58,7 +60,9 @@ FocusScope {
         id: badge
         x: 6
         anchors.verticalCenter: parent.verticalCenter
-        width: root.height - 12
+        // no icon (the lock screen's field): no badge, and the text starts near the edge
+        visible: root.icon !== ""
+        width: visible ? root.height - 12 : 0
         height: width
         radius: width / 2
         color: Config.primary

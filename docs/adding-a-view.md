@@ -94,6 +94,7 @@ Add an entry to `Registry.qml`:
 | `queue`    | `true` = a blocked alert of this view waits in the one-slot queue; otherwise it is dropped                                                                                      |
 | `opens`    | optional: the view a click on this view's toast opens (default: this view, pinned)                                                                                              |
 | `aliases`  | optional: other names IPC accepts                                                                                                                                               |
+| `dynamic`  | optional: `true` draws the island as Apple's Dynamic Island, opaque black (`Config.dynamicSurface`), instead of the windows' glass. Compact and Expanded only; text drawn straight on it takes `Config.dynamicInk` / `dynamicDim` |
 
 One view per _thing_, not per variant. Don't add a second view just to change urgency or layout:
 

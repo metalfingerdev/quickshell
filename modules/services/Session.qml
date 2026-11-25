@@ -18,6 +18,9 @@ Singleton {
     ]
 
     signal lockRequested()
+    // The island over the whole screen: as the lock comes (Lock.qml sets it, Bar grows the island) and
+    // under it while locked, so unlocking shows the island giving the screen back.
+    property bool covering: false
 
     // logout: Hyprland runs under UWSM (programs.hyprland.withUWSM), so stop that; otherwise end
     // the logind session.
@@ -26,8 +29,31 @@ Singleton {
         hibernate: ["systemctl", "hibernate"],
         logout:   ["uwsm", "stop"],
         reboot:   ["systemctl", "reboot"],
-        poweroff: ["systemctl", "poweroff"]
+        poweroff: ["systemctl", "poweroff"],
+        windows:  ["systemctl", "reboot", "--boot-loader-entry=auto-windows"],
+        firmware: ["systemctl", "reboot", "--firmware-setup"]
     })
+
+    // Restarts into something else, for one boot: what logind's BootLoaderEntries has of these
+    // (systemd-boot names Windows auto-windows), read once. Each asks first, as a restart does.
+    readonly property var targets: [
+        { id: "windows",  label: "Windows",        icon: "desktop_windows", key: "w", entry: "auto-windows" },
+        { id: "firmware", label: "Firmware setup", icon: "developer_board", key: "f", entry: "auto-reboot-to-firmware-setup" }
+    ]
+    property var restarts: []
+    Process {
+        running: true
+        command: ["busctl", "--json=short", "get-property", "org.freedesktop.login1", "/org/freedesktop/login1",
+                  "org.freedesktop.login1.Manager", "BootLoaderEntries"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    const entries = JSON.parse(text).data
+                    root.restarts = root.targets.filter(t => entries.includes(t.entry)).map(t => Object.assign({ confirm: true }, t))
+                } catch (e) {}
+            }
+        }
+    }
 
     function run(id) {
         if (id === "lock") { lockRequested(); return }

@@ -47,6 +47,8 @@ Item {
                     id: dateColumn
                     anchors.centerIn: parent
                     date: clock.date
+                    ink: Config.dynamicInk
+                    dim: Config.dynamicDim
                 }
 
                 ClickArea {

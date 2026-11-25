@@ -40,6 +40,13 @@ Scope {
     // `shown` lags `target` until swap has faded the old view out
     readonly property int target: Engine.view
     property int shown: -1
+    // Locking, the island grows over the whole screen and takes every input, and the lock takes over
+    // from it (Lock.qml); unlocked, it shrinks back from there. A view open then closes first.
+    readonly property bool covering: Session.covering && active
+    onCoveringChanged: if (covering) Engine.close()
+    // the surface's colour follows the view as it swaps in, eased with the morph
+    property color fill: covering || Registry.get(shown)?.dynamic ? Config.dynamicSurface : Config.island
+    Behavior on fill { ColorAnimation { duration: Config.durationMedium } }
     onTargetChanged: swap.restart()
 
     // The x the shown view is centred on (Engine.anchorX, -1 = screen centre). Opening a view moves
@@ -85,7 +92,7 @@ Scope {
 
     // The pointer is at the screen's top edge: on the spacer's hot zone or, where the overlay lies
     // over it (a notch), in the overlay's own top strip. That holds the island but isn't "on" it.
-    readonly property bool atEdge: edgeHover.hovered || (pointer.hovered && pointer.point.position.y < hotZone)
+    readonly property bool atEdge: !covering && (edgeHover.hovered || (pointer.hovered && pointer.point.position.y < hotZone))
     onAtEdgeChanged: Engine.edge(atEdge, screen.name)
 
     function pinShown() {
@@ -133,13 +140,13 @@ Scope {
         anchors { top: true; bottom: true; left: true; right: true }
         exclusionMode: ExclusionMode.Ignore
         color: "transparent"
-        mask: Region { item: Engine.hidden ? null : Engine.pinned ? outside : proxy }
+        mask: Region { item: root.covering ? outside : Engine.hidden ? null : Engine.pinned ? outside : proxy }
 
         WlrLayershell.namespace: "glass:island"     // Hyprland's glass (hypr/modules/look.lua)
         WlrLayershell.layer: WlrLayer.Overlay       // the top layer is drawn under fullscreen windows
         // Pinned views get the keyboard (the user is here). Rest, Peek and Toast never take it, so
         // neither the pointer passing over the island nor a toast can steal typing from an app.
-        WlrLayershell.keyboardFocus: root.active && Engine.pinned ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+        WlrLayershell.keyboardFocus: root.active && (Engine.pinned || root.covering) ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
         // Whether this window really has the keyboard (Hyprland sent it), not only asked for it.
         // Engine.closeThen waits for it to go before it moves Hyprland's focus.
@@ -151,9 +158,12 @@ Scope {
         MouseArea {
             id: outside
             anchors.fill: parent
-            enabled: Engine.pinned
+            enabled: Engine.pinned || root.covering
             acceptedButtons: Qt.AllButtons
-            onPressed: mouse => mouse.button === Qt.BackButton ? Engine.back() : Engine.close()
+            onPressed: mouse => {
+                if (root.covering) return
+                if (mouse.button === Qt.BackButton) Engine.back(); else Engine.close()
+            }
         }
 
         // The pointer is on the island while it is inside the FINAL rect (the proxy, like the input mask), not
@@ -177,7 +187,8 @@ Scope {
                 if (Config.focusVisible) Config.focusVisible = false
             }
         }
-        readonly property bool onIsland: pointer.hovered
+        // not while covering: the whole screen is the island then, and a hover would start the peek under the lock
+        readonly property bool onIsland: !root.covering && pointer.hovered
             && pointer.point.position.x >= proxy.x && pointer.point.position.x < proxy.x + proxy.width
             && pointer.point.position.y >= Math.max(proxy.y, root.hotZone) && pointer.point.position.y < proxy.y + proxy.height
         onOnIslandChanged: Engine.hover(onIsland)
@@ -202,10 +213,10 @@ Scope {
                 restoreMode: Binding.RestoreNone
             }
 
-            width: root.strip ? root.stripW : viewW
-            height: root.strip ? root.stripH : viewH
-            x: root.abscissa(width, root.anchor)
-            y: root.strip ? 0 : Engine.hidden ? -height - root.gap : root.gap
+            width: root.covering ? overlay.width : root.strip ? root.stripW : viewW
+            height: root.covering ? overlay.height : root.strip ? root.stripH : viewH
+            x: root.covering ? 0 : root.abscissa(width, root.anchor)
+            y: root.covering ? 0 : root.strip ? 0 : Engine.hidden ? -height - root.gap : root.gap
 
             // callLater coalesces the burst of x/y/w/h changes into one snap
             onXChanged:      Qt.callLater(root.snap)
@@ -256,7 +267,7 @@ Scope {
             preferredRendererType: Shape.CurveRenderer
 
             ShapePath {
-                fillColor: Config.island
+                fillColor: root.fill
                 strokeColor: "transparent"
                 startX: 0; startY: corner.leading ? 0 : corner.a
                 PathLine { x: corner.leading ? corner.a : 0; y: 0 }
@@ -273,7 +284,10 @@ Scope {
         Rectangle {
             id: surface
 
+            // the corners square off over the last quarter of the screen's height, so covering it the island
+            // fills it to its corners, and they round again as it shrinks back (no view is that tall)
             readonly property real r: Math.min(height / 2, Config.radius * Config.scale)
+                                      * Math.max(0, Math.min(1, 4 * (1 - height / overlay.height)))
 
             x: root.sx
             y: root.sy
@@ -284,8 +298,7 @@ Scope {
             topRightRadius: root.notch ? 0 : r
             bottomLeftRadius: r
             bottomRightRadius: r
-            color: Config.island
-            Behavior on color { ColorAnimation { duration: 200 } }
+            color: root.fill
             clip: true                     // content is revealed, never squished
 
             // Under every control of the view, and no control takes the mouse's back button, so it works anywhere on the island.
@@ -298,7 +311,7 @@ Scope {
             // Hidden behind the handle, the view fades out instead of showing a sliver of itself.
             Item {
                 anchors.fill: parent
-                opacity: Engine.hidden ? 0 : 1
+                opacity: Engine.hidden || root.covering ? 0 : 1
                 Behavior on opacity { NumberAnimation { duration: 150 } }
 
                 // The view always has its FINAL size, even while the surface is still smaller.
@@ -327,7 +340,7 @@ Scope {
 
             GlyphLight {
                 anchors.fill: parent
-                visible: lit && !Engine.hidden && !root.strip
+                visible: lit && !Engine.hidden && !root.strip && !root.covering
                 topRadius: surface.topLeftRadius
                 bottomRadius: surface.bottomLeftRadius
             }

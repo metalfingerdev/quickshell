@@ -31,6 +31,7 @@ Item {
 
         Header {
             width: parent.width
+            icon: Config.symbol.power
             title: "Power"
             subtitle: Session.uptimeText
             onBack: Engine.back()
@@ -82,9 +83,34 @@ Item {
             }
         }
 
+        Row {
+            visible: Session.restarts.length > 0
+            spacing: Config.spaceS
+
+            Label {
+                anchors.verticalCenter: parent.verticalCenter
+                rightPadding: Config.spaceXs
+                text: "Restart into"
+                color: Config.dim
+            }
+            Repeater {
+                model: Session.restarts
+
+                Pill {
+                    required property var modelData
+                    readonly property bool waiting: root.armed === modelData.id
+                    icon: modelData.icon
+                    text: waiting ? "Again?" : modelData.label
+                    shortcut: modelData.key
+                    active: waiting
+                    onClicked: root.press(modelData)
+                }
+            }
+        }
+
         KeyHints {
             width: parent.width
-            keys: [["↵", "run (twice for logout, reboot, shutdown)"], ["⌫", "back"]]
+            keys: [["↵", "run (twice to end the session)"], ["⌫", "back"]]
         }
     }
 }

@@ -47,7 +47,7 @@ Item {
 
         Header {
             width: parent.width
-            icon: Config.symbol.calendar
+            icon: "event_note"
             title: "Agenda"
             subtitle: Calendar.any ? Calendar.calendars.length + (Calendar.calendars.length === 1 ? " calendar" : " calendars") : ""
             onBack: Engine.back()
@@ -97,6 +97,7 @@ Item {
                         ListEntry {
                             required property var modelData
                             width: group.width
+                            filled: true
                             icon: modelData.allDay ? "today" : "schedule"
                             title: Calendar.title(modelData)
                             subtitle: root.span(modelData) + (modelData.where ? "  ·  " + modelData.where : "")

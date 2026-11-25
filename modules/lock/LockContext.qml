@@ -12,12 +12,33 @@ Scope {
 	property string currentText: ""
 	property bool unlockInProgress: false
 	property bool showFailure: false
+	// Apple's lock screen: only the picture and the time, until a key or the pointer wants in. Here, so
+	// waking one screen wakes them all.
+	property bool awake: false
+	// unlocked, and fading to the island's black before the lock lets go (Lock.qml)
+	property bool leaving: false
 
-	onCurrentTextChanged: showFailure = false;
+	onCurrentTextChanged: {
+		showFailure = false;
+		if (currentText !== "") wake();
+	}
+
+	// A while with nothing typed and the sign-in goes again; anything typed keeps it.
+	function wake() {
+		if (leaving) return;
+		awake = true;
+		rest.restart();
+	}
+	Timer {
+		id: rest
+		interval: 15000
+		onTriggered: if (root.currentText === "" && !root.unlockInProgress) root.awake = false; else restart();
+	}
 
 	function reset() {
 		currentText = "";
 		showFailure = false;
+		awake = false;
 	}
 
 	function tryUnlock() {

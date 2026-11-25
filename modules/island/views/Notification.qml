@@ -13,6 +13,14 @@ Item {
     readonly property bool center: Engine.pinned
     readonly property var popups: Notifier.popups.slice(0, Notifier.maxPopups)
     readonly property int more: Notifier.popups.length - popups.length
+    // the center's groups, by the day each came: Today, Yesterday, Earlier
+    function band(time) {
+        const start = new Date()
+        start.setHours(0, 0, 0, 0)
+        if (time >= start.getTime()) return "Today"
+        start.setDate(start.getDate() - 1)
+        return time >= start.getTime() ? "Yesterday" : "Earlier"
+    }
 
     implicitWidth: center ? 720 : 480
     implicitHeight: (center ? centerColumn.implicitHeight : popupColumn.implicitHeight) + (center ? 48 : 16)
@@ -50,6 +58,7 @@ Item {
 
         Header {
             width: parent.width
+            icon: Config.symbol.notifications
             title: "Notifications"
             subtitle: Notifier.count === 0 ? "" : Notifier.count === 1 ? "1 notification" : Notifier.count + " notifications"
             onBack: Engine.back()
@@ -81,9 +90,24 @@ Item {
 
             Repeater {
                 model: ScriptModel { values: root.center ? Notifier.items : []; objectProp: "id" }
-                delegate: NotificationCard {
+                delegate: Column {
+                    id: entry
+                    required property var modelData
+                    required property int index
+                    readonly property string band: root.band(modelData.time)
+
                     width: notes.innerWidth
-                    center: true
+                    spacing: Config.spaceS
+
+                    SectionLabel {
+                        visible: entry.index === 0 || root.band(Notifier.items[entry.index - 1]?.time ?? 0) !== entry.band
+                        text: entry.band
+                    }
+                    NotificationCard {
+                        width: parent.width
+                        modelData: entry.modelData
+                        center: true
+                    }
                 }
             }
         }

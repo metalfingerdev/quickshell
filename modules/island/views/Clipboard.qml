@@ -49,6 +49,7 @@ Item {
 
         Header {
             width: parent.width
+            icon: "content_paste"
             title: "Clipboard"
             subtitle: !ClipHistory.enabled ? "Needs cliphist and wl-clipboard"
                     : ClipHistory.items.length === 0 ? "What you copy shows here, until the session ends"
@@ -67,7 +68,8 @@ Item {
         ScrollList {
             width: parent.width
             visible: ClipHistory.items.length > 0
-            maxHeight: 6 * root.rowH + 14
+            maxHeight: 6 * (root.rowH + spacing) + 14
+            spacing: Config.spaceXs
 
             Repeater {
                 id: rows
@@ -79,8 +81,9 @@ Item {
                     required property int index
 
                     width: parent.width
+                    filled: true
                     focus: index === 0
-                    icon: "content_paste"
+                    icon: /^\s*https?:\/\//.test(modelData.text) ? "link" : "notes"
                     title: modelData.picture !== "" ? "Picture" : modelData.text.replace(/\s+/g, " ").trim()
                     subtitle: modelData.info
                     lead: modelData.picture !== "" ? thumb : null

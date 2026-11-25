@@ -9,6 +9,28 @@ import qs.modules.services
 Item {
     id: root
 
+    // which device it is, when there is a choice: one chip each, the one in use lit
+    component Devices: Flow {
+        id: devices
+        property var nodes: []
+        property var current: null
+        signal picked(var node)
+
+        visible: nodes.length > 1
+        width: parent.width
+        spacing: Config.spaceS
+
+        Repeater {
+            model: devices.nodes
+            Chip {
+                required property var modelData
+                text: Audio.label(modelData)
+                selected: modelData === devices.current
+                onClicked: devices.picked(modelData)
+            }
+        }
+    }
+
     readonly property int pad: 24
     readonly property int maxRows: 4
     readonly property int rowH: 66
@@ -48,6 +70,7 @@ Item {
 
         Header {
             width: parent.width
+            icon: Config.symbol.mixer
             title: "Mixer"
             subtitle: Audio.streams.length === 0 ? "No app is playing sound"
                     : Audio.streams.length === 1 ? "1 app playing sound" : Audio.streams.length + " apps playing sound"
@@ -68,6 +91,7 @@ Item {
             focus: true
             enabled: Audio.sink !== null
         }
+        Devices { nodes: Audio.sinks; current: Audio.sink; onPicked: node => Audio.setSink(node) }
 
         Heading { visible: Audio.hasMic; title: "Microphone"; detail: Audio.label(Audio.source) }
         VolumeSlider {
@@ -76,6 +100,7 @@ Item {
             node: Audio.source
             icon: silent ? "mic_off" : "mic"
         }
+        Devices { visible: Audio.hasMic && nodes.length > 1; nodes: Audio.sources; current: Audio.source; onPicked: node => Audio.setSource(node) }
 
         Heading { title: "Apps" }
         Label {

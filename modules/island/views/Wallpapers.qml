@@ -15,6 +15,10 @@ Item {
     readonly property int rows: 2
     readonly property real gap: 12
     readonly property bool any: Wallpaper.files.length > 0
+    // what the search leaves, by the file's name
+    property string query: ""
+    readonly property var shown: query === "" ? Wallpaper.files
+        : Wallpaper.files.filter(f => Wallpaper.baseName(f).toLowerCase().includes(query.toLowerCase()))
 
     implicitWidth: contentW + 2 * pad
     implicitHeight: column.implicitHeight + 2 * pad
@@ -29,7 +33,7 @@ Item {
         }
         function onChosen(view) {
             if (view !== Engine.View.Wallpapers || grid.count === 0) return
-            Wallpaper.set(Wallpaper.files[grid.currentIndex])
+            Wallpaper.set(root.shown[grid.currentIndex])
             Engine.close()
         }
     }
@@ -43,6 +47,7 @@ Item {
 
         Header {
             width: parent.width
+            icon: Config.symbol.wallpaper
             title: "Wallpaper"
             subtitle: (Wallpaper.current ? Wallpaper.baseName(Wallpaper.current) + "  ·  " : "")
                     + Wallpaper.files.length + (Wallpaper.files.length === 1 ? " image" : " images")
@@ -70,8 +75,26 @@ Item {
             }
         }
 
+        // only once there is more than a row to look through; "/" goes to it, Down back to the grid
+        SearchBar {
+            id: search
+            property string shortcut: "/"
+            function activate() { field.forceActiveFocus() }
+
+            visible: Wallpaper.files.length > root.across
+            width: parent.width
+            height: 48
+            placeholder: "Search by name"
+            takesArrows: true
+            onTextChanged: { root.query = text; grid.currentIndex = 0 }
+            onKey: Engine.key()
+            onDown: grid.forceActiveFocus()
+            onAccepted: if (root.shown.length > 0) Wallpaper.set(root.shown[grid.currentIndex])
+            onEscaped: { if (text !== "") text = ""; else grid.forceActiveFocus() }
+        }
+
         Item {
-            visible: root.any
+            visible: root.shown.length > 0
             width: parent.width
             height: grid.height
 
@@ -87,8 +110,8 @@ Item {
                 cellHeight: Math.round((cellWidth - root.gap) * 0.625) + root.gap
                 clip: true
                 boundsBehavior: Flickable.StopAtBounds
-                model: Wallpaper.files
-                currentIndex: Math.max(0, Wallpaper.currentIndex)
+                model: root.shown
+                currentIndex: Math.max(0, root.shown.indexOf(Wallpaper.current))
                 focus: true                              // the keyboard starts here
                 activeFocusOnTab: true
                 Component.onCompleted: positionViewAtIndex(currentIndex, GridView.Contain)
@@ -121,6 +144,14 @@ Item {
 
         EmptyState {
             width: parent.width
+            compact: true
+            visible: root.any && root.shown.length === 0
+            icon: "search_off"
+            title: "No picture's name has “" + root.query + "” in it"
+        }
+
+        EmptyState {
+            width: parent.width
             visible: !root.any
             icon: Config.symbol.wallpaper
             title: "No images in " + Wallpaper.dir
@@ -129,7 +160,7 @@ Item {
 
         KeyHints {
             width: parent.width
-            keys: [["← →", "pick"], ["↵", "apply"], ["⌫", "back"], ["Esc", "close"]]
+            keys: [["← →", "pick"], ["↵", "apply"], ["/", "search"], ["⌫", "back"], ["Esc", "close"]]
         }
     }
 }

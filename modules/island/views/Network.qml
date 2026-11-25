@@ -13,6 +13,7 @@ Item {
     readonly property int maxRows: 4
 
     property var selected: null
+    property bool details: false
     // the list's order when that panel opened; networks that vanish since drop out, new ones wait
     property var frozen: []
     readonly property var shown: selected ? frozen.filter(n => Net.networks.includes(n)) : Net.networks
@@ -43,7 +44,7 @@ Item {
     onAskingChanged: if (asking) password.forceActiveFocus()
     onConnectingChanged: if (asking && !connecting) password.forceActiveFocus()
 
-    Component.onCompleted: Net.scan(true)
+    Component.onCompleted: { Net.scan(true); Net.readDetails() }
     Component.onDestruction: Net.scan(false)
 
     // Escape closes the panel first (the field has its own); otherwise it goes on to "back"
@@ -61,6 +62,7 @@ Item {
 
         Header {
             width: parent.width
+            icon: "language"
             title: "Internet"
             subtitle: Net.attempt ? "Connecting to " + Net.attempt.name + "…" : Net.summary
             onBack: Engine.back()
@@ -254,6 +256,73 @@ Item {
             }
         }
 
+        // Noctalia's info, out of the way: the row opens it, and a value copies with a click
+        ListEntry {
+            visible: Net.details.length > 0
+            width: parent.width
+            filled: true
+            icon: "info"
+            title: "Details"
+            subtitle: Net.details.map(d => d.device + "  " + d.facts[0][1].split("/")[0]).join("  ·  ")
+            shortcut: "i"
+            onClicked: root.details = !root.details
+
+            Icon { name: root.details ? "expand_less" : "expand_more"; size: 22; color: Config.dim }
+        }
+        Repeater {
+            model: root.details ? Net.details : []
+
+            Rectangle {
+                id: card
+                required property var modelData
+                width: parent.width
+                height: facts.implicitHeight + 2 * Config.spaceM
+                radius: Config.innerRadius + 4
+                color: Config.container
+                border.color: Config.border
+                border.width: 1
+
+                Column {
+                    id: facts
+                    x: Config.spaceL
+                    y: Config.spaceM
+                    width: parent.width - 2 * Config.spaceL
+
+                    SectionLabel { text: card.modelData.device + (card.modelData.connection ? "  ·  " + card.modelData.connection : "") }
+                    Repeater {
+                        model: card.modelData.facts
+
+                        Item {
+                            id: fact
+                            required property var modelData
+                            width: facts.width
+                            height: 32
+
+                            Label { anchors.verticalCenter: parent.verticalCenter; width: 4 * Config.spaceXl; text: fact.modelData[0]; color: Config.dim }
+                            Label {
+                                anchors { left: parent.left; leftMargin: 4 * Config.spaceXl; right: copied.left; verticalCenter: parent.verticalCenter }
+                                text: fact.modelData[1]
+                                elide: Text.ElideRight
+                                font.family: Config.mono
+                            }
+                            Icon {
+                                id: copied
+                                anchors { right: parent.right; verticalCenter: parent.verticalCenter }
+                                visible: copyArea.containsMouse || done.running
+                                name: done.running ? "check" : "content_copy"
+                                color: done.running ? Config.good : Config.dim
+                            }
+                            ClickArea {
+                                id: copyArea
+                                onClicked: { Toggles.launch(["wl-copy", "--", fact.modelData[1]]); done.restart() }
+                            }
+                            Timer { id: done; interval: 1500 }
+                        }
+                    }
+                }
+            }
+        }
+
         Label {
             visible: Net.lastError !== ""
             width: parent.width
@@ -265,7 +334,7 @@ Item {
 
         KeyHints {
             width: parent.width
-            keys: [["1–9", "a network"], ["W", "Wi-Fi on/off"], ["⌫", "back"], ["Esc", root.selected ? "close the panel" : "close"]]
+            keys: [["1–9", "a network"], ["W", "Wi-Fi on/off"], ["I", "details"], ["⌫", "back"], ["Esc", root.selected ? "close the panel" : "close"]]
         }
     }
 }

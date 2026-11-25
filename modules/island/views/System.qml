@@ -17,36 +17,67 @@ Item {
     implicitWidth: 560
     implicitHeight: column.implicitHeight + 2 * pad
 
-    // one reading: what it is, its value, how full, and a reason when there is no value
-    component Reading: Column {
+    // One reading on a card of its own: its value and its last minute as a graph; a bar instead for
+    // what barely moves in a minute (the disk). A second graph, dimmer, shares the first one's scale.
+    component Reading: Rectangle {
         id: reading
         property string icon: ""
         property string name: ""
         property string value: ""
+        property string aside: ""         // after the value, dimmer: "of 15.0 GB"
         property string note: ""          // why there is no value, when there isn't
+        property var history: []
+        property var history2: []
+        property real max: 1
         property real fraction: -1
         property color tone: Config.primary
 
-        width: parent.width
-        spacing: Config.spaceS
+        implicitHeight: 136
+        radius: Config.cardRadius
+        color: Config.container
+        border.color: Config.border
+        border.width: 1
 
         Row {
+            id: label
+            x: Config.spaceL
+            y: Config.spaceL
             spacing: Config.spaceS
-            Icon { anchors.verticalCenter: parent.verticalCenter; name: reading.icon; size: 20; color: Config.dim }
+            Icon { anchors.verticalCenter: parent.verticalCenter; name: reading.icon; size: 18; color: reading.tone }
             Label { anchors.verticalCenter: parent.verticalCenter; text: reading.name; color: Config.dim }
         }
-        Label {
-            text: reading.value !== "" ? reading.value : reading.note
-            color: reading.value !== "" ? Config.text : Config.dim
-            font.pixelSize: reading.value !== "" ? Config.title : Config.body
-            font.features: { "tnum": 1 }
+        Row {
+            anchors { left: label.left; top: label.bottom; topMargin: Config.spaceXs }
+            spacing: Config.spaceS
+            Label {
+                id: shown
+                text: reading.value !== "" ? reading.value : reading.note
+                color: reading.value !== "" ? Config.text : Config.dim
+                font.pixelSize: reading.value !== "" ? Config.title : Config.body
+                font.features: { "tnum": 1 }
+            }
+            Label {
+                visible: reading.value !== ""
+                anchors.baseline: shown.baseline
+                text: reading.aside
+                color: Config.dim
+                font.features: { "tnum": 1 }
+            }
         }
-        Progress {
-            visible: reading.fraction >= 0
-            width: parent.width
-            thickness: 8
-            fraction: reading.fraction
-            color: reading.tone
+        Item {
+            visible: reading.value !== ""
+            anchors { left: parent.left; right: parent.right; bottom: parent.bottom; margins: Config.spaceL }
+            height: 44
+
+            Sparkline { anchors.fill: parent; visible: reading.fraction < 0; values: reading.history2; max: reading.max; color: Config.dim }
+            Sparkline { anchors.fill: parent; visible: reading.fraction < 0; values: reading.history; max: reading.max; color: reading.tone }
+            Progress {
+                visible: reading.fraction >= 0
+                anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
+                thickness: 8
+                fraction: reading.fraction
+                color: reading.tone
+            }
         }
     }
 
@@ -60,64 +91,66 @@ Item {
             width: parent.width
             icon: "monitor_heart"
             title: "System"
-            subtitle: "Live while this is open"
+            subtitle: "The last minute, live while this is open"
             onBack: Engine.back()
         }
 
         Grid {
+            id: grid
             width: parent.width
             columns: 2
-            columnSpacing: Config.spaceXl
-            rowSpacing: Config.spaceL
-            readonly property real cell: (width - columnSpacing) / 2
+            spacing: Config.spaceM
+            readonly property real cell: (width - spacing) / 2
 
-            Item {
-                width: parent.cell; height: cpu.implicitHeight
-                Reading { id: cpu; icon: "developer_board"; name: "Processor"; value: Math.round(SysStats.cpu * 100) + " %"; fraction: SysStats.cpu }
+            Reading {
+                width: grid.cell
+                icon: "developer_board"; name: "Processor"
+                value: Math.round(SysStats.cpu * 100) + " %"
+                history: SysStats.history.cpu
             }
-            Item {
-                width: parent.cell; height: mem.implicitHeight
-                Reading {
-                    id: mem
-                    icon: "memory"; name: "Memory"
-                    value: SysStats.mem > 0 ? SysStats.memGB.toFixed(1) + " of " + (SysStats.memGB / SysStats.mem).toFixed(1) + " GB" : ""
-                    note: "Reading…"
-                    fraction: SysStats.mem
-                }
+            Reading {
+                width: grid.cell
+                icon: "memory"; name: "Memory"
+                value: SysStats.mem > 0 ? SysStats.memGB.toFixed(1) + " GB" : ""
+                aside: SysStats.mem > 0 ? "of " + (SysStats.memGB / SysStats.mem).toFixed(1) + " GB" : ""
+                note: "Reading…"
+                history: SysStats.history.mem
             }
-            Item {
-                width: parent.cell; height: temp.implicitHeight
-                Reading {
-                    id: temp
-                    icon: "thermostat"; name: "Temperature"
-                    value: SysStats.temp > 0 ? Math.round(SysStats.temp) + " °C" : ""
-                    note: "No sensor found"
-                    fraction: SysStats.temp > 0 ? SysStats.temp / 100 : -1
-                    tone: SysStats.temp >= 85 ? Config.bad : SysStats.temp >= 70 ? Config.warn : Config.primary
-                }
+            Reading {
+                width: grid.cell
+                icon: "thermostat"; name: "Temperature"
+                value: SysStats.temp > 0 ? Math.round(SysStats.temp) + " °C" : ""
+                note: "No sensor found"
+                history: SysStats.history.temp
+                max: 100
+                tone: SysStats.temp >= 85 ? Config.bad : SysStats.temp >= 70 ? Config.warn : Config.primary
             }
-            Item {
-                width: parent.cell; height: disk.implicitHeight
-                Reading {
-                    id: disk
-                    icon: "hard_drive"; name: "Disk (/)"
-                    value: SysStats.diskTotalGB > 0 ? SysStats.diskUsedGB.toFixed(0) + " of " + SysStats.diskTotalGB.toFixed(0) + " GB" : ""
-                    note: "Reading…"
-                    fraction: SysStats.diskTotalGB > 0 ? SysStats.diskUsedGB / SysStats.diskTotalGB : -1
-                    tone: SysStats.diskUsedGB / Math.max(1, SysStats.diskTotalGB) >= 0.9 ? Config.bad : Config.primary
-                }
+            Reading {
+                width: grid.cell
+                icon: "hard_drive"; name: "Disk (/)"
+                value: SysStats.diskTotalGB > 0 ? SysStats.diskUsedGB.toFixed(0) + " GB" : ""
+                aside: "of " + SysStats.diskTotalGB.toFixed(0) + " GB"
+                note: "Reading…"
+                fraction: SysStats.diskTotalGB > 0 ? SysStats.diskUsedGB / SysStats.diskTotalGB : 0
+                tone: SysStats.diskUsedGB / Math.max(1, SysStats.diskTotalGB) >= 0.9 ? Config.bad : Config.primary
             }
         }
 
-        Row {
-            spacing: Config.spaceXl
-            Label { text: "↓ " + SysStats.rate(SysStats.rx); font.features: { "tnum": 1 } }
-            Label { text: "↑ " + SysStats.rate(SysStats.tx); color: Config.dim; font.features: { "tnum": 1 } }
-            Label { visible: SysStats.iface === ""; text: "No network route"; color: Config.dim }
+        // down in the primary colour, up dimmer, on one scale so the two compare
+        Reading {
+            width: parent.width
+            icon: "swap_vert"; name: "Network" + (SysStats.iface !== "" ? "  ·  " + SysStats.iface : "")
+            value: SysStats.iface !== "" ? "↓ " + SysStats.rate(SysStats.rx) : ""
+            aside: "↑ " + SysStats.rate(SysStats.tx)
+            note: "No network route"
+            history: SysStats.history.rx
+            history2: SysStats.history.tx
+            max: Math.max(1, ...SysStats.history.rx, ...SysStats.history.tx)
         }
 
         ListEntry {
             width: parent.width
+            filled: true
             icon: "psychology"
             title: !Agent.ready ? "Local model: checking…"
                  : !Agent.reachable ? "Local model: Ollama isn't running"

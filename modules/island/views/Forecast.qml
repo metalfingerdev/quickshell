@@ -91,6 +91,7 @@ Item {
                     required property var modelData
                     required property int index
                     width: parent.width
+                    filled: true
                     icon: Weather.icon(modelData.code, true)
                     title: root.dayName(modelData.date, index)
                     subtitle: Weather.skyName(modelData.code)
