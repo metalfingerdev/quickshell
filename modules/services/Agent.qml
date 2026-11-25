@@ -29,6 +29,12 @@ Singleton {
     signal answered(string question, string answer, bool ok)
 
     // the agent's settings, as it last said them: change them with set()
+    // what the agent says it can do (hello). An older agent lists none, so the buttons for these stay hidden.
+    property var features: []
+    function has(feature) { return features.includes(feature) }
+    // Nilo's notes (~/.config/nihil/nilo.md) go to the model on every question, out of its small window
+    function openNotes() { if (has("notes")) send({ op: "notes" }) }
+
     property string model: ""
     property bool web: false
     property bool think: false
@@ -147,8 +153,13 @@ Singleton {
         case "hello":
             restarts = 0
             trouble = ""
+            features = Array.isArray(e.features) ? e.features.filter(f => typeof f === "string") : []
             settings(e.settings)
             catalogue(e)
+            break
+        case "notes":
+            // the file is the person's: it only opens, in their editor, and is never written from here
+            if (typeof e.path === "string" && e.path !== "") Toggles.open(e.path)
             break
         case "settings": settings(e.settings); break
         case "models": catalogue(e); break

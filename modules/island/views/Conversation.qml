@@ -135,6 +135,13 @@ Item {
             onBack: Engine.back()
 
             Pill {
+                visible: Agent.has("notes")
+                implicitHeight: 44
+                icon: "sticky_note_2"
+                text: "Notes"
+                onClicked: Agent.openNotes()
+            }
+            Pill {
                 visible: Agent.messages.count > 0
                 implicitHeight: 44
                 icon: "add_comment"
