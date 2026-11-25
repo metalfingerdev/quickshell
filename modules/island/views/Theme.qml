@@ -186,6 +186,25 @@ Item {
             }
         }
 
+        // off: nothing is adjusted for you, a colour is drawn as picked (Colours sets every one of them)
+        ListSection {
+            ListEntry {
+                flat: true
+                title: "Keep colours readable"
+                subtitle: Config.keepReadable ? "A colour too close to the surface is drawn lighter or darker" : "Every colour is drawn exactly as set"
+                onClicked: Config.keepReadable = !Config.keepReadable
+                Toggle { checked: Config.keepReadable; activeFocusOnTab: false; onToggled: on => Config.keepReadable = on }
+            }
+            ListEntry {
+                flat: true
+                title: "Every colour"
+                subtitle: "Each role of the palette, for dark and for light"
+                shortcut: "c"
+                onClicked: Engine.open(Engine.View.Colours)
+                Icon { name: "chevron_right"; size: 22; color: Config.label3 }
+            }
+        }
+
         SectionLabel { text: "Colours from"; topPadding: Config.spaceS }
         Segmented {
             width: parent.width
@@ -277,7 +296,6 @@ Item {
                 kind: "text"
                 icon: "colorize"
                 text: "More colours"
-                shortcut: "c"
                 onClicked: Engine.open(Engine.View.Colours)
             }
         }

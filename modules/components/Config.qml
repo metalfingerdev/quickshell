@@ -81,6 +81,26 @@ QtObject {
     property var levels: ({})
     function lv(k) { return levels[k] ?? levelDefaults[k] }
     readonly property var current: withRoles(withContrast(source === "preset" ? (palettes[name] ?? palettes.teal) : generated(source)))
+    // The palette for either mode, whichever is showing, so Colours can show and edit both. A preset's
+    // other mode is what the Dark theme switch would pick: Paper, or the last dark preset.
+    function paletteFor(dark) {
+        let p
+        if (source === "preset") {
+            const own = palettes[name] ?? palettes.teal
+            p = own.dark === dark ? own : dark ? (palettes[lastDark] ?? palettes.teal) : palettes.paper
+        } else {
+            const primary = source === "wallpaper"
+                ? Qt.hsla(Math.max(0, wallpaperSeed.hslHue), wallpaperSeed.hslHue < 0 ? 0 : wallpaperSaturation, dark ? wallpaperTone : 1 - wallpaperTone, 1)
+                : accent
+            p = scheme(primary, source === "accent" && surfaceFollows ? Math.max(0, accent.hslHue) : surfaceHue, tint, dark)
+        }
+        return withRoles(withContrast(p))
+    }
+    // a colour as Qt writes one with its alpha, "#aarrggbb": what the roles keep, so Qt reads it back the same
+    function argb(c) {
+        const h = v => Math.round(v * 255).toString(16).padStart(2, "0")
+        return "#" + h(c.a) + h(c.r) + h(c.g) + h(c.b)
+    }
     function withRoles(p) {
         const roles = p.dark ? rolesDark : rolesLight
         const keys = Object.keys(roles).filter(k => roles[k] !== "" && roles[k] !== undefined)

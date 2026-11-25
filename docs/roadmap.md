@@ -23,6 +23,10 @@
 
 ## Done
 
+- [x] Colours, every one (2026-11-26): the Colours view edits the custom colour and each role of the palette, for
+      dark and for light apart (`Config.rolesDark` / `rolesLight`, "#aarrggbb"), with a map, hue, opacity and an
+      8-digit hex, and gives a role back to the theme; Theme has Keep colours readable and Every colour.
+
 - [x] Glass and blur, redone (2026-11-26): the island and the windows apart. Material is Blur or Liquid glass; the
       island has its opacity (or the windows'), blur, shadow, and under liquid glass its own tint (strength, hue,
       saturation, lightness, all to 0), refraction, highlight and glow, in a preset of its own on its layer
