@@ -15,13 +15,20 @@ Item {
     id: root
 
     readonly property int pad: 24
-    readonly property bool peek: Engine.toast
+    // Frozen once the engine has left this view: Bar keeps it up through the fade-out, and by then
+    // Engine.toast is false, which would flash the full conversation for that split second.
+    property bool peek: false
+    Binding {
+        target: root; property: "peek"; value: Engine.toast
+        when: Engine.view === Engine.View.Agent
+        restoreMode: Binding.RestoreNone
+    }
 
     implicitWidth: peek ? 560 : 780
     implicitHeight: peek ? Math.max(84, peekText.implicitHeight + 36) : column.implicitHeight + 2 * pad
 
     // the model loads while you get to the question (as Nilo does while you type)
-    Component.onCompleted: { Agent.refresh(); if (!peek) { Agent.warm(); Agent.fresh = false } }
+    Component.onCompleted: { Agent.refresh(); if (!Engine.toast) { Agent.warm(); Agent.fresh = false } }
 
     // With a card waiting, the first Enter only arms it and the second allows (as Nilo's): a question
     // typed and sent the moment the card comes up can't say yes to it.
