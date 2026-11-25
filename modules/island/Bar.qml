@@ -414,17 +414,11 @@ Scope {
 
         // beside the island whatever it shows, as the lights are; this window takes its own clicks, so a
         // view's click-outside doesn't reach it
-        Row {
+        TrayGroup {
             id: tray
             visible: Tray.strip.length > 0 && !Engine.hidden
             x: root.sx - width - (root.notch ? 14 : 8)
             y: Math.max(4, root.sy + Math.min(root.sh, 36) / 2 - height / 2)
-            spacing: Config.spaceXs
-            layoutDirection: Qt.RightToLeft      // the first, the one that needs you most, nearest the island
-            Repeater {
-                model: Tray.strip
-                TrayIcon { required property var modelData; app: modelData; size: 24; bare: true }
-            }
         }
 
         Row {

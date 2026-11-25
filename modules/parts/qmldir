@@ -15,3 +15,4 @@ BrightnessSlider 1.0 BrightnessSlider.qml
 DateStamp        1.0 DateStamp.qml
 TrayIcon     1.0 TrayIcon.qml
 GlassAmounts 1.0 GlassAmounts.qml
+TrayGroup    1.0 TrayGroup.qml

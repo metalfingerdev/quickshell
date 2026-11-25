@@ -38,7 +38,7 @@ Item {
                 width: dateColumn.implicitWidth + 16
                 height: 52
                 radius: Config.innerRadius
-                color: Config.state(Config.tile, Config.text, whenArea.containsMouse, whenArea.pressed || ring)
+                color: Config.layer(whenArea.containsMouse, whenArea.pressed || ring)
 
                 activeFocusOnTab: true
                 function activate() { Engine.open(Engine.View.Clock) }
