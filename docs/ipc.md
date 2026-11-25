@@ -40,7 +40,8 @@ mode: focus rings and shortcut keycaps show until the pointer moves. Names: `tab
 what hovering shows), `dashboard` (everything), `launcher`, `network`, `bluetooth`, `media`, `mixer`,
 `notifications` (`open` = the center, `alert` = the popups), `workspaces` (the overview), `clock`,
 `battery`, `power`, `theme` (colours and the wallpaper), `settings` (the shell, idle and the lock screen),
-`clipboard` (the history), `activity` (what's running), and the toasts `switcher`
+`clipboard` (the history), `activity` (what's running), `system` (processor, memory, temperature, disk,
+network and the local model; alias `stats`), `weather` (`forecast`), `agenda` (`events`, `schedule`), and the toasts `switcher`
 (`alert switcher` shows the workspace dots) and `mic`.
 
 `peek` is meant for a key's press and release: `peek true` on press, `peek false` on release. When

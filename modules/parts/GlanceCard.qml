@@ -126,13 +126,30 @@ Rectangle {
                 }
             }
             ClickArea {
+                anchors.fill: sky
+                enabled: root.weather
+                onClicked: mouse => Engine.open(Engine.View.Weather, sceneX(mouse))
+            }
+            ClickArea {
                 anchors.fill: next
                 enabled: root.event
-                onClicked: mouse => Engine.open(Engine.View.Clock, sceneX(mouse))
+                onClicked: mouse => Engine.open(Engine.View.Agenda, sceneX(mouse))
             }
         }
 
+        // the readings open the System view
+        Item {
+            width: parent.width
+            height: meters.height
+
+            ClickArea {
+                anchors.fill: parent
+                z: 1
+                onClicked: mouse => Engine.open(Engine.View.System, sceneX(mouse))
+            }
+
         Row {
+            id: meters
             width: parent.width
             spacing: Config.spaceM
 
@@ -160,6 +177,7 @@ Rectangle {
                     font.features: { "tnum": 1 }
                 }
             }
+        }
         }
     }
 }

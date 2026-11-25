@@ -34,7 +34,10 @@ QtObject {
         Mic,
         Activity,
         Clipboard,
-        Agent
+        Agent,
+        System,
+        Weather,
+        Agenda
     }
 
     readonly property int restView: Engine.View.Compact

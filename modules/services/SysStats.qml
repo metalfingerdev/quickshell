@@ -22,6 +22,8 @@ Singleton {
     property string iface: ""
     property real rx: 0             // bytes/s
     property real tx: 0
+    property real diskUsedGB: 0     // the root filesystem
+    property real diskTotalGB: 0    // 0: not read yet
 
     property var lastCpu: null
     property real lastRx: -1
@@ -54,6 +56,18 @@ Singleton {
                 const iface = m ? m[1] : ""
                 if (iface !== root.iface) { root.lastRx = -1; root.lastTx = -1 }
                 root.iface = iface
+            }
+        }
+    }
+
+    // the root filesystem, read when this is shown and then every minute (df: bytes, powers of 1000 like rate())
+    Process {
+        id: disk
+        command: ["df", "-B1", "--output=size,used", "/"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const m = text.trim().split("\n")[1]?.trim().split(/\s+/).map(Number)
+                if (m && m.length === 2 && m[0] > 0) { root.diskTotalGB = m[0] / 1e9; root.diskUsedGB = m[1] / 1e9 }
             }
         }
     }
@@ -157,5 +171,12 @@ Singleton {
         repeat: true
         triggeredOnStart: true
         onTriggered: route.running = true
+    }
+    Timer {
+        interval: 60000
+        running: root.shown
+        repeat: true
+        triggeredOnStart: true
+        onTriggered: disk.running = true
     }
 }
