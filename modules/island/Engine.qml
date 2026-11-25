@@ -103,6 +103,8 @@ QtObject {
     // switch made in the meantime. So an action that moves Hyprland's focus comes after the release:
     // closeThen(action) closes the island and runs `action` once Bar reports the keyboard gone
     // (hasKeyboard), or after releaseMs if that never comes.
+    // the Control Centre opens in Edit (the IPC and the keyboard bind that ask for it)
+    property bool editControls: false
     property bool hasKeyboard: false   // Bar: the island's window has the keyboard right now
     property int releaseMs: 200
     property var afterRelease: []

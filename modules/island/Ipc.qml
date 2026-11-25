@@ -14,6 +14,13 @@ IpcHandler {
         Engine.open(e.view)
     }
 
+    // The Control Centre, in Edit: add, take off and move its modules
+    function editControls(): void {
+        Config.focusVisible = true
+        Engine.editControls = true
+        Engine.open(Engine.View.Dashboard)
+    }
+
     // The launcher on one of its filters: all, apps, files, actions, clipboard, emoji (Super+. is emoji).
     // Already open, it switches there.
     function launch(filter: string): void {

@@ -349,6 +349,8 @@ QtObject {
     readonly property color island: Qt.rgba(surface.r, surface.g, surface.b, islandAlpha)
     // the island's shadow, 0 (none) .. 1 (as drawn), and more if wanted
     property real shadowStrength: 0
+    // The Control Centre's modules, in order (ControlLayout.js); empty is the default grid
+    property var controlLayout: []
 
     // Hyprland's windows animation (its curve, "Glide" in hypr/modules/look.lua, and its speed: 3.5 = 350 ms),
     // read from Hyprland itself (services/Desktops.qml, kept in step by shell.qml), so the shell and the

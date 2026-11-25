@@ -662,6 +662,15 @@ var entries = [
   "step": 0.01
  },
  {
+  "key": "controlCentre.layout",
+  "t": "Config",
+  "p": "controlLayout",
+  "m": "",
+  "kind": "object",
+  "label": "Control Centre modules, in order",
+  "group": "island"
+ },
+ {
   "key": "island.shadow",
   "t": "Config",
   "p": "shadowStrength",
