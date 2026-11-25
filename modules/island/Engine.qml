@@ -111,6 +111,8 @@ QtObject {
     // (hasKeyboard), or after releaseMs if that never comes.
     // the Control Centre opens in Edit (the IPC and the keyboard bind that ask for it)
     property bool editControls: false
+    // the launcher, already open, asked for a filter (IPC `launch`); on opening it reads launcherFilter
+    signal launcherAsked(string filter)
     // how tall a view can be on the island's screen (Bar sets it): a view's scrolling list takes what's left,
     // so its header and key hints always fit
     property real room: 1040

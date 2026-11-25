@@ -3,8 +3,9 @@ import qs.modules.island
 import qs.modules.components
 import qs.modules.services
 
-// The tray beside the island, as the status group is in Expanded: one pill of connected buttons, the list of
-// background apps (the Tray view) at its start, then each app's icon, which opens its menu.
+// The tray beside the island, built as StatusGroup is: a see-through pill whose own surface (anywhere that
+// isn't an icon) and its first button open the list of background apps (the Tray view); each app's icon opens
+// its menu.
 Rectangle {
     id: root
 
@@ -14,7 +15,14 @@ Rectangle {
     implicitWidth: row.implicitWidth + 2 * pad
     implicitHeight: segmentHeight + 2 * pad
     radius: height / 2
-    color: Config.tile
+    color: Config.layer(back.containsMouse, back.pressed)
+    Behavior on color { ColorAnimation { duration: Config.durationFast } }
+
+    // under the buttons, so it only sees what misses them
+    ClickArea {
+        id: back
+        onClicked: mouse => Engine.open(Engine.View.Tray, back.sceneX(mouse))
+    }
 
     Row {
         id: row
@@ -25,7 +33,7 @@ Rectangle {
         Pill {
             implicitHeight: root.segmentHeight
             kind: "text"
-            icon: "widgets"
+            icon: "apps"
             iconSize: 18
             onClicked: x => Engine.open(Engine.View.Tray, x)
         }
@@ -46,7 +54,7 @@ Rectangle {
                 bottomLeftRadius: first ? height / 2 : 6
                 topRightRadius: last ? height / 2 : 6
                 bottomRightRadius: last ? height / 2 : 6
-                color: Config.state(Config.raised, Config.text, icon.hovered, false)
+                color: Config.layer(icon.hovered, false)
                 Behavior on color { ColorAnimation { duration: Config.durationFast } }
 
                 TrayIcon {

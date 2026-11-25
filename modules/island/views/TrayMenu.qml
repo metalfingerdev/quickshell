@@ -57,7 +57,7 @@ Item {
         id: opener
         menu: root.menu
     }
-    readonly property int shown: item ? entries.count : Tray.items.length
+    readonly property int shown: item ? entries.count : Tray.all.length
 
     // Backspace climbs out of a submenu first; ViewLoader's own Backspace would leave the view
     Keys.onPressed: event => {
@@ -77,7 +77,8 @@ Item {
             icon: root.item ? "menu_open" : "widgets"
             title: !root.item ? "Tray"
                  : root.trail.length > 0 ? root.plain(root.trail[root.trail.length - 1].text) : Tray.name(root.item)
-            subtitle: !root.item ? (Tray.items.length === 1 ? "1 app" : Tray.items.length + " apps")
+            subtitle: !root.item ? (Tray.all.length === 1 ? "1 app" : Tray.all.length + " apps")
+                                   + (Tray.all.length > Tray.items.length ? "  ·  " + (Tray.all.length - Tray.items.length) + " hidden" : "")
                     : root.trail.length > 0 ? Tray.name(root.item) : root.item.tooltipDescription
             onBack: root.back()
 
@@ -93,10 +94,11 @@ Item {
                 visible: root.item !== null
                 implicitHeight: 48
                 kind: "text"
-                icon: "visibility_off"
+                readonly property bool hiding: root.item !== null && Tray.isHidden(root.item)
+                icon: hiding ? "visibility" : "visibility_off"
                 shortcut: "h"
-                Accessible.name: "Hide from the island"
-                onClicked: { Tray.hide(root.item); Tray.current = null }
+                Accessible.name: hiding ? "Show in the island" : "Hide from the island"
+                onClicked: { if (hiding) Tray.show(root.item); else Tray.hide(root.item); Tray.current = null }
             }
         }
 
@@ -107,22 +109,35 @@ Item {
             spacing: Config.spaceXs
 
             Repeater {
-                model: root.item ? [] : Tray.items
+                model: root.item ? [] : Tray.all
 
                 ListEntry {
+                    id: appRow
                     required property var modelData
                     required property int index
+                    readonly property bool hiding: Tray.isHidden(modelData)
 
                     width: parent.width
                     filled: true
                     focus: index === 0
+                    opacity: hiding ? 0.6 : 1
                     title: Tray.name(modelData)
-                    subtitle: modelData.tooltipDescription
+                    subtitle: hiding ? "Hidden from the island" : modelData.tooltipDescription
                     lead: Component {
                         IconImage { implicitSize: 28; asynchronous: true; source: modelData.icon }
                     }
                     onClicked: root.open(modelData)
 
+                    // a hidden one comes back from here, where it is still listed
+                    Pill {
+                        visible: appRow.hiding
+                        implicitHeight: 36
+                        kind: "tonal"
+                        icon: "visibility"
+                        text: "Show"
+                        activeFocusOnTab: false
+                        onClicked: Tray.show(modelData)
+                    }
                     Icon { visible: modelData.hasMenu; name: "chevron_right"; color: Config.dim }
                 }
             }
@@ -171,7 +186,7 @@ Item {
             icon: "widgets"
             title: root.item ? "This menu is empty" : "Nothing in the tray"
             hint: root.item ? "The app has nothing in its menu right now."
-                            : Tray.hidden !== "" ? "Apps you hid stay hidden; Settings shows them again."
+                            : Tray.hidden !== "" ? "Apps you hid are listed here when they run, with Show to bring them back."
                             : "Apps that put an icon in the tray show here."
             actionText: root.item && !root.item.onlyMenu ? "Open the app" : ""
             onAction: root.run(root.item)

@@ -27,7 +27,8 @@ IpcHandler {
         if (!["all", "apps", "files", "actions", "clipboard", "emoji"].includes(filter)) return
         Config.focusVisible = true
         Engine.launcherFilter = filter
-        if (!(Engine.pinned && Engine.view === Engine.View.Launcher)) Engine.open(Engine.View.Launcher)
+        if (Engine.pinned && Engine.view === Engine.View.Launcher) Engine.launcherAsked(filter)
+        else Engine.open(Engine.View.Launcher)
     }
 
     // Held, as Alt+Tab is: the first press opens the view, each one after moves on (1, or -1 for the

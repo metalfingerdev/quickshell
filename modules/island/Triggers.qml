@@ -82,7 +82,8 @@ Scope {
     // back (Escape, and it comes back as it was).
     function place(target, colour) {
         const p = target.split(":"), alpha = (old, key) => key === "tint_color" ? String(old).slice(7, 9) || "ff" : "ff"
-        if (p[0] === "accent") { Config.accent = colour; Config.source = "accent"; Config.remember(colour) }
+        if (p[0] === "copy") Quickshell.clipboardText = colour
+        else if (p[0] === "accent") { Config.accent = colour; Config.source = "accent"; Config.remember(colour) }
         else if (p[0] === "role") {
             const all = Object.assign({}, p[1] === "dark" ? Config.rolesDark : Config.rolesLight)
             all[p[2]] = Config.argb(Qt.color(colour))
@@ -96,6 +97,7 @@ Scope {
         target: Toggles
         function onColourPicked(colour) {
             if (colour !== "") root.place(Toggles.pickTarget, colour)
+            if (Toggles.pickTarget === "copy") return              // nothing to come back to
             Toggles.pickBack = Toggles.pickTarget
             Engine.open(Toggles.pickView >= 0 ? Toggles.pickView : Engine.View.Colours)
         }

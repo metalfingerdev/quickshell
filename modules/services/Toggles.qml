@@ -190,7 +190,7 @@ Singleton {
     // A colour from anywhere on the screen (hyprpicker: the zoom lens, a click), as "#rrggbb", or ""
     // if it was left with Escape. A signal, not a callback: whoever asked may be gone by then (a view).
     // It starts after a moment, as the screenshot does, so the island has gone from what it freezes.
-    // Where it goes is a string, as the asker may be gone: "accent", "role:dark|light:<role>", "hg:<windows|island>:
+    // Where it goes is a string, as the asker may be gone: "copy" (the clipboard), "accent", "role:dark|light:<role>", "hg:<windows|island>:
     // <shared|dark|light>:<key>", "hl:<table>:<key>" or "pref:<settings key>". pickBack is how the view that
     // asked finds its place again when it comes back.
     signal colourPicked(string colour)

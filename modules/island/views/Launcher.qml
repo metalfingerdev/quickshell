@@ -14,17 +14,31 @@ Item {
     readonly property int rowH: 64
     readonly property string terminal: "kitty"
     readonly property string agent: "crush"      // the terminal coding agent: the Coding agent action starts it
+    // Each filter has a sign: typed first in the field it switches there (as "?" asks the agent), so a filter
+    // is a keystroke away, as in Walker, Raycast or Ulauncher; the row under the field shows the signs.
     readonly property var filters: [
         { key: "all",     label: "All" },
         { key: "apps",    label: "Apps" },
-        { key: "files",   label: "Files" },
-        { key: "actions", label: "Actions" },
-        { key: "clipboard", label: "Clipboard" },
-        { key: "emoji",   label: "Emoji" }
+        { key: "files",   label: "Files  /", sign: "/" },
+        { key: "actions", label: "Actions  >", sign: ">" },
+        { key: "clipboard", label: "Clipboard  @", sign: "@" },
+        { key: "emoji",   label: "Emoji  :", sign: ":" }
     ]
-    // the filter it opens on: IPC `launch <filter>` sets it just before (Super+. opens Emoji)
-    property string filter: Engine.launcherFilter
-    Component.onCompleted: { Engine.launcherFilter = "all"; ClipHistory.refresh() }
+    // Taken once, not bound: the IPC `launch <filter>` (Super+., Super+Ctrl+D...) sets Engine.launcherFilter
+    // before the view loads, and asks again through launcherAsked when it is already open.
+    property string filter: "all"
+    Component.onCompleted: { filter = Engine.launcherFilter; Engine.launcherFilter = "all"; ClipHistory.refresh() }
+    Connections {
+        target: Engine
+        function onLauncherAsked(f) { root.filter = f; Engine.launcherFilter = "all" }
+    }
+    Connections {
+        target: bar
+        function onTextChanged() {
+            const f = root.filters.find(x => x.sign && x.sign === bar.text[0])
+            if (f) { root.filter = f.key; bar.text = bar.text.slice(1) }
+        }
+    }
     property int selected: 0
     readonly property string query: bar.text.trim().toLowerCase()
 
@@ -138,16 +152,38 @@ Item {
                          description: i.picture !== "" ? i.info : filter === "all" ? "Copied" : "" }))
     }
 
+    // The calculator: a sum typed anywhere shows its answer first; "=" before it is the calculator alone, and
+    // there Math's functions and constants work by name too (sqrt, sin, log, ln, pi, e...). Only these names,
+    // digits and operators get through, so nothing else can run.
+    readonly property var mathNames: ({ sqrt: "Math.sqrt", cbrt: "Math.cbrt", abs: "Math.abs", round: "Math.round",
+        floor: "Math.floor", ceil: "Math.ceil", sin: "Math.sin", cos: "Math.cos", tan: "Math.tan", asin: "Math.asin",
+        acos: "Math.acos", atan: "Math.atan", ln: "Math.log", log: "Math.log10", log2: "Math.log2", exp: "Math.exp",
+        pow: "Math.pow", min: "Math.min", max: "Math.max", hypot: "Math.hypot", pi: "Math.PI", e: "Math.E", tau: "(2*Math.PI)" })
+    readonly property bool calcMode: bar.text.trim().startsWith("=")
     readonly property var calc: {
-        const q = bar.text.trim()
-        if (!/^[\d\s+\-*/%^().,]+$/.test(q) || !/\d/.test(q) || !/[+\-*/%^]/.test(q)) return null
+        const q = calcMode ? bar.text.trim().slice(1).trim() : bar.text.trim()
+        if (q === "" || !/^[\d\s+\-*/%^().,a-z]+$/i.test(q)) return null
+        const named = /[a-z]/i.test(q)
+        if (!calcMode && (named || !/\d/.test(q) || !/[+\-*/%^]/.test(q))) return null
+        let unknown = false
+        // a letter after a digit is an exponent (1e3), not a name
+        const js = q.replace(/\^/g, "**").replace(/[a-z][a-z0-9]*/gi, (w, at, s) =>
+            /[\d.]/.test(s[at - 1] ?? "") && /^e\d*$/i.test(w) ? w : (mathNames[w.toLowerCase()] ?? (unknown = true, w)))
+        if (unknown) return null
         try {
-            // digits and operators only (checked above), so this can't run anything else
-            const v = Function('"use strict"; return (' + q.replace(/\^/g, "**").replace(/,/g, ".") + ")")()
+            const v = Function('"use strict"; return (' + (named ? js : js.replace(/,/g, ".")) + ")")()
             if (typeof v !== "number" || !isFinite(v)) return null
             const shown = String(Math.round(v * 1e10) / 1e10)
-            return { kind: "calc", name: "= " + shown, value: shown, description: "Enter copies it", icon: "calculate" }
+            return { kind: "calc", name: "= " + shown, value: shown, description: q + "  ·  Enter copies it", icon: "calculate" }
         } catch (e) { return null }
+    }
+
+    // "!" before a command runs it in the terminal, which stays open to show what it said
+    readonly property var runRow: {
+        const q = bar.text.trim()
+        if (!q.startsWith("!") || q.slice(1).trim() === "") return null
+        const cmd = q.slice(1).trim()
+        return { kind: "run", name: "Run: " + cmd, command: cmd, description: "In " + terminal + ", which stays open", icon: "terminal" }
     }
 
     // "?why is the sky blue" asks the agent (views/Conversation.qml), which loads its model while you type.
@@ -219,6 +255,8 @@ Item {
 
     readonly property var results: {
         if (ask) return [ask]
+        if (runRow) return [runRow]
+        if (calcMode) return calc ? [calc] : []
         if (emojiMode) return emojiRows
         if (filter === "clipboard") return clipRows
         const out = []
@@ -242,6 +280,7 @@ Item {
     }
 
     readonly property string hint: results.length > 0 ? ""
+        : calcMode ? "A sum, or sqrt, sin, cos, log, ln, pow, min, max, pi, e…"
         : emojiMode && !Emoji.ready ? "The emoji list needs unicode-emoji"
         : filter === "clipboard" && !ClipHistory.enabled ? "The clipboard history needs cliphist and wl-clipboard"
         : filter === "clipboard" && query === "" ? "What you copy shows here, until the session ends"
@@ -259,6 +298,7 @@ Item {
             break
         case "file":   Toggles.open(row.path); Engine.close(); break
         case "calc":   Quickshell.clipboardText = row.value; Engine.close(); break
+        case "run":    Engine.close(); Toggles.launch([root.terminal, "--hold", "sh", "-c", row.command]); break
         case "ask":    Agent.ask(row.prompt); Engine.open(Engine.View.Agent); break
         case "action": row.run(); break
         case "clip":   Engine.closeThen(() => ClipHistory.paste(row.item)); break
@@ -275,7 +315,8 @@ Item {
     }
 
     implicitWidth: 880
-    implicitHeight: 20 + bar.height + 12 + (results.length === 0 ? 56 : emojiMode ? grid.height + 44 : list.height) + 18 + (hints.visible ? 34 : 0)
+    readonly property real listTop: modes.y + modes.height + 12
+    implicitHeight: listTop + (results.length === 0 ? 56 : emojiMode ? grid.height + 44 : list.height) + 18 + (hints.visible ? 34 : 0)
 
     BackButton {
         id: back
@@ -298,7 +339,7 @@ Item {
         width: parent.width - x - 20
         implicitHeight: 60
         fieldSize: 18
-        placeholder: "Search, or ? to ask"
+        placeholder: "Search  ·  ? ask  ·  = calculate  ·  ! run"
         takesTab: true
         takesArrows: true
         takesSides: root.emojiMode
@@ -316,26 +357,25 @@ Item {
         onAccepted: root.run(root.results[root.selected])
         onTab: backward => root.cycle(backward ? -1 : 1)
         onEscaped: Engine.close()
-        onBackspaceEmpty: Engine.back()
+        // Backspace on an empty field leaves the filter first, then the launcher
+        onBackspaceEmpty: root.filter !== "all" ? root.filter = "all" : Engine.back()
+    }
 
-        Repeater {
-            model: root.filters
-
-            Chip {
-                required property var modelData
-                anchors.verticalCenter: parent.verticalCenter
-                text: modelData.label
-                selected: root.filter === modelData.key
-                activeFocusOnTab: false
-                onClicked: root.filter = modelData.key
-            }
-        }
+    // the filters, with their signs, as the Control Centre's connected group; the field keeps the keyboard
+    Segmented {
+        id: modes
+        x: bar.x; y: bar.y + bar.height + 10
+        width: bar.width
+        height: 36
+        options: root.filters
+        current: root.filter
+        onPicked: key => { root.filter = key; bar.forceActiveFocus() }
     }
 
     Label {
         visible: root.hint !== ""
         x: 36
-        y: bar.y + bar.height + 28
+        y: root.listTop + 16
         text: root.hint
         color: Config.dim
     }
@@ -347,7 +387,7 @@ Item {
 
         visible: root.emojiMode && root.results.length > 0
         x: 20
-        y: bar.y + bar.height + 12
+        y: root.listTop
         width: parent.width - 40
         cellWidth: width / columns
         cellHeight: cellWidth
@@ -421,7 +461,7 @@ Item {
         id: list
         visible: !root.emojiMode
         x: 20
-        y: bar.y + bar.height + 12
+        y: root.listTop
         width: parent.width - 40
         height: Math.min(root.results.length, root.maxRows) * (root.rowH + spacing)
         spacing: Config.spaceHair

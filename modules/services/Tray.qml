@@ -18,8 +18,9 @@ Singleton {
         property alias hidden: root.hidden
     }
     readonly property var patterns: hidden.split(",").map(s => s.trim().toLowerCase()).filter(s => s !== "")
-    readonly property var items: SystemTray.items.values
-        .filter(i => i.status !== Status.Passive && !patterns.some(p => key(i).includes(p)))
+    // every app with something to say, hidden or not: the Tray view lists these, so a hidden one can come back
+    readonly property var all: SystemTray.items.values.filter(i => i.status !== Status.Passive)
+    readonly property var items: all.filter(i => !isHidden(i))
 
     // Apple shows a menu bar extra only when it matters: an app that says it needs attention is the one
     // Compact shows, and Expanded's strip puts those first.
@@ -30,8 +31,11 @@ Singleton {
 
     function key(item) { return ((item.id ?? "") + " " + (item.title ?? "")).toLowerCase() }
     function name(item) { return item?.tooltipTitle || item?.title || item?.id || "" }
+    function isHidden(item) { return patterns.some(p => key(item).includes(p)) }
     function hide(item) {
         const id = (item.id || item.title || "").toLowerCase()
         if (id !== "") hidden = patterns.concat([id]).join(",")
     }
+    // every pattern that hides it goes, so it shows again whichever way it was hidden (here, or by hand)
+    function show(item) { hidden = patterns.filter(p => !key(item).includes(p)).join(",") }
 }

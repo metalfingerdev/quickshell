@@ -137,7 +137,7 @@ Item {
                  run: () => { Engine.launcherFilter = "emoji"; Engine.open(Engine.View.Launcher) } },
         codeagent: { kind: "small", title: "Coding agent", icon: "code", status: "Crush, in kitty", run: root.launch(["kitty", "-e", "crush"]) },
         picker: { kind: "small", letter: "u", title: "Colour picker", tool: "hyprpicker", icon: "colorize",
-                  status: "A colour from anywhere, copied", run: () => { Engine.close(); Toggles.pickColour() } },
+                  status: "A colour from anywhere, copied", run: () => { Engine.close(); Toggles.pickColour("copy") } },
         shuffle: { kind: "small", title: "Shuffle the wallpaper", icon: "shuffle", run: () => Wallpaper.random() },
         colours: { kind: "small", title: "Colours", icon: Config.symbol.colours, status: "Palettes, an accent", run: root.open(Engine.View.Colours) },
         theme: { kind: "small", title: "Theme", icon: Config.symbol.theme, run: root.open(Engine.View.Theme) },
