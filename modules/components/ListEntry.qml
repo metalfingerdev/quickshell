@@ -45,13 +45,13 @@ Rectangle {
     }
     Behavior on color { ColorAnimation { duration: Config.durationFast } }
 
-    // the hairline over a row that isn't first, inset past the icon; the row's own y says it isn't
+    // the gap over a row that isn't first, as Android 16's segmented lists have between their rows; the row's
+    // own y says it isn't
     Rectangle {
         visible: root.flat && root.y > 0.5
-        x: Config.spaceM + root.leadSize + Config.spaceM
-        width: parent.width - x
-        height: 1
-        color: Config.fill2
+        width: parent.width
+        height: 2
+        color: Config.fill4
     }
 
     // under the children, so buttons in the row still get their own clicks
@@ -74,7 +74,7 @@ Rectangle {
             Layout.preferredWidth: root.leadSize
             Layout.preferredHeight: root.leadSize
             radius: square ? Math.round(root.leadSize * 0.25) : root.leadSize / 2
-            color: root.lead !== null ? "transparent" : square ? root.tone : root.active ? Config.primary : Config.fill3
+            color: root.lead !== null ? "transparent" : square ? root.tone : root.active ? Config.primary : Config.fill2
 
             Loader {
                 anchors.centerIn: parent

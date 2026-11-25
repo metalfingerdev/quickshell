@@ -11,8 +11,8 @@ Rectangle {
     implicitWidth: 320
     implicitHeight: 48
     radius: height / 2
-    // a fill track with one thumb that slides to the chosen one, as Apple's does
-    color: Config.fill3
+    // a tonal track and one thumb that slides to the chosen one: Material's connected button group, with Apple's motion
+    color: Config.fill2
     readonly property int chosenIndex: options.findIndex(o => o.key === current)
 
     Rectangle {
@@ -22,7 +22,7 @@ Rectangle {
         width: (root.width - 2 * (Config.spaceHair + 1)) / Math.max(1, root.options.length)
         x: Config.spaceHair + 1 + Math.max(0, root.chosenIndex) * width
         radius: height / 2
-        color: Config.ink(0.3)
+        color: Config.secondary
         Behavior on x { NumberAnimation { duration: Config.durationMedium; easing.type: Easing.OutCubic } }
     }
 
@@ -49,7 +49,7 @@ Rectangle {
                 width: root.width / Math.max(1, root.options.length)
                 height: root.height
                 radius: root.radius
-                color: ring || area.pressed ? Config.fill3 : "transparent"
+                color: ring || area.pressed ? Config.fill1 : "transparent"
 
                 activeFocusOnTab: true
 
@@ -63,13 +63,13 @@ Rectangle {
                         anchors.verticalCenter: parent.verticalCenter
                         name: glyph
                         size: 20
-                        color: segment.chosen ? Config.label1 : Config.label2
+                        color: segment.chosen ? Config.secondaryInk : Config.label2
                     }
                     Label {
                         visible: text !== ""                 // an icon-only option stays centred
                         anchors.verticalCenter: parent.verticalCenter
                         text: segment.modelData.label ?? ""
-                        color: segment.chosen ? Config.label1 : Config.label2
+                        color: segment.chosen ? Config.secondaryInk : Config.label2
                         font.weight: segment.chosen ? Font.DemiBold : Font.Medium
                     }
                 }

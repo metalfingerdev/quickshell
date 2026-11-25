@@ -23,7 +23,7 @@ Rectangle {
     implicitHeight: 36
     radius: height / 2
     color: selected ? Config.state(Config.primary, ink, area.containsMouse, area.pressed)
-                    : Config.state(Config.fill3, Config.text, area.containsMouse, area.pressed)
+                    : Config.state(Config.fill2, Config.text, area.containsMouse, area.pressed)
     Behavior on color { ColorAnimation { duration: Config.durationFast } }
 
     Row {

@@ -16,8 +16,8 @@ Item {
     Accessible.onPressAction: activate()
 
     activeFocusOnTab: true
-    implicitWidth: 51
-    implicitHeight: 31
+    implicitWidth: 52
+    implicitHeight: 32
     opacity: enabled ? 1 : 0.38
 
     Rectangle {
@@ -29,16 +29,20 @@ Item {
 
         FocusRing { on: root.activeFocus }
 
+        // Material 3's: a small dim thumb when off, a large one with a check when on, wider while held
         Rectangle {
-            readonly property real size: track.height - 4
-            width: area.pressed ? size + 6 : size
+            property real size: area.pressed ? 28 : root.checked ? 24 : 16
+            width: size
             height: size
-            radius: height / 2
-            y: 2
-            x: root.checked ? track.width - width - 2 : 2
-            color: "white"
+            radius: size / 2
+            anchors.verticalCenter: parent.verticalCenter
+            x: root.checked ? track.width - width - 4 - (24 - Math.min(24, size)) / 2 : 8 - (size - 16) / 2
+            color: root.checked ? Config.primaryInk : Config.label2
             Behavior on x { NumberAnimation { duration: Config.durationMedium; easing.type: Easing.OutCubic } }
-            Behavior on width { NumberAnimation { duration: Config.durationFast } }
+            Behavior on size { NumberAnimation { duration: Config.durationFast } }
+            Behavior on color { ColorAnimation { duration: Config.durationFast } }
+
+            Icon { anchors.centerIn: parent; visible: root.checked; name: "check"; size: 16; color: Config.primary }
         }
     }
 

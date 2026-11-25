@@ -25,8 +25,8 @@ Singleton {
     // The island and the windows apart. Blur is an amount, 0..1, for whichever blur is drawing (-1: as it
     // is: look.lua's, or the liquid-glass look's own); the island's, -1, follows the windows'. Hyprland's own
     // blur is one for everything, so the island's amount only counts under liquid glass.
-    property real windowBlur: 0
-    property real islandBlur: 1
+    property real windowBlur: 0.2
+    property real islandBlur: 0
     property real activeOpacity: 0.9     // -1 = look.lua's
     property real inactiveOpacity: 0.9
     // hyprglass's settings, for the windows and for the island: each { shared, dark, light }

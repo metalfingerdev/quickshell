@@ -76,7 +76,7 @@ QtObject {
         surfDark: 0.065, surfLight: 0.975, surfStep: 0.04, tintMax: 0.32,
         textDark: 0.91, dimDark: 0.75, outlineDark: 0.52, textLight: 0.10, dimLight: 0.32, outlineLight: 0.50,
         secSat: 0.4, secDark: 0.26, secLight: 0.86,
-        label2: 0.6, label3: 0.3, label4: 0.18, fill1: 0.2, fill2: 0.16, fill3: 0.12, fill4: 0.08
+        label2: 0.6, label3: 0.3, label4: 0.18
     })
     property var levels: ({})
     function lv(k) { return levels[k] ?? levelDefaults[k] }
@@ -288,17 +288,21 @@ QtObject {
     readonly property color warn:        current.warn
     readonly property color bad:         current.bad
     readonly property bool  dark:        current.dark
-    // Labels and fills as the text colour at a level of alpha, so they work on glass of any opacity
-    // (Apple's vibrancy): the redesign draws with these instead of fixed greys and opaque surfaces.
+    // Labels as the text colour at a level of alpha, so they work on glass of any opacity (Apple's vibrancy).
     function ink(a) { return Qt.rgba(text.r, text.g, text.b, a) }
     readonly property color label1: text
     readonly property color label2: ink(lv("label2"))
     readonly property color label3: ink(lv("label3"))
     readonly property color label4: ink(lv("label4"))
-    readonly property color fill1: ink(lv("fill1"))
-    readonly property color fill2: ink(lv("fill2"))
-    readonly property color fill3: ink(lv("fill3"))
-    readonly property color fill4: ink(lv("fill4"))
+    // Cards, controls and tracks are Material's tonal containers, a step up from the island each: on glass
+    // they stay solid enough to read (a see-through card vanishes on a see-through island), and
+    // surfaceAlpha is how solid. fill1 is the highest step, fill4 the island's own colour.
+    property real surfaceAlpha: 0.9
+    function tone(c) { const k = Qt.darker(c, 1); return Qt.rgba(k.r, k.g, k.b, surfaceAlpha) }
+    readonly property color fill1: tone(highest)
+    readonly property color fill2: tone(high)
+    readonly property color fill3: tone(container)
+    readonly property color fill4: tone(surface)
     readonly property color divider:     mix(surface, outline, 0.35)
     readonly property color primaryDeep: mix(primary, primaryInk, 0.16)
 
@@ -340,11 +344,11 @@ QtObject {
     property real windowOpacity: 1
     // The island's own opacity, -1 = the windows'. All the way to 0, where the island draws nothing and
     // so the glass (Hyprland's blur, hyprglass) has no shape to follow.
-    property real islandOpacity: 0.2
+    property real islandOpacity: 0
     readonly property real islandAlpha: Math.max(0, Math.min(1, islandOpacity < 0 ? windowOpacity : islandOpacity))
     readonly property color island: Qt.rgba(surface.r, surface.g, surface.b, islandAlpha)
     // the island's shadow, 0 (none) .. 1 (as drawn), and more if wanted
-    property real shadowStrength: 1
+    property real shadowStrength: 0
 
     // Hyprland's windows animation (its curve, "Glide" in hypr/modules/look.lua, and its speed: 3.5 = 350 ms),
     // read from Hyprland itself (services/Desktops.qml, kept in step by shell.qml), so the shell and the

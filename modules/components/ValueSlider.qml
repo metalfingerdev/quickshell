@@ -1,8 +1,9 @@
 import QtQuick
 
-// A quantity, as Apple's sliders show one: a thin track, the accent up to the value, a white knob. It moves
-// under the pointer at once (moved) and settles on release (committed), so what is costly to apply (Hyprland,
-// the glass) waits for the release. Left/Right step it (ViewLoader calls nudge).
+// A quantity: a fat pill track (the Control Centre's sliders, in Material 3 Expressive's form), the accent up
+// to the value and a handle bar at its end. It moves under the pointer at once (moved) and settles on release
+// (committed), so what is costly to apply (Hyprland, the glass) waits for the release. Left/Right step it
+// (ViewLoader calls nudge).
 Item {
     id: root
 
@@ -26,39 +27,42 @@ Item {
     Accessible.onDecreaseAction: nudge(-1)
 
     implicitWidth: 240
-    implicitHeight: 28
+    implicitHeight: 36
     opacity: enabled ? 1 : 0.38
 
     Rectangle {
         id: track
-        x: knob.width / 2
-        width: parent.width - knob.width
-        height: 4
-        radius: 2
-        anchors.verticalCenter: parent.verticalCenter
-        color: Config.fill1
+        anchors.fill: parent
+        radius: height / 2
+        color: Config.fill2
 
-        Rectangle { width: parent.width * root.shown; height: parent.height; radius: 2; color: Config.primary }
+        Rectangle {
+            width: Math.max(height / 2, (parent.width - handle.width) * root.shown)
+            height: parent.height
+            radius: height / 2
+            color: Config.primary
+            Behavior on width { enabled: !root.dragging; NumberAnimation { duration: Config.durationFast } }
+        }
     }
+    // the handle: a bar, taller than the track, that widens the pill's end as it's held
     Rectangle {
-        id: knob
-        width: 22; height: 22; radius: 11
+        id: handle
+        width: root.dragging ? 3 : 4; height: parent.height + 8; radius: width / 2
         anchors.verticalCenter: parent.verticalCenter
-        x: track.width * root.shown
-        color: "white"
-        border.width: 1
+        x: Math.max(height / 4, (track.width - width) * root.shown)
+        color: Config.primaryDeep
+        border.width: 2
         border.color: Config.fill2
-        scale: root.dragging ? 1.15 : 1
-        Behavior on scale { NumberAnimation { duration: Config.durationFast } }
+        Behavior on width { NumberAnimation { duration: Config.durationFast } }
     }
-    FocusRing { target: knob; on: root.activeFocus && Config.focusVisible }
+    FocusRing { target: track; on: root.activeFocus && Config.focusVisible }
 
     MouseArea {
         id: area
         anchors.fill: parent
         cursorShape: Qt.PointingHandCursor
         preventStealing: true
-        function at(x) { return root.clamp((x - knob.width / 2) / Math.max(1, track.width)) }
+        function at(x) { return root.clamp(x / Math.max(1, track.width)) }
         onPressed: mouse => { root.forceActiveFocus(); root.dragValue = at(mouse.x); root.moved(root.dragValue) }
         onPositionChanged: mouse => { if (pressed) { root.dragValue = at(mouse.x); root.moved(root.dragValue) } }
         onReleased: root.committed(root.dragValue)

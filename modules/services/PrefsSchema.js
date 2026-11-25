@@ -596,58 +596,6 @@ var entries = [
   "res": "lv:label4"
  },
  {
-  "key": "colours.levels.fill1",
-  "t": "Config",
-  "p": "levels",
-  "m": "fill1",
-  "kind": "number",
-  "label": "Fill 1 alpha",
-  "group": "scheme",
-  "min": 0,
-  "max": 1,
-  "step": 0.005,
-  "res": "lv:fill1"
- },
- {
-  "key": "colours.levels.fill2",
-  "t": "Config",
-  "p": "levels",
-  "m": "fill2",
-  "kind": "number",
-  "label": "Fill 2 alpha",
-  "group": "scheme",
-  "min": 0,
-  "max": 1,
-  "step": 0.005,
-  "res": "lv:fill2"
- },
- {
-  "key": "colours.levels.fill3",
-  "t": "Config",
-  "p": "levels",
-  "m": "fill3",
-  "kind": "number",
-  "label": "Fill 3 alpha",
-  "group": "scheme",
-  "min": 0,
-  "max": 1,
-  "step": 0.005,
-  "res": "lv:fill3"
- },
- {
-  "key": "colours.levels.fill4",
-  "t": "Config",
-  "p": "levels",
-  "m": "fill4",
-  "kind": "number",
-  "label": "Fill 4 alpha",
-  "group": "scheme",
-  "min": 0,
-  "max": 1,
-  "step": 0.005,
-  "res": "lv:fill4"
- },
- {
   "key": "island.style",
   "t": "Config",
   "p": "style",
@@ -700,6 +648,18 @@ var entries = [
   "max": 1,
   "step": 0.01,
   "ini": "theme/islandOpacity"
+ },
+ {
+  "key": "island.surfaceAlpha",
+  "t": "Config",
+  "p": "surfaceAlpha",
+  "m": "",
+  "kind": "number",
+  "label": "Cards and controls: how solid",
+  "group": "island",
+  "min": 0,
+  "max": 1,
+  "step": 0.01
  },
  {
   "key": "island.shadow",

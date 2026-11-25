@@ -108,7 +108,7 @@ Item {
         height: visible ? 72 : 0
         opacity: enabled ? 1 : 0.38
 
-        Rectangle { visible: amount.y > 0.5; x: Config.spaceL; width: parent.width - x; height: 1; color: Config.fill2 }
+        Rectangle { visible: amount.y > 0.5; width: parent.width; height: 2; color: Config.fill4 }
         Label { x: Config.spaceL; y: Config.spaceM; text: amount.text; font.pixelSize: Config.body + 1 }
         Label {
             anchors { right: parent.right; rightMargin: Config.spaceL }
@@ -148,7 +148,7 @@ Item {
         signal moved(real value)
         width: parent ? parent.width : 0
         height: 56
-        Rectangle { x: Config.spaceL; width: parent.width - x; height: 1; color: Config.fill2 }
+        Rectangle { width: parent.width; height: 2; color: Config.fill4 }
         Label { x: Config.spaceL; anchors.verticalCenter: parent.verticalCenter; width: 120; text: bar.text; color: Config.label2 }
         ColourBar {
             id: colours
@@ -510,6 +510,11 @@ Item {
                     enabled: Config.islandOpacity >= 0
                     value: Config.islandAlpha
                     onMoved: v => Config.islandOpacity = Math.round(v * 100) / 100
+                }
+                Amount {
+                    text: "Cards and controls"
+                    value: Config.surfaceAlpha
+                    onMoved: v => Config.surfaceAlpha = Math.round(v * 100) / 100
                 }
                 Amount {
                     text: "Blur"
