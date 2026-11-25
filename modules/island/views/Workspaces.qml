@@ -94,7 +94,8 @@ Item {
     readonly property real headerH: 52 + 12
 
     implicitWidth: content.width + pad * 2
-    implicitHeight: content.height + headerH + pad * 2
+    readonly property real footerH: 36
+    implicitHeight: content.height + headerH + footerH + pad * 2
 
     Component.onCompleted: Desktops.watch(true)
     Component.onDestruction: Desktops.watch(false)
@@ -336,6 +337,13 @@ Item {
                 Behavior on y { NumberAnimation { duration: root.cfg.moveFastMs; easing.type: Easing.OutCubic } }
             }
         }
+    }
+
+    KeyHints {
+        x: root.pad
+        y: root.pad + root.headerH + content.height + Config.spaceM
+        width: content.width
+        keys: [["← → ↑ ↓", "select"], ["↵", "go"], ["⌫", "back"]]
     }
 
     // thumbnails dragged out of a special tile live here (the tile clips them)

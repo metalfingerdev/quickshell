@@ -81,5 +81,10 @@ Item {
                 }
             }
         }
+
+        KeyHints {
+            width: parent.width
+            keys: [["↵", "run (twice for logout, reboot, shutdown)"], ["⌫", "back"]]
+        }
     }
 }

@@ -119,24 +119,12 @@ Item {
             }
         }
 
-        Column {
-            visible: !root.any
+        EmptyState {
             width: parent.width
-            topPadding: Config.spaceXl
-            bottomPadding: Config.spaceXl
-            spacing: Config.spaceM
-
-            Icon {
-                anchors.horizontalCenter: parent.horizontalCenter
-                name: Config.symbol.wallpaper
-                size: 48
-                color: Config.dim
-            }
-            Label {
-                anchors.horizontalCenter: parent.horizontalCenter
-                text: "No images in " + Wallpaper.dir
-                color: Config.dim
-            }
+            visible: !root.any
+            icon: Config.symbol.wallpaper
+            title: "No images in " + Wallpaper.dir
+            hint: "Put pictures there (png, jpg, webp) and they show up here."
         }
 
         KeyHints {

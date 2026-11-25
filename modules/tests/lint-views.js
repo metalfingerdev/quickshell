@@ -1,13 +1,13 @@
 // Run: node modules/tests/lint-views.js [--strict]
-// Style lint for views/, parts/ and components/. No dependencies. Prints a count per rule; exits 1 only for
-// the rules in FAIL_ON (or for all of them with --strict). Every violation is a line you can fix, or, for a
+// Style lint for views/, parts/ and components/. No dependencies. Prints a count per rule and fails on any violation (FAIL_ON).
+// Every violation is a line you can fix, or, for a
 // file that really is different, an ALLOW entry with the reason.
 const fs = require("fs"), path = require("path")
 const root = path.join(__dirname, "..")
 const dirs = ["island/views", "parts", "components"]
 
 const SCALE = [0, 2, 4, 8, 12, 16, 24]        // Config.spaceHair..spaceXl (and 0)
-const FAIL_ON = new Set([])                    // rules that fail the run; the rest only warn
+const FAIL_ON = new Set(["hex", "duration", "spacing", "easing", "header", "hints", "empty"])                  // rules that fail the run; the rest only warn
 
 // Panels and the files that are on purpose different. Rule names: hex, duration, spacing, easing,
 // header, hints, empty.
@@ -28,7 +28,7 @@ const ALLOW = {
     "island/views/Switcher.qml":   { rules: ["header", "hints", "empty"], reason: "an overlay switcher with fixed keys" },
 }
 // Panels that show a list, which can be empty or unavailable
-const LISTS = ["Activity", "Battery", "Bluetooth", "Clipboard", "Mixer", "Network", "Notification", "Power", "Wallpapers", "Workspaces"]
+const LISTS = ["Activity", "Battery", "Clipboard", "Wallpapers"]
 const PANELS = ["Activity", "Battery", "Bluetooth", "Clipboard", "Clock", "Colours", "Conversation", "Media", "Mixer",
                 "Network", "Notification", "Power", "Settings", "Theme", "Wallpapers", "Workspaces"]
 

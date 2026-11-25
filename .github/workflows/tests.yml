@@ -15,5 +15,5 @@ jobs:
       # Machine.js against the view list and the Registry, read from Engine.qml and Registry.qml.
       # tst_keyboard.qml needs Qt and Quickshell, so it still runs by hand (README, Tests).
       - run: node modules/tests/machine.test.js
-      # Tokens and panel standard: warns for now, see FAIL_ON in the script
+      # Tokens and the panel standard (Header, KeyHints, EmptyState): fails on any violation
       - run: node modules/tests/lint-views.js

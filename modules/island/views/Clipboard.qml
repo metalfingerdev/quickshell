@@ -98,6 +98,15 @@ Item {
             }
         }
 
+        EmptyState {
+            width: parent.width
+            visible: ClipHistory.items.length === 0
+            icon: ClipHistory.enabled ? "content_paste" : "content_paste_off"
+            title: ClipHistory.enabled ? "Nothing copied yet" : "Clipboard history is off"
+            hint: ClipHistory.enabled ? "What you copy shows here, until the session ends."
+                                      : "It needs cliphist and wl-clipboard installed."
+        }
+
         KeyHints {
             width: parent.width
             keys: [["Enter", "paste"], ["Del", "forget"]]

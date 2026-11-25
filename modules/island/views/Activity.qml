@@ -67,6 +67,14 @@ Item {
             onBack: Engine.back()
         }
 
+        EmptyState {
+            width: parent.width
+            visible: !Activities.working
+            icon: "task_alt"
+            title: "Nothing running"
+            hint: "Downloads and other jobs show here while they work."
+        }
+
         ScrollList {
             width: parent.width
             visible: Activities.working
@@ -89,6 +97,11 @@ Item {
                     }
                 }
             }
+        }
+
+        KeyHints {
+            width: parent.width
+            keys: [["⌫", "back"], ["Esc", "close"]]
         }
     }
 }

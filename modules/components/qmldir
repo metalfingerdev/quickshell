@@ -33,3 +33,4 @@ SectionLabel 1.0 SectionLabel.qml
 ClickArea    1.0 ClickArea.qml
 CoverImage   1.0 CoverImage.qml
 Store        1.0 Store.qml
+EmptyState   1.0 EmptyState.qml

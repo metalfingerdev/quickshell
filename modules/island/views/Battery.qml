@@ -142,12 +142,35 @@ Item {
             implicitHeight: 48
         }
 
+        EmptyState {
+            width: parent.width
+            visible: !Energy.present
+            icon: "battery_unknown"
+            title: "No battery"
+            hint: "This machine doesn't report one."
+        }
+
+        EmptyState {
+            width: parent.width
+            visible: Engine.pinned && Toggles.profile === ""
+            compact: true
+            icon: "speed"
+            title: "Power profiles unavailable"
+            hint: "Needs power-profiles-daemon (powerprofilesctl)."
+        }
+
         Segmented {
             visible: Engine.pinned && Toggles.profile !== ""
             width: parent.width
             options: Toggles.profiles
             current: Toggles.profile
             onPicked: key => Toggles.setProfile(key)
+        }
+
+        KeyHints {
+            visible: Engine.pinned
+            width: parent.width
+            keys: [["[ ]", "brightness"], ["⌫", "back"]]
         }
     }
 }
