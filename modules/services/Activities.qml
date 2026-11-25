@@ -11,11 +11,14 @@ import Quickshell.Io
 //   qs ipc call activity progress rebuild 0.4      0..1; below 0: no idea how far
 //   qs ipc call activity done rebuild              or failed; clear ends it without a toast
 // A download in a browser is one too: a *.part or *.crdownload growing in the downloads folder.
+// One with a card of its own in Expanded (the agent's) starts with `own`: Compact and the list show
+// it, ActivityCard doesn't.
 Singleton {
     id: root
 
-    property var jobs: ({})                 // id -> { label, fraction }, fraction -1 = unknown
-    readonly property var list: Object.keys(jobs).map(id => ({ id: id, label: jobs[id].label, fraction: jobs[id].fraction }))
+    property var jobs: ({})                 // id -> { label, fraction, own }, fraction -1 = unknown
+    readonly property var list: Object.keys(jobs).map(id => ({ id: id, label: jobs[id].label, fraction: jobs[id].fraction, own: jobs[id].own }))
+    readonly property var shared: list.filter(j => !j.own)   // for ActivityCard
     readonly property bool working: list.length > 0
     // the furthest behind of those that say how far they are; -1 = none says
     readonly property real level: {
@@ -29,11 +32,11 @@ Singleton {
     property bool lastOk: true
     signal ended(bool ok)
 
-    function start(id, label)       { put(id, label, -1) }
-    function progress(id, fraction) { put(id, jobs[id]?.label ?? id, fraction) }
-    function put(id, label, fraction) {
+    function start(id, label, own = false) { put(id, label, -1, own) }
+    function progress(id, fraction) { put(id, jobs[id]?.label ?? id, fraction, jobs[id]?.own ?? false) }
+    function put(id, label, fraction, own) {
         const next = Object.assign({}, jobs)
-        next[id] = { label: label || id, fraction: isFinite(fraction) && fraction >= 0 ? Math.min(1, fraction) : -1 }
+        next[id] = { label: label || id, fraction: isFinite(fraction) && fraction >= 0 ? Math.min(1, fraction) : -1, own: own }
         jobs = next
     }
     // outcome: "done", "failed" or "quiet" (gone without a toast)

@@ -71,7 +71,7 @@ Item {
             width: parent.width
         }
         ActivityCard {
-            visible: Activities.working
+            visible: Activities.shared.length > 0
             width: parent.width
         }
         RecordingCard {

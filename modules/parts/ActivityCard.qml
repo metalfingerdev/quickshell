@@ -20,7 +20,7 @@ Rectangle {
         spacing: 10
 
         Repeater {
-            model: Activities.list
+            model: Activities.shared
 
             Column {
                 id: job

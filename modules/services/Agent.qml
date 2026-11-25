@@ -69,7 +69,7 @@ Singleton {
         thinkFrom = 0
         thoughtMs = 0
         send({ op: "ask", text: q })
-        Activities.start("agent", "Agent")
+        Activities.start("agent", "Agent", true)
     }
     // The answer ends when the agent says done (cancelled), so a question asked right after finds it free.
     function stop() {
