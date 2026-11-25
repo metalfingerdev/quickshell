@@ -153,7 +153,16 @@ Item {
             font.features: { "tnum": 1 }
         }
 
-        // paused reads at a glance beside the cover; playing needs no mark
+        // sound playing, as the Dynamic Island shows it: bars moving beside the cover (a cue, not a spectrum);
+        // paused, a pause mark in their place
+        Equalizer {
+            visible: Players.hasTrack && Players.playing
+            anchors.verticalCenter: parent.verticalCenter
+            running: Players.playing
+            barWidth: 2
+            height: 12
+            color: Config.primary
+        }
         Icon {
             visible: Players.hasTrack && !Players.playing
             anchors.verticalCenter: parent.verticalCenter
