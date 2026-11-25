@@ -69,19 +69,16 @@ clears the peek (a hover peek, a view opening), the next press shows it again.
 | `qs ipc call wallpaper reload` | re-read the folder |
 | `qs ipc call wallpaper current` | print the path showing now |
 
-## Edge light, tasks and generations
+## Tasks and generations
 
 | Command | Effect |
 |---|---|
-| `qs ipc call glyph flash <run\|critical\|charge>` | light along the island's edge: once round, twice in the warning colour, up both sides |
-| `qs ipc call glyph enable <true\|false>` | the edge light on or off (Settings, Shell: "Light along the edge") |
 | `qs ipc call tasks add <text>` | a card on top of To do |
 | `qs ipc call tasks list` | the board, as `tasks.json` has it |
 | `qs ipc call generations flake <folder>` | the flake this machine is built from (`~/nixos-dotfiles`), for the Updates section |
 | `qs ipc call generations list` | the generations, as JSON |
 
-The edge light also shows how far an activity has got (`activity progress`), up both sides from the
-bottom. The board is `~/.local/state/quickshell/tasks.json` (`{ "cards": [{ "id", "text", "column" }] }`,
+The board is `~/.local/state/quickshell/tasks.json` (`{ "cards": [{ "id", "text", "column" }] }`,
 column 0 to do, 1 doing, 2 done): edit it by hand and the board follows.
 
 ## Lock screen

@@ -92,7 +92,10 @@ Scope {
 
     // The pointer is at the screen's top edge: on the spacer's hot zone or, where the overlay lies
     // over it (a notch), in the overlay's own top strip. That holds the island but isn't "on" it.
-    readonly property bool atEdge: !covering && (edgeHover.hovered || (pointer.hovered && pointer.point.position.y < hotZone))
+    // A notch's top strip over the island is the island's own, unless auto-hide is on: then it is the edge
+    // that reveals it.
+    readonly property bool atEdge: !covering && (edgeHover.hovered
+        || (pointer.hovered && pointer.point.position.y < hotZone && (Engine.autoHide || !overlay.inNotch(pointer.point.position.x))))
     onAtEdgeChanged: Engine.edge(atEdge, screen.name)
 
     function pinShown() {
@@ -178,7 +181,12 @@ Scope {
         anchors { top: true; bottom: true; left: true; right: true }
         exclusionMode: ExclusionMode.Ignore
         color: "transparent"
-        mask: Region { item: root.covering ? outside : Engine.hidden ? null : Engine.pinned ? outside : proxy }
+        // the notch's inverted corners are the island's too, so they take the pointer as it does
+        mask: Region {
+            item: root.covering ? outside : Engine.hidden ? null : Engine.pinned ? outside : proxy
+            Region { item: root.notch && !root.covering && !Engine.hidden && !Engine.pinned ? cornerL : null }
+            Region { item: root.notch && !root.covering && !Engine.hidden && !Engine.pinned ? cornerR : null }
+        }
 
         WlrLayershell.namespace: "glass:island"     // Hyprland's glass (hypr/modules/look.lua)
         WlrLayershell.layer: WlrLayer.Overlay       // the top layer is drawn under fullscreen windows
@@ -226,10 +234,28 @@ Scope {
             }
         }
         // not while covering: the whole screen is the island then, and a hover would start the peek under the lock
+        // Whether x is over the notch: the island and its two corners (FINAL rect, as the mask).
+        function inNotch(x) { return root.notch && x >= proxy.x - cornerL.width && x < proxy.x + proxy.width + cornerR.width }
         readonly property bool onIsland: !root.covering && pointer.hovered
-            && pointer.point.position.x >= proxy.x && pointer.point.position.x < proxy.x + proxy.width
-            && pointer.point.position.y >= Math.max(proxy.y, root.hotZone) && pointer.point.position.y < proxy.y + proxy.height
+            && inNotch(pointer.point.position.x)
+            && pointer.point.position.y >= (Engine.autoHide || !root.notch ? Math.max(proxy.y, root.hotZone) : proxy.y)
+            && pointer.point.position.y < proxy.y + proxy.height
+            && (root.notch || (pointer.point.position.x >= proxy.x && pointer.point.position.x < proxy.x + proxy.width))
         onOnIslandChanged: Engine.hover(onIsland)
+
+        // the final rects of the anti-corners (AntiCorner draws them from the animated one)
+        component CornerBox: Item {
+            y: proxy.y
+            width: Math.min(12, proxy.height / 2)
+            height: width
+            MouseArea {
+                anchors.fill: parent
+                acceptedButtons: Qt.LeftButton | Qt.BackButton
+                onClicked: mouse => mouse.button === Qt.BackButton ? Engine.back() : root.pinShown()
+            }
+        }
+        CornerBox { id: cornerL; x: proxy.x - width }
+        CornerBox { id: cornerR; x: proxy.x + proxy.width }
 
         Item {
             id: proxy
@@ -353,12 +379,6 @@ Scope {
                 }
             }
 
-            GlyphLight {
-                anchors.fill: parent
-                visible: lit && !Engine.hidden && !root.strip && !root.covering
-                topRadius: surface.topLeftRadius
-                bottomRadius: surface.bottomLeftRadius
-            }
         }
 
         Row {

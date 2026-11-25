@@ -70,13 +70,11 @@ Scope {
             root.alert(Engine.View.Battery)
             if (!root.armed) return
             Sounds.play(Energy.plugged ? "power-plug" : "power-unplug")
-            if (Energy.plugged) Glyph.flash("charge")
         }
         function onWarn(critical) {
             const v = Engine.View.Battery
             Engine.alert(v, Registry.priority(v, critical))         // a warning skips the startup guard
             Sounds.play("dialog-warning")
-            Glyph.flash("critical")
         }
     }
 
@@ -151,7 +149,6 @@ Scope {
             if (!root.centerShown) Engine.alert(v, Registry.priority(v, critical))
             if (!fresh) return
             Sounds.play(critical ? "dialog-warning" : "message-new-instant")
-            Glyph.flash(critical ? "critical" : "run")
         }
         function onPopupsChanged() { Qt.callLater(root.settle) }
     }

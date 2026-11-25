@@ -229,12 +229,6 @@ Item {
                 onPicked: key => Config.handle = key
             }
 
-            Switch {
-                text: "Light along the edge"
-                checked: Glyph.enabled
-                onToggled: on => Glyph.enabled = on
-            }
-
             SectionLabel { text: "Clock"; topPadding: Config.spaceXs }
             Switch {
                 text: "24-hour clock"

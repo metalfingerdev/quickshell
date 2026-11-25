@@ -128,7 +128,7 @@ list view) and the new size's redirect would land mid-slide and the island would
 | | Peek (hover) | Pinned (click, IPC) | Rest, Toast, Hidden |
 |---|---|---|---|
 | keyboard | never, so the pointer passing over can't steal typing from an app | yes | never, for the same reason with a toast |
-| hover | the view lives as long as the hover (plus `graceMs`) | pauses the countdown; leaving restarts it | holds a toast; at Rest, starts the peek (on the surface only: the top `hotZone` pixels are the edge's) |
+| hover | the view lives as long as the hover (plus `graceMs`) | pauses the countdown; leaving restarts it | holds a toast; at Rest, starts the peek (on the island only, a notch's corners and top strip included; with auto-hide on, the top `hotZone` pixels are the edge's) |
 | keystroke | nothing (no countdown) | restarts the countdown from the top | - |
 
 The peek key (IPC `peek true`/`peek false`, see [ipc.md](ipc.md)) calls `Engine.peek(on)`: it shows the

@@ -23,7 +23,6 @@ singleton SysStats   1.0 SysStats.qml
 singleton Weather    1.0 Weather.qml
 singleton Calendar   1.0 Calendar.qml
 singleton Tray       1.0 Tray.qml
-singleton Glyph      1.0 Glyph.qml
 singleton Generations 1.0 Generations.qml
 singleton Tasks      1.0 Tasks.qml
 singleton Pins       1.0 Pins.qml
