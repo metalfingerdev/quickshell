@@ -10,8 +10,10 @@ import "GlassSchema.js" as GlassSchema
 
 // What the windows and the island are made of: Hyprland's blur, shadow and the windows' opacity, and liquid
 // glass, the hyprglass plugin (hypr/modules/plugins.lua loads it when nixos-dotfiles built it for this
-// Hyprland). Settings sets them at runtime (hyprctl eval), and Prefs keeps them in settings.json. A config
-// reload puts look.lua's and plugins.lua's values back, so they go back in after one, and at start.
+// Hyprland). Prefs keeps them in settings.json. hyprglass only takes preset() and layer() while the config
+// loads (at runtime they are queued and dropped), so everything is also written to ~/.config/island/
+// hyprland.lua, which hypr's hyprland.lua runs last, and a change to those lines reloads Hyprland. The
+// rest goes in at once with hyprctl eval.
 //
 // `hg` and `hl` are the free-form part: { shared: {key: value}, dark: {...}, light: {...} }, hyprglass's
 // settings and any Hyprland option (the mode's table wins). ISLAND_DRY=1 sends nothing (test instances).
@@ -84,16 +86,28 @@ Singleton {
                                  windows: tables("windows"), island: tables("island"),
                                  windowBlur: windowBlur, islandBlur: islandBlur }).forEach(l => out.push(l))
         }
-        return out.join("; ")
+        return out
     }
     // An eval may count as a reload: the one that follows our own is ours, and isn't answered again.
     property double applied: 0
-    function apply() {
-        const code = lua()
-        if (dry || code === "") return
+    readonly property var loadOnly: /^hl\.plugin\.hyprglass\.(preset|layer)\(/
+    function glassLines(text) { return text.split("\n").map(l => l.trim()).filter(l => loadOnly.test(l)).join("\n") }
+    // a drag sends one change at its end, not a reload per step
+    // and nothing before the probe has said whether the plugin is in, or the file loses its glass a moment
+    property bool probed: false
+    function apply() { if (!dry && probed) settle.restart() }
+    Timer { id: settle; interval: 300; onTriggered: root.send() }
+    function send() {
+        const lines = lua(), now = lines.filter(l => !loadOnly.test(l))
+        const glass = lines.filter(l => l.startsWith("hl.plugin.hyprglass"))
+        const text = "-- Written by the island's Settings (Glass.qml); edit it there, or delete this file.\n"
+            + lines.filter(l => !l.startsWith("hl.plugin.hyprglass")).join("\n")
+            + (glass.length ? "\nif hl.plugin.hyprglass then\n    " + glass.join("\n    ") + "\nend" : "") + "\n"
+        const old = store.text()
+        if (text !== old) store.setText(text)
         applied = Date.now()
-        setter.command = ["hyprctl", "eval", code]
-        setter.running = true
+        if (glassLines(text) !== glassLines(old)) { setter.command = ["hyprctl", "reload"]; setter.running = true }
+        else if (now.length) { setter.command = ["hyprctl", "eval", now.join("; ")]; setter.running = true }
     }
     function readDescriptions() { if (!dry && descriptions.length === 0) describe.running = true }
 
@@ -121,6 +135,7 @@ Singleton {
         stdout: StdioCollector {
             onStreamFinished: {
                 try { root.available = typeof JSON.parse(text) === "object" } catch (e) { root.available = false }
+                root.probed = true
                 root.apply()
             }
         }
@@ -132,6 +147,7 @@ Singleton {
             onStreamFinished: { try { root.descriptions = JSON.parse(text) } catch (e) {} }
         }
     }
+    FileView { id: store; path: root.dry ? "" : Quickshell.env("HOME") + "/.config/island/hyprland.lua"; blockLoading: true }
     // the island takes the windows' opacity, so it's read again once Hyprland has the new one
     Process { id: setter; onExited: Desktops.readOpacity() }
 }
