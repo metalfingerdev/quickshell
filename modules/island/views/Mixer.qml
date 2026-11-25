@@ -25,6 +25,7 @@ Item {
             icon: "expand_more"
             text: Audio.label(devices.current)
             implicitHeight: 40
+            shortcut: "o"
             onClicked: menu.open = !menu.open
         }
         Menu {

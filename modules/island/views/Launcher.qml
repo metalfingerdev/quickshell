@@ -275,13 +275,21 @@ Item {
     }
 
     implicitWidth: 880
-    implicitHeight: 20 + bar.height + 12 + (results.length === 0 ? 56 : emojiMode ? grid.height + 44 : list.height) + 18
+    implicitHeight: 20 + bar.height + 12 + (results.length === 0 ? 56 : emojiMode ? grid.height + 44 : list.height) + 18 + (hints.visible ? 34 : 0)
 
     BackButton {
         id: back
         x: 20
         anchors.verticalCenter: bar.verticalCenter
         onClicked: Engine.back()
+    }
+
+    // under the results, while the keyboard is in use (the field is where you type, so these are all there is)
+    KeyHints {
+        id: hints
+        x: 36; y: root.implicitHeight - 34
+        width: parent.width - 72
+        keys: [["↑ ↓", "choose"], ["↵", "open"], ["Tab", "filter"], ["Ctrl P", "pin"], ["Esc", "close"]]
     }
 
     SearchBar {

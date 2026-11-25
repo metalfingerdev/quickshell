@@ -61,6 +61,7 @@ Item {
                 implicitHeight: 48
                 icon: "delete_sweep"
                 text: "Clear"
+                shortcut: "x"
                 onClicked: ClipHistory.wipe()
             }
         }

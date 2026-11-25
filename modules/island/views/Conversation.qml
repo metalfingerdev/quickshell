@@ -265,6 +265,12 @@ Item {
                         Item {
                             width: parent.width
                             height: 24
+                            activeFocusOnTab: true
+                            function activate() { Agent.messages.setProperty(msg.index, "open", !msg.open) }
+                            Accessible.role: Accessible.Button
+                            Accessible.name: "Thinking"
+                            Accessible.onPressAction: activate()
+                            FocusRing { on: parent.activeFocus && Config.focusVisible }
 
                             Row {
                                 anchors.verticalCenter: parent.verticalCenter
@@ -284,7 +290,7 @@ Item {
                                     color: Config.dim
                                 }
                             }
-                            ClickArea { onClicked: Agent.messages.setProperty(msg.index, "open", !msg.open) }
+                            ClickArea { onClicked: parent.activate() }
                         }
                         Label {
                             visible: !msg.open && msg.thinkingNow

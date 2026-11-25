@@ -6,6 +6,7 @@ default.
 | Command | Effect |
 |---|---|
 | `qs ipc call island open <name>` | pin a view, centred horizontally at the top gap. Opening the open view closes it |
+| `qs ipc call island editControls` | the Control Centre, in Edit: add, take off and move its modules (Super+Shift+G) |
 | `qs ipc call island launch <filter>` | the launcher on a filter: `all`, `apps`, `files`, `actions`, `clipboard`, `emoji` (Super+.) |
 | `qs ipc call island cycle <name> <1\|-1>` | as Alt+Tab, with Super held: the first call opens the view, the next ones move on (`-1`: back), and letting go of Super picks what was reached. `workspaces`, `wallpapers` and `clipboard` take part (`Held.qml`, which hears Super through Hyprland's global shortcut `quickshell:island-super`) |
 | `qs ipc call island alert <name>` | raise the view as a toast (priority and queue rules apply) |

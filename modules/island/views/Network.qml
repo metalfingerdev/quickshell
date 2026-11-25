@@ -303,6 +303,12 @@ Item {
                             required property var modelData
                             width: facts.width
                             height: 32
+                            activeFocusOnTab: true
+                            function activate() { Toggles.launch(["wl-copy", "--", fact.modelData[1]]); done.restart() }
+                            Accessible.role: Accessible.Button
+                            Accessible.name: "Copy " + fact.modelData[0]
+                            Accessible.onPressAction: activate()
+                            FocusRing { on: fact.activeFocus && Config.focusVisible }
 
                             Label { anchors.verticalCenter: parent.verticalCenter; width: 4 * Config.spaceXl; text: fact.modelData[0]; color: Config.dim }
                             Label {
@@ -314,13 +320,13 @@ Item {
                             Icon {
                                 id: copied
                                 anchors { right: parent.right; verticalCenter: parent.verticalCenter }
-                                visible: copyArea.containsMouse || done.running
+                                visible: copyArea.containsMouse || done.running || fact.activeFocus
                                 name: done.running ? "check" : "content_copy"
                                 color: done.running ? Config.good : Config.dim
                             }
                             ClickArea {
                                 id: copyArea
-                                onClicked: { Toggles.launch(["wl-copy", "--", fact.modelData[1]]); done.restart() }
+                                onClicked: fact.activate()
                             }
                             Timer { id: done; interval: 1500 }
                         }

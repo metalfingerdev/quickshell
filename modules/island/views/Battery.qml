@@ -163,7 +163,7 @@ Item {
         Segmented {
             visible: Engine.pinned && Toggles.profile !== ""
             width: parent.width
-            options: Toggles.profiles
+            options: Toggles.profiles.map((p, i) => Object.assign({ shortcut: String(i + 1) }, p))      // 1, 2, 3
             current: Toggles.profile
             onPicked: key => Toggles.setProfile(key)
         }
