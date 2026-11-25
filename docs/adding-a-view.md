@@ -35,7 +35,12 @@ The contract:
   the roles `Config.surface`, `container`, `high`, `primary` / `primaryInk` (text on primary),
   `secondary` / `secondaryInk`, `text`, `dim`, `outline`, and `Config.font`, `Config.body`,
   `Config.title`, `Config.radius`, ... so the view follows the palette. Never hard-code a colour.
-  `Config.state(base, ink, hovered, pressed)` gives the hover/press state layer. Reuse the components
+  `Config.state(base, ink, hovered, pressed)` gives the hover/press state layer.
+  Spacing is `Config.spaceXs/S/M/L/Xl` (4, 8, 12, 16, 24: margins, padding and gaps sit on that grid) and
+  state-layer fades take `Config.durationFast` (120 ms; `durationMedium` is 200 ms for a control changing
+  size). The island's own morph uses `Config.motionMs`. No overshoot easings (`OutBack` and friends).
+  `node modules/tests/lint-views.js` checks all of it, and that a panel has a `Header`, `KeyHints` and, if it
+  shows a list, an `EmptyState`. Reuse the components
   (`Header`, `QuickTile`, `Slider`, `Segmented`, `Chip`, `SearchBar`, `ListEntry`, `Pill`, `Toggle`,
   `ScrollList`, `Progress`, `Icon`, ...) and the shared parts (`import qs.modules.parts`:
   `MediaCard`, `NotificationCard`, `StatusGroup`, `WorkspaceDots`, `WallpaperThumb`). No view file

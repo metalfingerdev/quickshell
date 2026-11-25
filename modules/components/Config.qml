@@ -263,6 +263,19 @@ QtObject {
     property var curve: [0.22, 1, 0.36, 1, 1, 1]     // Easing.BezierSpline: x1, y1, x2, y2, end
     property int motionMs: 350
 
+    // Spacing, on a 4 px grid: margins, padding and gaps take one of these (modules/tests/lint-views.js
+    // flags a literal off the scale). Radii and font sizes have their own tokens above.
+    readonly property int spaceXs: 4
+    readonly property int spaceS: 8
+    readonly property int spaceM: 12
+    readonly property int spaceL: 16
+    readonly property int spaceXl: 24
+
+    // Durations for what isn't the island's own morph (that is motionMs): state layers (hover, press, focus)
+    // fade in durationFast, a control changing size or position in durationMedium.
+    readonly property int durationFast: 120
+    readonly property int durationMedium: 200
+
     // the "Dark theme" tile: the dark palette to come back to from a light one
     property string lastDark: "teal"
     onNameChanged: if (palettes[name]?.dark) lastDark = name
