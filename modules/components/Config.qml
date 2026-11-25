@@ -324,7 +324,7 @@ QtObject {
     readonly property int smallRadius: tv("smallRadius", Math.round(12 * roundness))
 
     property string style: "pill"
-    property string handle: "strip"
+    property string handle: "none"
     property bool activateLinux: true
     // the tray's icons in Expanded: one colour, as Apple's menu bar extras are, or the apps' own
     property bool trayMono: true
