@@ -148,36 +148,36 @@ Rectangle {
                 onClicked: mouse => Engine.open(Engine.View.System, sceneX(mouse))
             }
 
-        Row {
-            id: meters
-            width: parent.width
-            spacing: Config.spaceM
+            Row {
+                id: meters
+                width: parent.width
+                spacing: Config.spaceM
 
-            Meter { icon: "developer_board"; value: Math.round(SysStats.cpu * 100) + "%"; fraction: SysStats.cpu }
-            Meter { icon: "memory"; value: SysStats.memGB.toFixed(1) + " GB"; fraction: SysStats.mem }
-            Meter {
-                icon: "thermostat"
-                value: SysStats.temp > 0 ? Math.round(SysStats.temp) + " °C" : "—"
-                fraction: SysStats.temp > 0 ? SysStats.temp / 100 : -1
-                tone: SysStats.temp >= 85 ? Config.bad : SysStats.temp >= 70 ? Config.warn : Config.primary
-            }
-            Column {
-                width: (column.width - 3 * 12) / 4
-                spacing: 0
+                Meter { icon: "developer_board"; value: Math.round(SysStats.cpu * 100) + "%"; fraction: SysStats.cpu }
+                Meter { icon: "memory"; value: SysStats.memGB.toFixed(1) + " GB"; fraction: SysStats.mem }
+                Meter {
+                    icon: "thermostat"
+                    value: SysStats.temp > 0 ? Math.round(SysStats.temp) + " °C" : "—"
+                    fraction: SysStats.temp > 0 ? SysStats.temp / 100 : -1
+                    tone: SysStats.temp >= 85 ? Config.bad : SysStats.temp >= 70 ? Config.warn : Config.primary
+                }
+                Column {
+                    width: (column.width - 3 * 12) / 4
+                    spacing: 0
 
-                Label {
-                    text: "↓ " + SysStats.rate(SysStats.rx)
-                    font.pixelSize: Config.small
-                    font.features: { "tnum": 1 }
-                }
-                Label {
-                    text: "↑ " + SysStats.rate(SysStats.tx)
-                    color: Config.dim
-                    font.pixelSize: Config.small
-                    font.features: { "tnum": 1 }
+                    Label {
+                        text: "↓ " + SysStats.rate(SysStats.rx)
+                        font.pixelSize: Config.small
+                        font.features: { "tnum": 1 }
+                    }
+                    Label {
+                        text: "↑ " + SysStats.rate(SysStats.tx)
+                        color: Config.dim
+                        font.pixelSize: Config.small
+                        font.features: { "tnum": 1 }
+                    }
                 }
             }
-        }
         }
     }
 }

@@ -152,7 +152,7 @@ Item {
 
         EmptyState {
             width: parent.width
-            visible: Engine.pinned && Toggles.profile === ""
+            visible: Engine.pinned && !Toggles.has("powerprofilesctl")
             compact: true
             icon: "speed"
             title: "Power profiles unavailable"
@@ -170,7 +170,7 @@ Item {
         KeyHints {
             visible: Engine.pinned
             width: parent.width
-            keys: [["[ ]", "brightness"], ["⌫", "back"]]
+            keys: Backlight.available ? [["[ ]", "brightness"], ["⌫", "back"]] : [["⌫", "back"]]
         }
     }
 }

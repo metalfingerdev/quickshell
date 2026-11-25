@@ -9,7 +9,7 @@ import qs.modules.services
 Item {
     id: root
 
-    readonly property int pad: 24
+    readonly property int pad: Config.spaceXl
 
     Component.onCompleted: SysStats.watch(true)
     Component.onDestruction: SysStats.watch(false)
@@ -119,10 +119,12 @@ Item {
         ListEntry {
             width: parent.width
             icon: "psychology"
-            title: !Agent.reachable ? "Local model: Ollama isn't running"
+            title: !Agent.ready ? "Local model: checking…"
+                 : !Agent.reachable ? "Local model: Ollama isn't running"
                  : Agent.inUse === "" ? "Local model: none installed"
                  : "Local model: " + Agent.inUse
-            subtitle: !Agent.reachable ? "The assistant can't answer until it is started."
+            subtitle: !Agent.ready ? ""
+                    : !Agent.reachable ? "The assistant can't answer until it is started."
                     : Agent.inUse === "" ? "Models are managed in the flake's ollama module."
                     : Agent.loaded ? "In memory, ready" : "Not loaded: the first answer is slower"
         }

@@ -1,7 +1,8 @@
 // Run: node modules/tests/lint-views.js [--strict]
 // Style lint for views/, parts/ and components/. No dependencies. Prints a count per rule and fails on any violation (FAIL_ON).
-// Every violation is a line you can fix, or, for a
-// file that really is different, an ALLOW entry with the reason.
+// Every violation is a line you can fix, or, for a file that really is different, an ALLOW entry with the reason.
+// Limits: it reads margins/padding/spacing and duration written as a plain positive number (a negative one is an
+// optical overlap on purpose), not x/y, width expressions or `property int pad`.
 const fs = require("fs"), path = require("path")
 const root = path.join(__dirname, "..")
 const dirs = ["island/views", "parts", "components"]

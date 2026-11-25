@@ -8,7 +8,7 @@ import qs.modules.services
 Item {
     id: root
 
-    readonly property int pad: 24
+    readonly property int pad: Config.spaceXl
 
     function dayName(date, index) {
         if (index === 0) return "Today"

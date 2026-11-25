@@ -8,7 +8,7 @@ import qs.modules.services
 Item {
     id: root
 
-    readonly property int pad: 24
+    readonly property int pad: Config.spaceXl
 
     function dayLabel(seconds) {
         const d = new Date(seconds * 1000), t = new Date(Calendar.now * 1000)
