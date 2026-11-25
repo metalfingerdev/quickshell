@@ -35,9 +35,9 @@ Rectangle {
 
     readonly property int leadSize: flat ? 40 : 44
     readonly property color ink: lit ? Config.primaryInk : active ? Config.secondaryInk : Config.text
-    // where it sits in its list: the ends round, the joints nearly square
-    readonly property bool first: !flat || y < 0.5
-    readonly property bool last: !flat || !parent || y + height > parent.height - 0.5
+    // where it sits in its list: the ends round, the joints nearly square; a ListSection's title and footer are joints too
+    readonly property bool first: !flat || (y < 0.5 && !(parent?.parent?.cappedTop ?? false))
+    readonly property bool last: !flat || !parent || (y + height > parent.height - 0.5 && !(parent.parent?.cappedBottom ?? false))
     readonly property real outer: Config.cardRadius
     implicitWidth: 320
     width: flat && parent ? parent.width : implicitWidth

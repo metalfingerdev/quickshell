@@ -2,7 +2,8 @@ import QtQuick
 
 // What a panel shows instead of an empty list, or when the service behind it isn't there: say what is
 // missing and why, and offer the one action that helps. `compact` is a single line for a part of a panel.
-Item {
+// On a card of its own, as everything on the island is.
+Rectangle {
     id: root
 
     property string icon: "inbox"
@@ -14,12 +15,14 @@ Item {
     signal action()
 
     implicitWidth: 320
-    implicitHeight: col.implicitHeight + (compact ? 0 : 2 * Config.spaceXl)
+    implicitHeight: col.implicitHeight + 2 * (compact ? Config.spaceM : Config.spaceXl)
+    radius: Config.cardRadius
+    color: Config.tile
 
     Column {
         id: col
         anchors.centerIn: parent
-        width: Math.min(parent.width, 380)
+        width: Math.min(parent.width - 2 * Config.spaceL, 380)
         spacing: Config.spaceS
 
         Icon {

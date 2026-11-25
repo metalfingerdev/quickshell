@@ -1,9 +1,9 @@
 import QtQuick
 import QtQuick.Layouts
 
-// A navigation bar, after Apple's: a glass back button, the panel's title (large when it is a top-level
-// panel), glass buttons at the far end. No card behind it. Components don't know the Engine: wire onBack yourself.
-Item {
+// A navigation bar: the back button, the panel's title, its actions at the far end, on a capsule of its
+// own so the title reads on any glass. Components don't know the Engine: wire onBack yourself.
+Rectangle {
     id: root
 
     property string icon: ""            // kept for the panels that name theirs; it is drawn small, in the primary colour
@@ -14,9 +14,11 @@ Item {
     signal back()
 
     implicitHeight: 56
+    radius: height / 2
+    color: Config.tile
 
     RowLayout {
-        anchors.fill: parent
+        anchors { fill: parent; leftMargin: root.showBack ? Config.spaceS : Config.spaceL; rightMargin: Config.spaceS }
         spacing: Config.spaceM
 
         BackButton {

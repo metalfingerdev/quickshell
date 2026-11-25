@@ -43,3 +43,4 @@ Equalizer    1.0 Equalizer.qml
 SettingTile  1.0 SettingTile.qml
 Amount       1.0 Amount.qml
 TintBar      1.0 TintBar.qml
+Card         1.0 Card.qml
