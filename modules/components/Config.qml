@@ -340,7 +340,7 @@ QtObject {
     property real windowOpacity: 1
     // The island's own opacity, -1 = the windows'. All the way to 0, where the island draws nothing and
     // so the glass (Hyprland's blur, hyprglass) has no shape to follow.
-    property real islandOpacity: -1
+    property real islandOpacity: 0.2
     readonly property real islandAlpha: Math.max(0, Math.min(1, islandOpacity < 0 ? windowOpacity : islandOpacity))
     readonly property color island: Qt.rgba(surface.r, surface.g, surface.b, islandAlpha)
     // the island's shadow, 0 (none) .. 1 (as drawn), and more if wanted
