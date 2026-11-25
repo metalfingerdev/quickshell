@@ -1,13 +1,12 @@
 import QtQuick
 import qs.modules.components
-import qs.modules.parts
+import qs.modules.services
 
-Item {
-    implicitWidth: 440
-    implicitHeight: 72
-
-    VolumeSlider {
-        anchors { fill: parent; margins: Config.spaceM }
-        activeFocusOnTab: false
-    }
+Hud {
+    readonly property int level: Audio.level(Audio.sink)
+    readonly property bool silent: Audio.isMuted(Audio.sink)
+    icon: Audio.levelIcon(level, silent)
+    value: silent ? 0 : level / 100
+    valueText: silent ? "Muted" : level + "%"
+    onStepped: d => Audio.setLevel(Audio.sink, Math.max(0, Math.min(100, level + 5 * d)))
 }

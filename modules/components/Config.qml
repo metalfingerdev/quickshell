@@ -308,6 +308,8 @@ QtObject {
     property string style: "pill"
     property string handle: "strip"
     property bool activateLinux: true
+    // the tray's icons in Expanded: one colour, as Apple's menu bar extras are, or the apps' own
+    property bool trayMono: true
 
     // Glass is Hyprland's (hypr/modules/look.lua): every window is drawn at decoration.active_opacity over
     // its blur, and layers named glass:* get the same blur. The island is one (Bar), so it takes

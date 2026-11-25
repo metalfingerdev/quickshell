@@ -125,8 +125,8 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
             width: 22
             height: 22
-            radius: 11
-            color: Config.container
+            radius: 6
+            color: Config.fill3
 
             CoverImage {
                 id: cover
@@ -170,6 +170,21 @@ Item {
             size: 16
             filled: true
             color: Config.dim
+        }
+
+        // an app that needs attention, the only tray app Compact shows: its icon and, past one, a count
+        Row {
+            visible: Tray.attention.length > 0
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: Config.spaceXs
+            TrayIcon { size: 22; app: Tray.attention[0] ?? null; visible: app !== null }
+            Label {
+                visible: Tray.attention.length > 1
+                anchors.verticalCenter: parent.verticalCenter
+                text: Tray.attention.length
+                color: Config.label2
+                font.pixelSize: Config.small
+            }
         }
 
         Icon {

@@ -21,6 +21,10 @@ Singleton {
     readonly property var items: SystemTray.items.values
         .filter(i => i.status !== Status.Passive && !patterns.some(p => key(i).includes(p)))
 
+    // Apple shows a menu bar extra only when it matters: an app that says it needs attention is the one
+    // Compact shows, and Expanded's strip puts those first.
+    readonly property var attention: items.filter(i => i.status === Status.NeedsAttention)
+    readonly property var strip: attention.concat(items.filter(i => i.status !== Status.NeedsAttention)).slice(0, 6)
     // the one whose menu the Tray view shows; null lists them all
     property var current: null
 

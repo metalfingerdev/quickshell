@@ -13,3 +13,4 @@ WallpaperThumb   1.0 WallpaperThumb.qml
 VolumeSlider     1.0 VolumeSlider.qml
 BrightnessSlider 1.0 BrightnessSlider.qml
 DateStamp        1.0 DateStamp.qml
+TrayIcon     1.0 TrayIcon.qml

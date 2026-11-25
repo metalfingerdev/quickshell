@@ -39,3 +39,4 @@ ColourBar    1.0 ColourBar.qml
 ListSection  1.0 ListSection.qml
 Menu         1.0 Menu.qml
 Sheet        1.0 Sheet.qml
+Hud          1.0 Hud.qml

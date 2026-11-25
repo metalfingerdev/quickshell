@@ -599,6 +599,15 @@ var entries = [
   "ini": "theme/roundness"
  },
  {
+  "key": "island.trayMono",
+  "t": "Config",
+  "p": "trayMono",
+  "m": "",
+  "kind": "bool",
+  "label": "Tray icons in one colour",
+  "group": "island"
+ },
+ {
   "key": "island.activateLinux",
   "t": "Config",
   "p": "activateLinux",
