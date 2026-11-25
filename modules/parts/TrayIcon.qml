@@ -13,16 +13,16 @@ Rectangle {
 
     required property var app
     property int size: 28
-    readonly property bool urgent: app.status === Status.NeedsAttention
+    readonly property bool urgent: app?.status === Status.NeedsAttention
     readonly property bool keyboardSelected: activeFocus && Config.focusVisible
 
     function activate() {
-        if (app.hasMenu) { Tray.current = app; Engine.open(Engine.View.Tray) }
-        else Engine.closeThen(() => app.activate())
+        if (app?.hasMenu) { Tray.current = app; Engine.open(Engine.View.Tray) }
+        else Engine.closeThen(() => app?.activate())
     }
     activeFocusOnTab: true
     Accessible.role: Accessible.Button
-    Accessible.name: Tray.name(app)
+    Accessible.name: app ? Tray.name(app) : ""
     Accessible.onPressAction: activate()
 
     width: size; height: size; radius: size / 2
@@ -34,7 +34,7 @@ Rectangle {
         anchors.centerIn: parent
         implicitSize: Math.round(root.size * 0.6)
         asynchronous: true
-        source: root.app.icon
+        source: root.app?.icon ?? ""
         layer.enabled: Config.trayMono && !root.urgent
         layer.effect: MultiEffect { saturation: -1 }
     }
@@ -53,7 +53,7 @@ Rectangle {
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
         acceptedButtons: Qt.LeftButton | Qt.RightButton
-        onClicked: mouse => mouse.button === Qt.RightButton ? root.app.secondaryActivate() : root.activate()
+        onClicked: mouse => mouse.button === Qt.RightButton ? root.app?.secondaryActivate() : root.activate()
     }
     FocusRing { on: root.keyboardSelected }
 }

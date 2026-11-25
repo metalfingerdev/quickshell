@@ -894,6 +894,18 @@ var entries = [
   "ini": "theme/firstDay"
  },
  {
+  "key": "alerts.powerCountdown",
+  "t": "Config",
+  "p": "powerCountdown",
+  "m": "",
+  "kind": "number",
+  "label": "Shut-down countdown (seconds, 0: at once)",
+  "group": "alerts",
+  "min": 0,
+  "max": 600,
+  "step": 5
+ },
+ {
   "key": "alerts.levelToasts",
   "t": "Config",
   "p": "levelToasts",

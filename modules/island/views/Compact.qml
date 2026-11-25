@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Widgets
 import qs.modules.island
+import qs.modules.parts
 import qs.modules.components
 import qs.modules.services
 

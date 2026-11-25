@@ -353,6 +353,8 @@ QtObject {
     readonly property string timeFormat: clock24 ? "HH:mm" : "h:mm AP"
     property int firstDay: -1
     // the toasts that only echo a key: volume, brightness and the microphone; and the workspace switch
+    // seconds the shut-down sheet counts before it runs by itself; 0 runs at once
+    property int powerCountdown: 60
     property bool levelToasts: true
     property bool switcherToasts: true
 
