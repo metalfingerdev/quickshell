@@ -22,7 +22,7 @@ FocusScope {
     property var controlKeys: []
     property int fieldSize: 16
     // the capsule's colour: the lock screen's is see-through, over its picture
-    property color fill: Config.fill2
+    property color fill: Config.raised
     default property alias trailing: side.data
 
     signal key()
@@ -65,7 +65,7 @@ FocusScope {
         width: visible ? implicitWidth : 0
         name: root.icon
         size: Math.round(root.height * 0.4)
-        color: Config.label2
+        color: Config.dim
     }
 
     TextInput {

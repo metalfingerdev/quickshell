@@ -21,7 +21,7 @@ Flow {
                 width: Math.max(22, cap.implicitWidth + 12)
                 height: 22
                 radius: 6
-                color: Config.high
+                color: Config.raised
                 border.width: 1
                 border.color: Config.outline
 

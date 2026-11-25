@@ -34,7 +34,7 @@ FocusScope {
         height: column.implicitHeight + 2 * Config.spaceL
         y: root.open ? parent.height - height - Config.spaceL : parent.height
         radius: Config.cardRadius
-        color: Config.high
+        color: Config.raised
         Behavior on y { Motion {} }
 
         MouseArea { anchors.fill: parent }          // a click on the panel isn't a click on the scrim

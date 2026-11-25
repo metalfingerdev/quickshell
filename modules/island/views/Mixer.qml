@@ -156,7 +156,7 @@ Item {
                             visible: app.iconPath === ""
                             anchors.fill: parent
                             radius: 22
-                            color: Config.high
+                            color: Config.raised
 
                             Icon {
                                 anchors.centerIn: parent

@@ -54,7 +54,7 @@ Item {
                 visible: text !== ""
                 text: root.subtitle
                 elide: Text.ElideRight
-                color: Config.label2
+                color: Config.dim
                 font.pixelSize: Config.small + 1
             }
         }

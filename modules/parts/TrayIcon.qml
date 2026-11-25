@@ -27,7 +27,7 @@ Rectangle {
     Accessible.onPressAction: activate()
 
     width: size; height: size; radius: size / 2
-    color: Config.state(bare ? "transparent" : Config.fill3, Config.text, area.containsMouse, area.pressed || keyboardSelected)
+    color: Config.state(bare ? "transparent" : Config.tile, Config.text, area.containsMouse, area.pressed || keyboardSelected)
     Behavior on color { ColorAnimation { duration: Config.durationFast } }
 
     IconImage {

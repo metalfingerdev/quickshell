@@ -1,9 +1,13 @@
 import QtQuick
 import qs.modules.components
-import qs.modules.services
+import qs.modules.parts
 
-Hud {
-    icon: Backlight.icon
-    value: Backlight.percent / 100
-    onStepped: d => Backlight.set(Math.max(0, Math.min(100, Backlight.percent + 5 * d)))
+Item {
+    implicitWidth: 440
+    implicitHeight: 72
+
+    BrightnessSlider {
+        anchors { fill: parent; margins: Config.spaceM }
+        activeFocusOnTab: false
+    }
 }

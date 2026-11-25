@@ -78,7 +78,7 @@ Item {
                         Rectangle {
                             anchors.horizontalCenter: parent.horizontalCenter
                             width: 56; height: 56; radius: 28
-                            color: Config.fill2
+                            color: Config.raised
 
                             Icon {
                                 anchors.centerIn: parent
@@ -123,7 +123,7 @@ Item {
             width: parent.width
             wrapMode: Text.WordWrap
             text: "The session ends when the countdown does."
-            color: Config.label2
+            color: Config.dim
         }
         Row {
             spacing: Config.spaceM

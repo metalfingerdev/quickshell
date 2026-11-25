@@ -27,6 +27,7 @@ Scope {
 
     readonly property bool notch: Config.style === "notch"
     readonly property real gap: Config.tv("gap", notch ? 0 : 8)
+    Binding { target: Engine; property: "room"; value: root.screen.height - 2 * root.gap - 24; when: root.active }
     readonly property real edgePad: Config.tv("edgePad", 8)
     readonly property real hotZone: Config.tv("hotZone", 4)
     readonly property bool debug: Engine.debug

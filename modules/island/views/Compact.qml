@@ -33,7 +33,7 @@ Item {
             Rectangle {
                 anchors.verticalCenter: parent.verticalCenter
                 width: 28; height: 4; radius: 2
-                color: Config.container
+                color: Config.tile
                 clip: true
 
                 Rectangle {
@@ -127,7 +127,7 @@ Item {
             width: 22
             height: 22
             radius: 6
-            color: Config.fill3
+            color: Config.tile
 
             CoverImage {
                 id: cover
@@ -169,7 +169,7 @@ Item {
             name: "pause"
             size: 14
             filled: true
-            color: Config.label2
+            color: Config.dim
         }
 
         Icon {

@@ -16,10 +16,9 @@ ClippingRectangle {
     Component.onDestruction: Players.watch(false)
 
     implicitWidth: 420
-    implicitHeight: compact ? 68 : 164
+    implicitHeight: compact ? 84 : 164
     radius: Config.cardRadius
-    // compact (Expanded) it sits on the island as the rest of the peek does: no card, no backdrop
-    color: compact ? "transparent" : Config.container
+    color: Config.tile
 
     // the scrim keeps the text readable over the art
     CoverImage {
@@ -31,7 +30,7 @@ ClippingRectangle {
     MultiEffect {
         anchors.fill: parent
         source: backdrop
-        visible: backdrop.status === Image.Ready && !root.compact
+        visible: backdrop.status === Image.Ready
         blurEnabled: true
         blur: 1.0
         blurMax: 40
@@ -40,11 +39,11 @@ ClippingRectangle {
     }
     Rectangle {
         anchors.fill: parent
-        visible: backdrop.status === Image.Ready && !root.compact
+        visible: backdrop.status === Image.Ready
         gradient: Gradient {
             orientation: Gradient.Horizontal
-            GradientStop { position: 0.0; color: Qt.rgba(Config.container.r, Config.container.g, Config.container.b, 0.88) }
-            GradientStop { position: 1.0; color: Qt.rgba(Config.container.r, Config.container.g, Config.container.b, 0.45) }
+            GradientStop { position: 0.0; color: Qt.rgba(Config.tile.r, Config.tile.g, Config.tile.b, 0.88) }
+            GradientStop { position: 1.0; color: Qt.rgba(Config.tile.r, Config.tile.g, Config.tile.b, 0.45) }
         }
     }
 
@@ -54,23 +53,22 @@ ClippingRectangle {
 
         ClippingRectangle {
             id: thumb
-            x: Config.spaceXs
+            x: 14
             anchors.verticalCenter: parent.verticalCenter
-            width: 52
-            height: 52
+            width: 56
+            height: 56
             radius: Config.smallRadius
-            color: Config.high
+            color: Config.raised
 
             CoverImage {
                 id: thumbArt
                 source: root.player?.trackArtUrl ?? ""
                 sourceSize: Qt.size(96, 96)
             }
-            Icon {
+            Equalizer {
                 anchors.centerIn: parent
                 visible: thumbArt.status !== Image.Ready
-                name: "music_note"
-                size: 22
+                running: Players.playing
                 color: Config.primary
             }
         }
@@ -106,12 +104,11 @@ ClippingRectangle {
             spacing: Config.spaceHair
 
             Pill { kind: "text"; icon: "skip_previous"; iconSize: 22; enabled: root.player?.canGoPrevious ?? false; onClicked: Players.previous() }
-            // bare glyphs, the middle one larger, as Apple's transport is
             Pill {
                 implicitHeight: 48
-                kind: "text"
+                kind: "filled"
                 icon: Players.playing ? "pause" : "play_arrow"
-                iconSize: 30
+                iconSize: 22
                 enabled: Players.canToggle
                 onClicked: Players.toggle()
             }

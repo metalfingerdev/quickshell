@@ -1,8 +1,7 @@
 import QtQuick
-import Quickshell.Widgets
 
-// A titled platter of rows with hairlines between them (each flat ListEntry draws its own), and an optional
-// footer under it: System Settings' inset grouped list. Rows go in as children; give them `flat: true`.
+// A titled list of rows, as a connected list of tiles: each flat ListEntry is a tile of its own, the
+// Control Centre's joint apart, rounded where the list ends. An optional footer under it.
 Column {
     id: root
 
@@ -19,16 +18,10 @@ Column {
         leftPadding: Config.spaceM
     }
 
-    ClippingRectangle {
+    Column {
+        id: body
         width: parent.width
-        height: body.implicitHeight
-        radius: Config.cardRadius
-        color: Config.fill3
-
-        Column {
-            id: body
-            width: parent.width
-        }
+        spacing: 4
     }
 
     Label {
@@ -38,7 +31,7 @@ Column {
         rightPadding: Config.spaceM
         wrapMode: Text.WordWrap
         text: root.footer
-        color: Config.label2
+        color: Config.dim
         font.pixelSize: Config.small
     }
 }

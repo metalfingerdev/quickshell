@@ -110,7 +110,7 @@ Item {
                 width: 240
                 height: 240
                 radius: Config.cardRadius + 4
-                color: Config.container
+                color: Config.tile
 
                 Icon {
                     anchors.centerIn: parent
@@ -344,7 +344,7 @@ Item {
                         lead: Component {
                             ClippingRectangle {
                                 width: 44; height: 44; radius: 12
-                                color: Config.high
+                                color: Config.raised
                                 CoverImage {
                                     source: entry.modelData.trackArtUrl ?? ""
                                     sourceSize: Qt.size(88, 88)

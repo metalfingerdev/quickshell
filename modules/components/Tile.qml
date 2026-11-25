@@ -19,7 +19,7 @@ Rectangle {
     Accessible.onPressAction: activate()
 
     radius: Config.cardRadius
-    color: Config.state(tint.a > 0 ? tint : Config.fill3, Config.text, area.containsMouse, area.pressed || keyboardSelected)
+    color: Config.state(tint.a > 0 ? tint : Config.tile, Config.text, area.containsMouse, area.pressed || keyboardSelected)
     border.width: current ? 2 : 0
     border.color: Config.primary
     Behavior on color { ColorAnimation { duration: Config.durationFast } }

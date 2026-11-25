@@ -225,7 +225,7 @@ Item {
         Behavior on radius { Motion {} }
         scale: area.pressed ? 0.92 : 1
         Behavior on scale { NumberAnimation { duration: Config.durationFast; easing.type: Easing.OutCubic } }
-        color: Config.state(on ? Config.primary : Config.container, ink, area.containsMouse, area.pressed || keyboardSelected)
+        color: Config.state(on ? Config.primary : Config.tile, ink, area.containsMouse, area.pressed || keyboardSelected)
         Behavior on color { ColorAnimation { duration: Config.durationFast } }
         opacity: enabled ? 1 : 0.38
 
@@ -272,7 +272,7 @@ Item {
         activeFocusOnTab: true
         anchors.fill: parent
         radius: 22
-        color: Config.state(Config.container, Config.text, area.containsMouse, area.pressed || keyboardSelected)
+        color: Config.state(Config.tile, Config.text, area.containsMouse, area.pressed || keyboardSelected)
         Behavior on color { ColorAnimation { duration: Config.durationFast } }
         scale: area.pressed ? 0.97 : 1
         Behavior on scale { NumberAnimation { duration: Config.durationFast; easing.type: Easing.OutCubic } }
@@ -329,7 +329,7 @@ Item {
         Behavior on bottomRightRadius { Motion {} }
         scale: area.pressed ? 0.96 : 1
         Behavior on scale { NumberAnimation { duration: Config.durationFast; easing.type: Easing.OutCubic } }
-        color: Config.state(selected ? Config.primary : Config.container, ink, area.containsMouse, area.pressed || keyboardSelected)
+        color: Config.state(selected ? Config.primary : Config.tile, ink, area.containsMouse, area.pressed || keyboardSelected)
         Behavior on color { ColorAnimation { duration: Config.durationFast } }
 
         Row {
@@ -384,7 +384,7 @@ Item {
             radius: 22
             color: "transparent"
             border.width: slot.ring ? 3 : 2
-            border.color: slot.ring ? Config.primary : Config.label3
+            border.color: slot.ring ? Config.primary : Config.outline
         }
         Rectangle {
             visible: root.editing
@@ -542,7 +542,7 @@ Item {
                 activeFocusOnTab: true
                 anchors.fill: parent
                 radius: 28
-                color: Config.container
+                color: Config.tile
                 scale: wallArea.pressed ? 0.97 : 1
                 Behavior on scale { NumberAnimation { duration: Config.durationFast; easing.type: Easing.OutCubic } }
 

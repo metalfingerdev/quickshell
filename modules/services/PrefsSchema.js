@@ -557,45 +557,6 @@ var entries = [
   "res": "lv:secLight"
  },
  {
-  "key": "colours.levels.label2",
-  "t": "Config",
-  "p": "levels",
-  "m": "label2",
-  "kind": "number",
-  "label": "Secondary label alpha",
-  "group": "scheme",
-  "min": 0,
-  "max": 1,
-  "step": 0.005,
-  "res": "lv:label2"
- },
- {
-  "key": "colours.levels.label3",
-  "t": "Config",
-  "p": "levels",
-  "m": "label3",
-  "kind": "number",
-  "label": "Tertiary label alpha",
-  "group": "scheme",
-  "min": 0,
-  "max": 1,
-  "step": 0.005,
-  "res": "lv:label3"
- },
- {
-  "key": "colours.levels.label4",
-  "t": "Config",
-  "p": "levels",
-  "m": "label4",
-  "kind": "number",
-  "label": "Quaternary label alpha",
-  "group": "scheme",
-  "min": 0,
-  "max": 1,
-  "step": 0.005,
-  "res": "lv:label4"
- },
- {
   "key": "island.style",
   "t": "Config",
   "p": "style",

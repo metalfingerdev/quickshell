@@ -37,7 +37,7 @@ Item {
         height: root.seekable && (root.hovered || root.dragging || root.activeFocus) ? root.thickness * 1.5 : root.thickness
         anchors.verticalCenter: parent.verticalCenter
         radius: height / 2
-        color: Config.high
+        color: Config.raised
         Behavior on height { NumberAnimation { duration: Config.durationFast } }
 
         Rectangle {

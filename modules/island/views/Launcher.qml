@@ -368,7 +368,7 @@ Item {
             Rectangle {
                 anchors { fill: parent; margins: Config.spaceXs }
                 radius: Config.innerRadius
-                color: cell.current ? Config.secondary : cellArea.containsMouse ? Config.high : "transparent"
+                color: cell.current ? Config.secondary : cellArea.containsMouse ? Config.raised : "transparent"
                 Behavior on color { ColorAnimation { duration: Config.durationFast } }
             }
             // a kaomoji is long: it shrinks to its cell, and the line below shows it whole
@@ -456,7 +456,7 @@ Item {
                     visible: (row.modelData.picture ?? "") !== ""
                     anchors.fill: parent
                     radius: 22
-                    color: Config.high
+                    color: Config.raised
 
                     CoverImage {
                         source: row.modelData.picture ?? ""
@@ -474,7 +474,7 @@ Item {
                     visible: lead.appIcon === "" && (row.modelData.picture ?? "") === ""
                     anchors.fill: parent
                     radius: 22
-                    color: row.current ? Config.primary : Config.high
+                    color: row.current ? Config.primary : Config.raised
 
                     Icon {
                         anchors.centerIn: parent

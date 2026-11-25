@@ -20,7 +20,7 @@ Rectangle {
     implicitWidth: 420
     implicitHeight: 84
     radius: Config.cardRadius
-    color: "transparent"
+    color: Config.tile
 
     Rectangle {
         id: badge

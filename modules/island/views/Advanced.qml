@@ -98,7 +98,7 @@ Item {
         width: parent.width
         height: 56
         radius: Config.innerRadius + 4
-        color: Config.fill3
+        color: Config.tile
 
         Column {
             anchors { left: parent.left; leftMargin: Config.spaceL; right: control.left; rightMargin: Config.spaceM; verticalCenter: parent.verticalCenter }
@@ -153,7 +153,7 @@ Item {
                 visible: ["number", "colour", "text"].includes(entry.d.kind)
                 anchors.verticalCenter: parent.verticalCenter
                 width: 104; height: 36; radius: 18
-                color: Config.high
+                color: Config.raised
                 border.width: typed.activeFocus ? 2 : 0
                 border.color: Config.primary
                 Field {
@@ -256,7 +256,7 @@ Item {
 
         ScrollList {
             width: parent.width
-            maxHeight: 520
+            maxHeight: Math.min(520, Engine.room - 340)
             spacing: Config.spaceXs
             visible: root.rows.length > 0
 

@@ -28,7 +28,7 @@ Item {
     ClippingRectangle {
         anchors { fill: parent; margins: root.chosen ? 5 : 0 }
         radius: width / 2
-        color: root.palette?.high ?? Config.high
+        color: root.palette?.high ?? Config.raised
         border.width: 1
         border.color: Qt.rgba(Config.outline.r, Config.outline.g, Config.outline.b, 0.5)
 

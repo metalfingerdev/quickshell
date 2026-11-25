@@ -40,7 +40,7 @@ Rectangle {
     function label(key) {
         switch (key) {
         case "record":    return Toggles.recordTime
-        case "network":   return ""
+        case "network":   return Net.current ? Net.current.name : "Ethernet"
         case "bluetooth": {
             const bt = Bluez.connected[0] ?? null
             return !bt ? "" : bt.batteryAvailable ? Math.round(bt.battery * 100) + "%" : bt.name
@@ -88,9 +88,7 @@ Rectangle {
     implicitWidth: row.implicitWidth + 2 * pad
     implicitHeight: segmentHeight + 2 * pad
     radius: height / 2
-    // Tabs puts it on a platter like its other groups; in Expanded it sits on the island, bare
-    property bool platter: false
-    color: platter ? Config.state(Config.fill3, Config.text, back.containsMouse, back.pressed) : Config.layer(back.containsMouse, back.pressed)
+    color: Config.state(Config.tile, Config.text, back.containsMouse, back.pressed)
     Behavior on color { ColorAnimation { duration: Config.durationFast } }
 
     // the group's own pill: under the buttons, so it only sees what misses them
@@ -127,8 +125,11 @@ Rectangle {
 
                 width: iconOnly ? root.segmentHeight + (first && last ? 0 : 4) : content.implicitWidth + 26
                 height: root.segmentHeight
-                radius: height / 2
-                color: Config.layer(area.containsMouse, area.pressed || ring)
+                topLeftRadius: first ? height / 2 : 6
+                bottomLeftRadius: first ? height / 2 : 6
+                topRightRadius: last ? height / 2 : 6
+                bottomRightRadius: last ? height / 2 : 6
+                color: Config.state(Config.raised, Config.text, area.containsMouse, area.pressed || ring)
                 Behavior on color { ColorAnimation { duration: Config.durationFast } }
 
                 activeFocusOnTab: true
@@ -169,7 +170,10 @@ Rectangle {
                 Rectangle {
                     anchors { fill: parent; margins: Config.spaceXs }
                     visible: seg.ring
-                    radius: seg.radius - 3
+                    topLeftRadius: Math.max(0, seg.topLeftRadius - 3)
+                    bottomLeftRadius: Math.max(0, seg.bottomLeftRadius - 3)
+                    topRightRadius: Math.max(0, seg.topRightRadius - 3)
+                    bottomRightRadius: Math.max(0, seg.bottomRightRadius - 3)
                     color: "transparent"
                     border.width: 3
                     border.color: Config.primary

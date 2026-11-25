@@ -7,6 +7,7 @@ Item {
 
     property real value: 0
     property string icon: ""
+    property string title: ""             // the setting's name, inside the track after the icon
     property string valueText: Math.round(shown * 100) + "%"
     property bool iconClickable: false
     property real step: 0.05
@@ -27,7 +28,7 @@ Item {
     function nudge(dir) { const v = clamp(value + dir * step); moved(v); committed(v) }
     function activate() { if (iconClickable) iconClicked() }
     Accessible.role: Accessible.Slider
-    Accessible.name: Config.spoken(icon)
+    Accessible.name: title !== "" ? title : Config.spoken(icon)
     Accessible.description: valueText
     Accessible.onIncreaseAction: nudge(1)
     Accessible.onDecreaseAction: nudge(-1)
@@ -42,7 +43,7 @@ Item {
         id: track
         anchors.fill: parent
         radius: height / 2
-        color: Config.high
+        color: Config.raised
 
         // the fill never gets narrower than the icon's circle, so the icon always sits on it
         Rectangle {
@@ -66,6 +67,17 @@ Item {
 
         FocusRing { on: root.keyboardSelected }
 
+        Label {
+            id: name
+            visible: text !== ""
+            x: root.icon !== "" ? track.height + 2 : 20
+            width: amount.x - x - 12
+            anchors.verticalCenter: parent.verticalCenter
+            text: root.title
+            elide: Text.ElideRight
+            font.weight: Font.Medium
+        }
+
         // the value, at the far end: dim on the track, and the same text clipped to the fill on
         // top of it, so it reads wherever the fill's edge cuts through it
         Label {
@@ -82,6 +94,16 @@ Item {
             height: parent.height
             clip: true
 
+            Text {
+                visible: name.visible
+                x: name.x
+                y: name.y
+                width: name.width
+                text: name.text
+                elide: Text.ElideRight
+                color: Config.primaryInk
+                font: name.font
+            }
             Text {
                 x: amount.x
                 y: amount.y

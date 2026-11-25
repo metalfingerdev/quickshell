@@ -1,9 +1,9 @@
 import QtQuick
 import QtQuick.Layouts
 
-// A row. Alone it is a platter of its own (`filled`); inside a ListSection it is `flat`, and the section
-// draws the platter and the gaps. Its icon sits in a circle as the Control Centre's tiles have it: the text
-// colour on a raised tone, the accent when `lit` (on, connected).
+// A row, as the Control Centre's tiles are: alone a tile of its own (`filled`); in a ListSection (`flat`) one
+// of a connected list, its outer corners round where the list ends and nearly square where it meets the next.
+// Its icon sits in a raised circle; `lit` (on, connected) turns the whole tile the accent.
 Rectangle {
     id: root
 
@@ -33,27 +33,27 @@ Rectangle {
     Accessible.description: subtitle
     Accessible.onPressAction: activate()
 
-    readonly property int leadSize: flat ? 32 : 44
+    readonly property int leadSize: flat ? 40 : 44
+    readonly property color ink: lit ? Config.primaryInk : active ? Config.secondaryInk : Config.text
+    // where it sits in its list: the ends round, the joints nearly square
+    readonly property bool first: !flat || y < 0.5
+    readonly property bool last: !flat || !parent || y + height > parent.height - 0.5
+    readonly property real outer: Config.cardRadius
     implicitWidth: 320
     width: flat && parent ? parent.width : implicitWidth
-    implicitHeight: flat ? (subtitle !== "" ? 60 : 48) : subtitle !== "" ? 64 : 52
-    radius: flat ? 0 : Config.innerRadius + 4
+    implicitHeight: flat ? (subtitle !== "" ? 64 : 56) : subtitle !== "" ? 64 : 52
+    topLeftRadius: first ? outer : 8
+    topRightRadius: first ? outer : 8
+    bottomLeftRadius: last ? outer : 8
+    bottomRightRadius: last ? outer : 8
     color: {
-        const base = active ? Config.secondary : filled && !flat ? Config.fill3 : "transparent"
-        return keyboardSelected || area.pressed ? Config.mix(active ? base : Config.fill3, Config.text, 0.10)
-             : area.containsMouse ? Config.mix(active ? base : Config.fill3, Config.text, 0.05)
+        const base = lit ? Config.primary : active ? Config.secondary : filled || flat ? Config.tile : "transparent"
+        const under = base.a > 0 ? base : Config.tile
+        return keyboardSelected || area.pressed ? Config.mix(under, ink, 0.10)
+             : area.containsMouse ? Config.mix(under, ink, 0.05)
              : base
     }
     Behavior on color { ColorAnimation { duration: Config.durationFast } }
-
-    // the gap over a row that isn't first, as Android 16's segmented lists have between their rows; the row's
-    // own y says it isn't
-    Rectangle {
-        visible: root.flat && root.y > 0.5
-        width: parent.width
-        height: 2
-        color: Config.fill4
-    }
 
     // under the children, so buttons in the row still get their own clicks
     ClickArea {
@@ -75,7 +75,7 @@ Rectangle {
             Layout.preferredWidth: root.leadSize
             Layout.preferredHeight: root.leadSize
             radius: root.leadSize / 2
-            color: root.lead !== null ? "transparent" : on ? Config.primary : Config.fill2
+            color: root.lead !== null ? "transparent" : root.lit ? Config.primaryDeep : root.active ? Config.primary : Config.raised
 
             Loader {
                 anchors.centerIn: parent
@@ -88,7 +88,7 @@ Rectangle {
                 name: root.icon
                 size: root.flat ? 20 : 22
                 filled: parent.on
-                color: parent.on ? Config.primaryInk : Config.text
+                color: root.active && !root.lit ? Config.primaryInk : root.ink
             }
         }
 
@@ -101,7 +101,7 @@ Rectangle {
                 width: parent.width
                 text: root.title
                 elide: Text.ElideRight
-                color: root.active ? Config.secondaryInk : Config.text
+                color: root.ink
                 font.pixelSize: Config.body + 1
                 font.weight: Font.Medium
             }
@@ -110,7 +110,7 @@ Rectangle {
                 visible: text !== ""
                 text: root.subtitle
                 elide: Text.ElideRight
-                color: root.active ? Config.mix(Config.secondaryInk, Config.secondary, 0.25) : Config.label2
+                color: root.lit || root.active ? Config.mix(root.ink, root.color, 0.25) : Config.dim
                 font.pixelSize: Config.small + 1
             }
         }
@@ -118,7 +118,7 @@ Rectangle {
         Label {
             visible: text !== ""
             text: root.trailing
-            color: Config.label2
+            color: Config.dim
             font.pixelSize: Config.small + 1
         }
 

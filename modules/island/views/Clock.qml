@@ -139,7 +139,7 @@ Item {
                 width: month.implicitWidth + 32
                 height: month.implicitHeight + 32
                 radius: Config.cardRadius
-                color: Config.container
+                color: Config.tile
 
                 Column {
                     id: month

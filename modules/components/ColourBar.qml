@@ -36,7 +36,7 @@ Item {
             g.clip()
             for (let x = 0; x * cell < width; x++)
                 for (let y = 0; y * cell < height; y++) {
-                    g.fillStyle = (x + y) % 2 ? Config.outline : Config.high
+                    g.fillStyle = (x + y) % 2 ? Config.outline : Config.raised
                     g.fillRect(x * cell, y * cell, cell, cell)
                 }
         }

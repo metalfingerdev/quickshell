@@ -10,7 +10,7 @@ Rectangle {
     implicitWidth: 420
     implicitHeight: list.implicitHeight + 24
     radius: Config.cardRadius
-    color: "transparent"
+    color: Config.tile
 
     Column {
         id: list
@@ -59,7 +59,7 @@ Rectangle {
                     height: 4
                     clip: true
 
-                    Rectangle { anchors.fill: parent; radius: 2; color: Config.high }
+                    Rectangle { anchors.fill: parent; radius: 2; color: Config.raised }
                     Rectangle {
                         visible: job.known
                         width: parent.width * Math.max(0, Math.min(1, job.modelData.fraction))

@@ -70,7 +70,7 @@ Item {
                 id: badge
                 anchors.verticalCenter: parent.verticalCenter
                 width: 76; height: 76; radius: 38
-                color: Config.mix(Config.container, root.levelColor, 0.22)
+                color: Config.mix(Config.tile, root.levelColor, 0.22)
 
                 Icon {
                     anchors.centerIn: parent
@@ -120,7 +120,7 @@ Item {
                     width: chip.implicitWidth + 28
                     height: 40
                     radius: 20
-                    color: Config.container
+                    color: Config.tile
 
                     Row {
                         id: chip

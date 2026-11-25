@@ -8,7 +8,7 @@ Rectangle {
     width: Math.max(20, label.implicitWidth + 10)
     height: 20
     radius: 6
-    color: Config.highest
+    color: Config.raised
     border.width: 1
     border.color: Config.outline
     z: 101

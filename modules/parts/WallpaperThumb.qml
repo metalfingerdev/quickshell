@@ -19,7 +19,7 @@ ClippingRectangle {
     Accessible.onPressAction: activate()
 
     radius: Config.innerRadius
-    color: Config.container
+    color: Config.tile
 
     CoverImage {
         source: root.path ? Wallpaper.fileUrl(root.path) : ""

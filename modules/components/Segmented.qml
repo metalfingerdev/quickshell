@@ -1,6 +1,8 @@
 import QtQuick
 
-Rectangle {
+// One of a few, as the Control Centre's connected groups: buttons a joint apart, the outer corners of the
+// group round and the joints nearly square, the chosen one in the accent and round all over.
+Item {
     id: root
 
     property var options: []
@@ -10,24 +12,11 @@ Rectangle {
 
     implicitWidth: 320
     implicitHeight: 48
-    radius: height / 2
-    // a tonal track and one thumb that slides to the chosen one: Material's connected button group, with Apple's motion
-    color: Config.fill2
-    readonly property int chosenIndex: options.findIndex(o => o.key === current)
-
-    Rectangle {
-        visible: root.chosenIndex >= 0
-        y: Config.spaceHair + 1
-        height: parent.height - 2 * (Config.spaceHair + 1)
-        width: (root.width - 2 * (Config.spaceHair + 1)) / Math.max(1, root.options.length)
-        x: Config.spaceHair + 1 + Math.max(0, root.chosenIndex) * width
-        radius: height / 2
-        color: Config.secondary
-        Behavior on x { NumberAnimation { duration: Config.durationMedium; easing.type: Easing.OutCubic } }
-    }
+    readonly property int joint: 4
 
     Row {
         anchors.fill: parent
+        spacing: root.joint
 
         Repeater {
             model: root.options
@@ -39,19 +28,32 @@ Rectangle {
                 readonly property bool chosen: modelData.key === root.current
                 readonly property string shortcut: modelData.shortcut ?? ""
                 readonly property bool ring: activeFocus && Config.focusVisible
+                readonly property bool first: index === 0
+                readonly property bool last: index === root.options.length - 1
+                readonly property real round: height / 2
+                readonly property color ink: chosen ? Config.primaryInk : Config.text
 
                 function activate() { root.picked(modelData.key) }
                 Accessible.role: Accessible.RadioButton
                 Accessible.name: modelData.label ?? Config.spoken(modelData.icon)
                 Accessible.checked: chosen
                 Accessible.onPressAction: activate()
-
-                width: root.width / Math.max(1, root.options.length)
-                height: root.height
-                radius: root.radius
-                color: ring || area.pressed ? Config.fill1 : "transparent"
-
                 activeFocusOnTab: true
+
+                width: (root.width - (root.options.length - 1) * root.joint) / Math.max(1, root.options.length)
+                height: root.height
+                topLeftRadius: first || chosen ? round : 8
+                bottomLeftRadius: first || chosen ? round : 8
+                topRightRadius: last || chosen ? round : 8
+                bottomRightRadius: last || chosen ? round : 8
+                Behavior on topLeftRadius { Motion {} }
+                Behavior on bottomLeftRadius { Motion {} }
+                Behavior on topRightRadius { Motion {} }
+                Behavior on bottomRightRadius { Motion {} }
+                scale: area.pressed ? 0.96 : 1
+                Behavior on scale { NumberAnimation { duration: Config.durationFast; easing.type: Easing.OutCubic } }
+                color: Config.state(chosen ? Config.primary : Config.raised, ink, area.containsMouse, area.pressed || ring)
+                Behavior on color { ColorAnimation { duration: Config.durationFast } }
 
                 Row {
                     anchors.centerIn: parent
@@ -63,14 +65,15 @@ Rectangle {
                         anchors.verticalCenter: parent.verticalCenter
                         name: glyph
                         size: 20
-                        color: segment.chosen ? Config.secondaryInk : Config.label2
+                        filled: segment.chosen
+                        color: segment.ink
                     }
                     Label {
                         visible: text !== ""                 // an icon-only option stays centred
                         anchors.verticalCenter: parent.verticalCenter
                         text: segment.modelData.label ?? ""
-                        color: segment.chosen ? Config.secondaryInk : Config.label2
-                        font.weight: segment.chosen ? Font.DemiBold : Font.Medium
+                        color: segment.ink
+                        font.weight: Font.Medium
                     }
                 }
 
@@ -78,16 +81,7 @@ Rectangle {
                     id: area
                     onClicked: segment.activate()
                 }
-
-                // inside the segment: it touches its neighbours
-                Rectangle {
-                    anchors { fill: parent; margins: Config.spaceXs }
-                    visible: segment.ring
-                    radius: segment.radius - 4
-                    color: "transparent"
-                    border.width: 3
-                    border.color: Config.primary
-                }
+                FocusRing { on: segment.ring }
                 KeyBadge { key: segment.shortcut; anchors { rightMargin: Config.spaceS; topMargin: -8 } }
             }
         }

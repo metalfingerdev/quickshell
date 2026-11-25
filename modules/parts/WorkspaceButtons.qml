@@ -86,7 +86,7 @@ Item {
 
                     radius: height / 2
                     color: slot.current ? Config.state(Config.primary, Config.primaryInk, area.containsMouse, area.pressed || ring)
-                         : slot.used ? Config.state(Config.high, Config.text, area.containsMouse, area.pressed || ring)
+                         : slot.used ? Config.state(Config.raised, Config.text, area.containsMouse, area.pressed || ring)
                          : Config.layer(area.containsMouse, area.pressed || ring)
                     Behavior on color { ColorAnimation { duration: Config.durationMedium } }
 

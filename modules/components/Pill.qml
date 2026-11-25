@@ -32,7 +32,7 @@ Rectangle {
     implicitHeight: 44
     radius: height / 2
     color: bare ? Qt.rgba(ink.r, ink.g, ink.b, area.pressed ? 0.14 : area.containsMouse || keyboardSelected ? 0.10 : 0)
-                : Config.state(filled ? Config.primary : Config.fill2, ink, area.containsMouse || keyboardSelected, area.pressed)
+                : Config.state(filled ? Config.primary : Config.raised, ink, area.containsMouse || keyboardSelected, area.pressed)
     opacity: enabled ? 1 : 0.38
     Behavior on color { ColorAnimation { duration: Config.durationFast } }
 

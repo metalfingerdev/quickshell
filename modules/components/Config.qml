@@ -76,7 +76,6 @@ QtObject {
         surfDark: 0.065, surfLight: 0.975, surfStep: 0.04, tintMax: 0.32,
         textDark: 0.91, dimDark: 0.75, outlineDark: 0.52, textLight: 0.10, dimLight: 0.32, outlineLight: 0.50,
         secSat: 0.4, secDark: 0.26, secLight: 0.86,
-        label2: 0.6, label3: 0.3, label4: 0.18
     })
     property var levels: ({})
     function lv(k) { return levels[k] ?? levelDefaults[k] }
@@ -288,21 +287,13 @@ QtObject {
     readonly property color warn:        current.warn
     readonly property color bad:         current.bad
     readonly property bool  dark:        current.dark
-    // Labels as the text colour at a level of alpha, so they work on glass of any opacity (Apple's vibrancy).
-    function ink(a) { return Qt.rgba(text.r, text.g, text.b, a) }
-    readonly property color label1: text
-    readonly property color label2: ink(lv("label2"))
-    readonly property color label3: ink(lv("label3"))
-    readonly property color label4: ink(lv("label4"))
-    // Cards, controls and tracks are Material's tonal containers, a step up from the island each: on glass
-    // they stay solid enough to read (a see-through card vanishes on a see-through island), and
-    // surfaceAlpha is how solid. fill1 is the highest step, fill4 the island's own colour.
-    property real surfaceAlpha: 0.9
+    // What the island is built of, as the Control Centre draws it: `tile` under anything you press or read
+    // (a card, a row, a tile), `raised` for what sits on a tile (an icon's circle, a slider's track).
+    // surfaceAlpha is how solid they are on the glass ("Cards and controls").
+    property real surfaceAlpha: 1
     function tone(c) { const k = Qt.darker(c, 1); return Qt.rgba(k.r, k.g, k.b, surfaceAlpha) }
-    readonly property color fill1: tone(highest)
-    readonly property color fill2: tone(high)
-    readonly property color fill3: tone(container)
-    readonly property color fill4: tone(surface)
+    readonly property color tile: tone(container)
+    readonly property color raised: tone(high)
     readonly property color divider:     mix(surface, outline, 0.35)
     readonly property color primaryDeep: mix(primary, primaryInk, 0.16)
 

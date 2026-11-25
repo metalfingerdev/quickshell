@@ -34,7 +34,7 @@ Item {
 
         implicitHeight: 136
         radius: Config.cardRadius
-        color: Config.fill3
+        color: Config.tile
 
         Row {
             id: label

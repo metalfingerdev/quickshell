@@ -85,7 +85,7 @@ Item {
             id: notes
             visible: Notifier.count > 0
             width: parent.width
-            maxHeight: 600
+            maxHeight: Math.min(600, Engine.room - 200)
             spacing: Config.spaceM
 
             Repeater {

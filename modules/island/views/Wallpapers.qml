@@ -67,7 +67,7 @@ Item {
             width: parent.width
             height: 200
             radius: Config.cardRadius
-            color: Config.container
+            color: Config.tile
 
             CoverImage {
                 source: Wallpaper.current ? Wallpaper.fileUrl(Wallpaper.current) : ""

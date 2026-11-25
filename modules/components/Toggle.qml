@@ -24,7 +24,7 @@ Item {
         id: track
         anchors.fill: parent
         radius: height / 2
-        color: root.checked ? Config.primary : Config.fill1
+        color: root.checked ? Config.primary : Config.raised
         Behavior on color { ColorAnimation { duration: Config.durationMedium } }
 
         FocusRing { on: root.activeFocus }
@@ -37,7 +37,7 @@ Item {
             radius: size / 2
             anchors.verticalCenter: parent.verticalCenter
             x: root.checked ? track.width - width - 4 - (24 - Math.min(24, size)) / 2 : 8 - (size - 16) / 2
-            color: root.checked ? Config.primaryInk : Config.label2
+            color: root.checked ? Config.primaryInk : Config.dim
             Behavior on x { NumberAnimation { duration: Config.durationMedium; easing.type: Easing.OutCubic } }
             Behavior on size { NumberAnimation { duration: Config.durationFast } }
             Behavior on color { ColorAnimation { duration: Config.durationFast } }

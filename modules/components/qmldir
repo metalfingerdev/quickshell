@@ -39,6 +39,7 @@ ColourBar    1.0 ColourBar.qml
 ListSection  1.0 ListSection.qml
 Menu         1.0 Menu.qml
 Sheet        1.0 Sheet.qml
-Hud          1.0 Hud.qml
-ValueSlider  1.0 ValueSlider.qml
 Equalizer    1.0 Equalizer.qml
+SettingTile  1.0 SettingTile.qml
+Amount       1.0 Amount.qml
+TintBar      1.0 TintBar.qml

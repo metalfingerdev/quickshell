@@ -127,7 +127,7 @@ Item {
                     width: (parent.width - 4 * Config.spaceS) / 5
                     height: 52
                     radius: Config.innerRadius
-                    color: chosen ? Config.fill1 : Config.state(Config.fill3, Config.text, area.containsMouse, area.pressed || keyboardSelected)
+                    color: chosen ? Config.raised : Config.state(Config.tile, Config.text, area.containsMouse, area.pressed || keyboardSelected)
                     activeFocusOnTab: true
                     function activate() { root.role = modelData[0] }
                     Accessible.role: Accessible.RadioButton
@@ -141,7 +141,7 @@ Item {
                         width: 28; height: 28; radius: 14
                         color: root.colourOf(cell.modelData[0])
                         border.width: 1
-                        border.color: Config.fill1
+                        border.color: Config.raised
                     }
                     Label {
                         anchors { left: swatch.right; leftMargin: Config.spaceS; right: parent.right; rightMargin: Config.spaceS; verticalCenter: parent.verticalCenter }
@@ -191,11 +191,11 @@ Item {
                         radius: Config.innerRadius - Config.spaceS
                         color: root.shown
                         border.width: 1
-                        border.color: Config.fill1
+                        border.color: Config.raised
                     }
                 }
 
-                Label { visible: !root.accent; text: "Opacity"; color: Config.label2 }
+                Label { visible: !root.accent; text: "Opacity"; color: Config.dim }
                 ColourBar {
                     visible: !root.accent
                     width: parent.width
@@ -210,7 +210,7 @@ Item {
                     width: parent.width
                     height: 44
                     radius: height / 2
-                    color: Config.fill3
+                    color: Config.tile
                     border.width: hex.activeFocus ? 2 : 0
                     border.color: Config.primary
 
@@ -242,7 +242,7 @@ Item {
                             visible: hex.text === ""
                             anchors.verticalCenter: parent.verticalCenter
                             text: Config.hex(root.shown) + (root.accent ? "" : Math.round(root.shown.a * 255).toString(16).padStart(2, "0"))
-                            color: Config.label2
+                            color: Config.dim
                             font: hex.font
                         }
                     }
@@ -261,7 +261,7 @@ Item {
                     width: parent.width
                     wrapMode: Text.WordWrap
                     text: "Drawn " + (Config.dark ? "lighter" : "darker") + " to read on the island. Turn off “Keep colours readable” in Theme to draw it as picked."
-                    color: Config.label2
+                    color: Config.dim
                     font.pixelSize: Config.small
                 }
             }

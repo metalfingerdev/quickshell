@@ -80,7 +80,6 @@ Item {
                 shortcut: "w"
                 enabled: Net.available && !Net.wifiBlocked
                 onClicked: Net.setWifi(!Net.wifiEnabled)
-                Toggle { checked: Net.wifiEnabled; activeFocusOnTab: false; enabled: parent.enabled; onToggled: Net.setWifi(!Net.wifiEnabled) }
             }
             ListEntry {
                 flat: true
@@ -112,7 +111,7 @@ Item {
             id: list
             visible: Net.wifiEnabled && root.shown.length > 0
             width: parent.width
-            maxHeight: 6 * 60 + 2 * 48 + 2 * inset
+            maxHeight: Math.min(6 * 68 + 2 * 48 + 2 * inset, Engine.room - 420)
 
             Column {
                 width: list.innerWidth
@@ -133,7 +132,7 @@ Item {
                     onClicked: root.choose(net)
 
                     Icon { visible: net.connected; name: "check"; size: 20; color: Config.primary }
-                    Icon { visible: Net.secured(net); name: "lock"; size: 16; color: Config.label2 }
+                    Icon { visible: Net.secured(net); name: "lock"; size: 16; color: Config.dim }
                 }
 
                 ListSection {
@@ -162,7 +161,7 @@ Item {
             width: parent.width
             height: panel.implicitHeight + 32
             radius: Config.cardRadius
-            color: Config.fill3
+            color: Config.tile
 
             Column {
                 id: panel
@@ -186,7 +185,7 @@ Item {
                         width: parent.width - join.width - cancel.width - 2 * parent.spacing
                         height: 52
                         radius: height / 2
-                        color: Config.high
+                        color: Config.raised
                         border.width: password.activeFocus ? 2 : 0
                         border.color: Config.primary
 
@@ -286,7 +285,7 @@ Item {
                 width: parent.width
                 height: facts.implicitHeight + 2 * Config.spaceM
                 radius: Config.innerRadius + 4
-                color: Config.fill3
+                color: Config.tile
 
                 Column {
                     id: facts

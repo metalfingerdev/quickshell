@@ -48,7 +48,7 @@ Rectangle {
     implicitWidth: 420
     implicitHeight: Math.max(72, column.implicitHeight + 32)
     radius: Config.innerRadius + 4
-    color: Config.state(Config.container, Config.text, area.containsMouse, area.pressed || (activeFocus && Config.focusVisible))
+    color: Config.state(Config.tile, Config.text, area.containsMouse, area.pressed || (activeFocus && Config.focusVisible))
     border.width: modelData.critical ? 1 : 0
     border.color: Config.bad
     Behavior on color { ColorAnimation { duration: Config.durationFast } }
@@ -70,7 +70,7 @@ Rectangle {
         width: 40
         height: 40
         radius: 20
-        color: Config.high
+        color: Config.raised
 
         CoverImage {
             id: picture

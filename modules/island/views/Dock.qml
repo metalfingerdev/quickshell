@@ -74,7 +74,7 @@ Item {
                     width: root.cell
                     height: root.cell
                     radius: Config.cardRadius
-                    color: Config.state(Config.container, Config.text, area.containsMouse || keyboardSelected, area.pressed)
+                    color: Config.state(Config.tile, Config.text, area.containsMouse || keyboardSelected, area.pressed)
                     Behavior on color { ColorAnimation { duration: Config.durationFast } }
 
                     focus: index === 0

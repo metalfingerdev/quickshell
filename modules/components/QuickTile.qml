@@ -35,7 +35,7 @@ Rectangle {
     implicitWidth: 220
     implicitHeight: 72
     radius: height / 2
-    color: Config.state(on ? Config.primary : Config.fill3, ink,
+    color: Config.state(on ? Config.primary : Config.tile, ink,
                         body.containsMouse && !arrowArea.containsMouse && !circleArea.containsMouse,
                         body.pressed || keyboardSelected)
     opacity: enabled ? 1 : 0.38
@@ -53,7 +53,7 @@ Rectangle {
         width: root.inner
         height: width
         radius: width / 2
-        color: Config.state(root.on ? Config.primaryDeep : Config.high, root.ink, circleArea.containsMouse, circleArea.pressed)
+        color: Config.state(root.on ? Config.primaryDeep : Config.raised, root.ink, circleArea.containsMouse, circleArea.pressed)
         Behavior on color { ColorAnimation { duration: Config.durationFast } }
 
         Icon {
@@ -102,7 +102,7 @@ Rectangle {
         width: root.inner
         height: width
         radius: width / 2
-        color: Config.state(root.on ? Config.primaryDeep : Config.high, root.ink, arrowArea.containsMouse, arrowArea.pressed)
+        color: Config.state(root.on ? Config.primaryDeep : Config.raised, root.ink, arrowArea.containsMouse, arrowArea.pressed)
         Behavior on color { ColorAnimation { duration: Config.durationFast } }
 
         Icon {
@@ -126,7 +126,7 @@ Rectangle {
         width: 52
         height: 32
         radius: 16
-        color: root.on ? Config.primaryInk : Config.high
+        color: root.on ? Config.primaryInk : Config.raised
         border.width: root.on ? 0 : 2
         border.color: Config.outline
 

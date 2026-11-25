@@ -40,7 +40,7 @@ control's shortcut key) until it closes, and each keystroke restarts its timeout
 mode: focus rings and shortcut keycaps show until the pointer moves. Names: `tabs` (the hub, also
 what hovering shows), `dashboard` (everything), `launcher`, `network`, `bluetooth`, `media`, `mixer`,
 `notifications` (`open` = the center, `alert` = the popups), `workspaces` (the overview), `clock`,
-`battery`, `power`, `theme` (colours and the wallpaper), `settings` (the shell, idle and the lock screen),
+`battery`, `power`, `theme` (colours and the wallpaper), `settings` (its pages: `island`, `glass`, `alerts`, `energy`, `lockscreen`, each a view of its own),
 `clipboard` (the history), `activity` (what's running), `system` (processor, memory, temperature, disk,
 network and the local model; alias `stats`), `weather` (`forecast`), `agenda` (`events`, `schedule`), `tray` (the tray's apps and their menus), `generations` (`updates`, `nixos`: NixOS's
 generations and the flake's inputs), `tasks` (`todo`, `kanban`: the task board), `dock` (`favourites`: pinned apps),

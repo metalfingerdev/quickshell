@@ -308,7 +308,7 @@ Item {
                                 width: answer.width
                                 height: thoughts.implicitHeight + 24
                                 radius: Config.innerRadius
-                                color: Config.container
+                                color: Config.tile
 
                                 Text {
                                     id: thoughts

@@ -26,7 +26,7 @@ FocusScope {
     Rectangle {
         anchors.fill: parent
         radius: Config.innerRadius + 4
-        color: Config.high
+        color: Config.raised
     }
 
     Column {
@@ -48,7 +48,7 @@ FocusScope {
                     visible: row.separator
                     anchors.verticalCenter: parent.verticalCenter
                     x: Config.spaceM; width: parent.width - 2 * Config.spaceM; height: 1
-                    color: Config.fill2
+                    color: Config.raised
                 }
 
                 Rectangle {
@@ -88,7 +88,7 @@ FocusScope {
                         visible: text !== ""
                         anchors { right: parent.right; rightMargin: Config.spaceM; verticalCenter: parent.verticalCenter }
                         text: row.modelData.hint ?? ""
-                        color: hit.lit ? Config.primaryInk : Config.label2
+                        color: hit.lit ? Config.primaryInk : Config.dim
                         font.pixelSize: Config.small
                     }
                     ClickArea { id: area; onClicked: hit.activate() }

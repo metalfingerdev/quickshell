@@ -94,7 +94,7 @@ Item {
                     property Component thumb: Component {
                         ClippingRectangle {
                             width: 44; height: 44; radius: 22
-                            color: Config.high
+                            color: Config.raised
                             CoverImage { source: row.modelData.picture; sourceSize: Qt.size(88, 88) }
                         }
                     }

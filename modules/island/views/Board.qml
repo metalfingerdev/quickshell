@@ -123,7 +123,7 @@ Item {
                                 width: parent.width
                                 height: Math.max(52, words.implicitHeight + 2 * Config.spaceM)
                                 radius: Config.innerRadius
-                                color: Config.state(root.editing === modelData.id ? Config.secondary : Config.container,
+                                color: Config.state(root.editing === modelData.id ? Config.secondary : Config.tile,
                                                     Config.text, area.containsMouse, area.pressed)
                                 opacity: root.dragged === modelData.id ? 0.4 : 1
                                 Behavior on color { ColorAnimation { duration: Config.durationFast } }
@@ -249,7 +249,7 @@ Item {
         width: root.laneW
         height: 52
         radius: Config.innerRadius
-        color: Config.high
+        color: Config.raised
         z: 10
 
         Label {

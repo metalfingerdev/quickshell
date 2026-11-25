@@ -188,20 +188,22 @@ Item {
 
         // off: nothing is adjusted for you, a colour is drawn as picked (Colours sets every one of them)
         ListSection {
-            ListEntry {
-                flat: true
+            SettingTile {
+                width: parent.width
+                icon: "contrast"
                 title: "Keep colours readable"
-                subtitle: Config.keepReadable ? "A colour too close to the surface is drawn lighter or darker" : "Every colour is drawn exactly as set"
-                onClicked: Config.keepReadable = !Config.keepReadable
-                Toggle { checked: Config.keepReadable; activeFocusOnTab: false; onToggled: on => Config.keepReadable = on }
+                detail: Config.keepReadable ? "A colour too close to the surface is drawn lighter or darker" : "Every colour is drawn exactly as set"
+                checked: Config.keepReadable
+                onFlipped: on => Config.keepReadable = on
             }
             ListEntry {
                 flat: true
+                icon: "palette"
                 title: "Every colour"
                 subtitle: "Each role of the palette, for dark and for light"
                 shortcut: "c"
                 onClicked: Engine.open(Engine.View.Colours)
-                Icon { name: "chevron_right"; size: 22; color: Config.label3 }
+                Icon { name: "chevron_right"; size: 22; color: Config.outline }
             }
         }
 
@@ -225,7 +227,7 @@ Item {
                 width: 176
                 height: 110
                 radius: Config.innerRadius
-                color: Config.container
+                color: Config.tile
                 CoverImage {
                     source: Wallpaper.current ? Wallpaper.fileUrl(Wallpaper.current) : ""
                     sourceSize: Qt.size(352, 220)

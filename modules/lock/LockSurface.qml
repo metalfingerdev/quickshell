@@ -131,7 +131,7 @@ Rectangle {
 				width: 96
 				height: 96
 				radius: LockConfig.avatarShape === "square" ? Config.innerRadius : width / 2
-				color: Config.high
+				color: Config.raised
 
 				AnimatedImage {
 					id: avatar

@@ -42,7 +42,13 @@ QtObject {
         Generations,
         Tasks,
         Dock,
-        Advanced
+        Advanced,
+        // Settings' pages, each a view of its own
+        SettingsIsland,
+        SettingsGlass,
+        SettingsAlerts,
+        SettingsEnergy,
+        SettingsLock
     }
 
     readonly property int restView: Engine.View.Compact
@@ -105,6 +111,9 @@ QtObject {
     // (hasKeyboard), or after releaseMs if that never comes.
     // the Control Centre opens in Edit (the IPC and the keyboard bind that ask for it)
     property bool editControls: false
+    // how tall a view can be on the island's screen (Bar sets it): a view's scrolling list takes what's left,
+    // so its header and key hints always fit
+    property real room: 1040
     property bool hasKeyboard: false   // Bar: the island's window has the keyboard right now
     property int releaseMs: 200
     property var afterRelease: []

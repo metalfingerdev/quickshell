@@ -65,7 +65,6 @@ Item {
                 shortcut: "b"
                 enabled: Bluez.available && !Bluez.blocked
                 onClicked: Bluez.setEnabled(!Bluez.enabled)
-                Toggle { checked: Bluez.enabled; activeFocusOnTab: false; enabled: parent.enabled; onToggled: Bluez.setEnabled(!Bluez.enabled) }
             }
         }
 
@@ -85,7 +84,7 @@ Item {
             id: list
             visible: Bluez.enabled && Bluez.devices.length > 0
             width: parent.width
-            maxHeight: 6 * 60 + 2 * 48 + 2 * inset
+            maxHeight: Math.min(6 * 68 + 2 * 48 + 2 * inset, Engine.room - 300)
 
             Column {
                 width: list.innerWidth
