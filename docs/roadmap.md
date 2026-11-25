@@ -23,6 +23,12 @@
 
 ## Done
 
+- [x] The redesign, batch 1 (2026-11-26): docs/design.md; Header as a navigation bar, Toggle as a switch,
+      Segmented with a sliding thumb, controls on alpha fills (no outlines anywhere), ListEntry and the new
+      ListSection (grouped rows with coloured square icons), Menu and Sheet (Mixer's device picker is the first Menu).
+      Open: Compact and Expanded with the tray, the toasts, Control Centre, and each panel moved onto ListSection
+      (the plan's Phase 3 batches 2 to 6).
+
 - [x] Settings as code (2026-11-26): every setting in `settings.json` (migrated from island.ini), live-reloaded,
       sparse, with `prefs reset`; Advanced shows each of them (a number takes any value, a colour any colour),
       the colour roles and the scheme's own numbers, the island's geometry and shadow, hyprglass's 38 settings

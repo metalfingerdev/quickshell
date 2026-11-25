@@ -36,3 +36,6 @@ Store        1.0 Store.qml
 EmptyState   1.0 EmptyState.qml
 Sparkline    1.0 Sparkline.qml
 ColourBar    1.0 ColourBar.qml
+ListSection  1.0 ListSection.qml
+Menu         1.0 Menu.qml
+Sheet        1.0 Sheet.qml

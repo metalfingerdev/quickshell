@@ -47,8 +47,6 @@ Item {
         id: track
         anchors.fill: parent
         radius: height / 2
-        border.width: 1
-        border.color: Config.border
         gradient: Gradient {
             orientation: Gradient.Horizontal
             GradientStop { position: 0;     color: root.colourAt(0) }

@@ -4,7 +4,7 @@ import QtQuick
 Pill {
     icon: Config.symbol.back
     iconSize: 22
-    implicitHeight: 44
-    kind: "text"
+    implicitHeight: 40
+    kind: "tonal"
     activeFocusOnTab: false
 }

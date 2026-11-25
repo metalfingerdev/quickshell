@@ -32,10 +32,7 @@ Rectangle {
     implicitHeight: 44
     radius: height / 2
     color: bare ? Qt.rgba(ink.r, ink.g, ink.b, area.pressed ? 0.14 : area.containsMouse || keyboardSelected ? 0.10 : 0)
-                : Config.state(filled ? Config.primary : Config.container, ink, area.containsMouse || keyboardSelected, area.pressed)
-    // a tonal pill is the card's own colour, so on a card (a Header) only its outline shows it
-    border.color: Config.border
-    border.width: kind === "tonal" && !filled ? 1 : 0
+                : Config.state(filled ? Config.primary : Config.fill3, ink, area.containsMouse || keyboardSelected, area.pressed)
     opacity: enabled ? 1 : 0.38
     Behavior on color { ColorAnimation { duration: Config.durationFast } }
 

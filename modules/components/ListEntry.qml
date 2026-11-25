@@ -1,6 +1,8 @@
 import QtQuick
 import QtQuick.Layouts
 
+// A row. Alone it is a platter of its own (`filled`); inside a ListSection it is `flat`, and the section
+// draws the platter and the hairlines. `tone` makes its icon a coloured rounded square, as in System Settings.
 Rectangle {
     id: root
 
@@ -9,9 +11,6 @@ Rectangle {
     property string subtitle: ""
     property string trailing: ""
     property bool active: false
-    // a tile of its own, for a list that is the view (Tray, NixOS, Clipboard); off where rows sit
-    // beside other controls (Media's outputs), which a fill on every row would crowd
-    property bool filled: false
     property string shortcut: ""
     property bool keyboardSelected: activeFocus && Config.focusVisible
     readonly property bool hovered: area.containsMouse
@@ -19,6 +18,10 @@ Rectangle {
     default property alias extra: side.data
     // off by default: a list of entries still scrolls under the pointer
     property bool wheelable: false
+    // alone, a platter of its own, so a list that is the view reads as cells; in a ListSection, the section's
+    property bool filled: false
+    property bool flat: false
+    property color tone: "transparent"
     signal clicked()
     signal scrolled(int step)
 
@@ -29,18 +32,26 @@ Rectangle {
     Accessible.description: subtitle
     Accessible.onPressAction: activate()
 
+    readonly property int leadSize: flat ? 32 : 44
     implicitWidth: 320
-    implicitHeight: subtitle !== "" ? 64 : 52
-    radius: Config.innerRadius + 4
+    implicitHeight: flat ? (subtitle !== "" ? 60 : 48) : subtitle !== "" ? 64 : 52
+    radius: flat ? 0 : Config.innerRadius + 4
     color: {
-        const base = active ? Config.secondary : Qt.rgba(Config.container.r, Config.container.g, Config.container.b, filled ? 1 : 0)
-        return keyboardSelected || area.pressed ? Config.mix(active ? base : Config.container, Config.text, 0.10)
-             : area.containsMouse ? Config.mix(active ? base : Config.container, Config.text, 0.05)
+        const base = active ? Config.secondary : filled && !flat ? Config.fill3 : "transparent"
+        return keyboardSelected || area.pressed ? Config.mix(active ? base : Config.fill3, Config.text, 0.10)
+             : area.containsMouse ? Config.mix(active ? base : Config.fill3, Config.text, 0.05)
              : base
     }
-    border.color: Config.border
-    border.width: filled && !active ? 1 : 0
     Behavior on color { ColorAnimation { duration: Config.durationFast } }
+
+    // the hairline over a row that isn't first, inset past the icon; the row's own y says it isn't
+    Rectangle {
+        visible: root.flat && root.y > 0.5
+        x: Config.spaceM + root.leadSize + Config.spaceM
+        width: parent.width - x
+        height: 1
+        color: Config.fill2
+    }
 
     // under the children, so buttons in the row still get their own clicks
     ClickArea {
@@ -54,13 +65,14 @@ Rectangle {
 
     RowLayout {
         anchors { fill: parent; leftMargin: Config.spaceM; rightMargin: Config.spaceL }
-        spacing: Config.spaceL
+        spacing: Config.spaceM
 
         Rectangle {
-            Layout.preferredWidth: 44
-            Layout.preferredHeight: 44
-            radius: 22
-            color: root.lead !== null ? "transparent" : root.active ? Config.primary : Config.high
+            readonly property bool square: root.tone.a > 0
+            Layout.preferredWidth: root.leadSize
+            Layout.preferredHeight: root.leadSize
+            radius: square ? Math.round(root.leadSize * 0.25) : root.leadSize / 2
+            color: root.lead !== null ? "transparent" : square ? root.tone : root.active ? Config.primary : Config.fill3
 
             Loader {
                 anchors.centerIn: parent
@@ -71,9 +83,9 @@ Rectangle {
                 anchors.centerIn: parent
                 visible: root.lead === null && root.icon !== ""
                 name: root.icon
-                size: 22
+                size: root.flat ? 20 : 22
                 filled: root.active
-                color: root.active ? Config.primaryInk : Config.text
+                color: parent.square ? "white" : root.active ? Config.primaryInk : Config.text
             }
         }
 
@@ -95,7 +107,7 @@ Rectangle {
                 visible: text !== ""
                 text: root.subtitle
                 elide: Text.ElideRight
-                color: root.active ? Config.mix(Config.secondaryInk, Config.secondary, 0.25) : Config.dim
+                color: root.active ? Config.mix(Config.secondaryInk, Config.secondary, 0.25) : Config.label2
                 font.pixelSize: Config.small + 1
             }
         }
@@ -103,7 +115,7 @@ Rectangle {
         Label {
             visible: text !== ""
             text: root.trailing
-            color: Config.dim
+            color: Config.label2
             font.pixelSize: Config.small + 1
         }
 

@@ -10,7 +10,7 @@ Item {
     id: root
 
     // which device it is, when there is a choice: one chip each, the one in use lit
-    component Devices: Flow {
+    component Devices: Item {
         id: devices
         property var nodes: []
         property var current: null
@@ -18,16 +18,21 @@ Item {
 
         visible: nodes.length > 1
         width: parent.width
-        spacing: Config.spaceS
+        height: visible ? 40 : 0
 
-        Repeater {
-            model: devices.nodes
-            Chip {
-                required property var modelData
-                text: Audio.label(modelData)
-                selected: modelData === devices.current
-                onClicked: devices.picked(modelData)
-            }
+        Pill {
+            id: button
+            icon: "expand_more"
+            text: Audio.label(devices.current)
+            implicitHeight: 40
+            onClicked: menu.open = !menu.open
+        }
+        Menu {
+            id: menu
+            x: 0; y: button.height + Config.spaceXs
+            width: 300
+            items: devices.nodes.map((n, i) => ({ key: String(i), label: Audio.label(n), checked: n === devices.current }))
+            onChosen: key => devices.picked(devices.nodes[Number(key)])
         }
     }
 

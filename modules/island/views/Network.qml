@@ -154,7 +154,7 @@ Item {
             width: parent.width
             height: panel.implicitHeight + 32
             radius: Config.cardRadius
-            color: Config.container
+            color: Config.fill3
 
             Column {
                 id: panel
@@ -278,9 +278,7 @@ Item {
                 width: parent.width
                 height: facts.implicitHeight + 2 * Config.spaceM
                 radius: Config.innerRadius + 4
-                color: Config.container
-                border.color: Config.border
-                border.width: 1
+                color: Config.fill3
 
                 Column {
                     id: facts

@@ -277,10 +277,6 @@ QtObject {
     readonly property color fill3: ink(lv("fill3"))
     readonly property color fill4: ink(lv("fill4"))
     readonly property color divider:     mix(surface, outline, 0.35)
-    // the hairline round a panel's cards and resting tiles (Noctalia's box border): there, but quieter
-    // than outline; Settings can turn them off
-    property bool outlines: true
-    readonly property color border:      outlines ? mix(container, outline, 0.4) : "transparent"
     readonly property color primaryDeep: mix(primary, primaryInk, 0.16)
 
     function mix(a, b, t) {

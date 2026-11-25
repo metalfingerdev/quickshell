@@ -24,9 +24,7 @@ Item {
         width: parent.width
         height: 56
         radius: Config.innerRadius + 4
-        color: Config.container
-        border.color: Config.border
-        border.width: 1
+        color: Config.fill3
 
         Label {
             anchors { left: parent.left; leftMargin: Config.spaceL; verticalCenter: parent.verticalCenter }
@@ -348,11 +346,6 @@ Item {
                 value: Config.roundness - 0.5
                 valueText: "Roundness  " + Math.round((0.5 + shown) * 100) + "%"
                 onMoved: v => Config.roundness = Math.round((0.5 + v) * 20) / 20
-            }
-            Switch {
-                text: "Outlines on cards and tiles"
-                checked: Config.outlines
-                onToggled: on => Config.outlines = on
             }
             Switch {
                 text: "Reduce motion"

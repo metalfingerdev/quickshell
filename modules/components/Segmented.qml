@@ -11,9 +11,20 @@ Rectangle {
     implicitWidth: 320
     implicitHeight: 48
     radius: height / 2
-    color: "transparent"
-    border.width: 1
-    border.color: Config.outline
+    // a fill track with one thumb that slides to the chosen one, as Apple's does
+    color: Config.fill3
+    readonly property int chosenIndex: options.findIndex(o => o.key === current)
+
+    Rectangle {
+        visible: root.chosenIndex >= 0
+        y: Config.spaceHair + 1
+        height: parent.height - 2 * (Config.spaceHair + 1)
+        width: (root.width - 2 * (Config.spaceHair + 1)) / Math.max(1, root.options.length)
+        x: Config.spaceHair + 1 + Math.max(0, root.chosenIndex) * width
+        radius: height / 2
+        color: Config.ink(0.3)
+        Behavior on x { NumberAnimation { duration: Config.durationMedium; easing.type: Easing.OutCubic } }
+    }
 
     Row {
         anchors.fill: parent
@@ -37,41 +48,29 @@ Rectangle {
 
                 width: root.width / Math.max(1, root.options.length)
                 height: root.height
-                topLeftRadius: index === 0 ? root.radius : 0
-                bottomLeftRadius: index === 0 ? root.radius : 0
-                topRightRadius: index === root.options.length - 1 ? root.radius : 0
-                bottomRightRadius: index === root.options.length - 1 ? root.radius : 0
-                color: Config.state(chosen ? Config.secondary : Qt.rgba(Config.surface.r, Config.surface.g, Config.surface.b, 0),
-                                    Config.text, area.containsMouse, area.pressed || ring)
-                Behavior on color { ColorAnimation { duration: Config.durationFast } }
+                radius: root.radius
+                color: ring || area.pressed ? Config.fill3 : "transparent"
 
                 activeFocusOnTab: true
-
-                Rectangle {
-                    visible: segment.index > 0
-                    width: 1
-                    height: parent.height
-                    color: Config.outline
-                }
 
                 Row {
                     anchors.centerIn: parent
                     spacing: Config.spaceS
 
                     Icon {
-                        readonly property string glyph: segment.chosen && root.showCheck ? "check" : segment.modelData.icon ?? ""
+                        readonly property string glyph: segment.modelData.icon ?? ""
                         visible: glyph !== ""
                         anchors.verticalCenter: parent.verticalCenter
                         name: glyph
                         size: 20
-                        color: segment.chosen ? Config.secondaryInk : Config.text
+                        color: segment.chosen ? Config.label1 : Config.label2
                     }
                     Label {
                         visible: text !== ""                 // an icon-only option stays centred
                         anchors.verticalCenter: parent.verticalCenter
                         text: segment.modelData.label ?? ""
-                        color: segment.chosen ? Config.secondaryInk : Config.text
-                        font.weight: Font.Medium
+                        color: segment.chosen ? Config.label1 : Config.label2
+                        font.weight: segment.chosen ? Font.DemiBold : Font.Medium
                     }
                 }
 
@@ -84,10 +83,7 @@ Rectangle {
                 Rectangle {
                     anchors { fill: parent; margins: Config.spaceXs }
                     visible: segment.ring
-                    topLeftRadius: Math.max(0, segment.topLeftRadius - 4)
-                    bottomLeftRadius: Math.max(0, segment.bottomLeftRadius - 4)
-                    topRightRadius: Math.max(0, segment.topRightRadius - 4)
-                    bottomRightRadius: Math.max(0, segment.bottomRightRadius - 4)
+                    radius: segment.radius - 4
                     color: "transparent"
                     border.width: 3
                     border.color: Config.primary

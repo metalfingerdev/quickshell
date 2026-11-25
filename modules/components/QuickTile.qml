@@ -35,11 +35,9 @@ Rectangle {
     implicitWidth: 220
     implicitHeight: 72
     radius: height / 2
-    color: Config.state(on ? Config.primary : Config.container, ink,
+    color: Config.state(on ? Config.primary : Config.fill3, ink,
                         body.containsMouse && !arrowArea.containsMouse && !circleArea.containsMouse,
                         body.pressed || keyboardSelected)
-    border.color: Config.border
-    border.width: on ? 0 : 1
     opacity: enabled ? 1 : 0.38
     Behavior on color { ColorAnimation { duration: Config.durationFast } }
 

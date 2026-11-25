@@ -22,7 +22,7 @@ FocusScope {
     property var controlKeys: []
     property int fieldSize: 16
     // the capsule's colour: the lock screen's is see-through, over its picture
-    property color fill: Config.high
+    property color fill: Config.fill3
     default property alias trailing: side.data
 
     signal key()
@@ -56,28 +56,21 @@ FocusScope {
         onClicked: root.readOnly ? root.clicked() : field.forceActiveFocus()
     }
 
-    Rectangle {
+    // Spotlight's field: a magnifier in the secondary colour, no badge
+    Icon {
         id: badge
-        x: 6
+        x: Config.spaceM
         anchors.verticalCenter: parent.verticalCenter
-        // no icon (the lock screen's field): no badge, and the text starts near the edge
         visible: root.icon !== ""
-        width: visible ? root.height - 12 : 0
-        height: width
-        radius: width / 2
-        color: Config.primary
-
-        Icon {
-            anchors.centerIn: parent
-            name: root.icon
-            size: Math.round(root.height * 0.36)
-            color: Config.primaryInk
-        }
+        width: visible ? implicitWidth : 0
+        name: root.icon
+        size: Math.round(root.height * 0.4)
+        color: Config.label2
     }
 
     TextInput {
         id: field
-        anchors { left: badge.right; leftMargin: Config.spaceM; right: side.left; rightMargin: Config.spaceM; top: parent.top; bottom: parent.bottom }
+        anchors { left: badge.right; leftMargin: root.icon !== "" ? Config.spaceS : Config.spaceL; right: side.left; rightMargin: Config.spaceM; top: parent.top; bottom: parent.bottom }
         focus: true
         verticalAlignment: TextInput.AlignVCenter
         readOnly: root.readOnly

@@ -91,8 +91,8 @@ Loader item ──implicit size──► proxy (invisible, snaps instantly, the 
   full view, the Registry's `opens` (the workspace dots open the overview, the volume and brightness
   toasts the dashboard), or else its own view, Pinned; the clock (Compact, at rest) and Expanded (the
   peek) pin the hub, `Tabs`. Elsewhere it does nothing.
-- **Panels**, after Noctalia: a `Header` card with the panel's glyph, content on outlined cards
-  (`Config.border`), all on the island's glass (`Config.island`, under hyprglass when the plugin is loaded:
+- **Panels**, after Apple's (docs/design.md): a `Header` navigation bar, content on fills of the text colour at low
+  alpha (`Config.fill1`..`fill4`, so they hold on any opacity), ListSection platters, all on the island's glass (`Config.island`, under hyprglass when the plugin is loaded:
   hypr/modules/plugins.lua, `services/Glass.qml`).
 - **Locking**: `Session.covering` (set by `lock/Lock.qml`) makes the proxy the whole screen, the input mask
   the whole screen and the keyboard exclusive, so the island grows over everything and takes every input;

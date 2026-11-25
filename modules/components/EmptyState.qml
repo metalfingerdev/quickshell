@@ -26,7 +26,7 @@ Item {
             anchors.horizontalCenter: parent.horizontalCenter
             name: root.icon
             size: root.compact ? 24 : 40
-            color: Config.dim
+            color: Config.label3
         }
         Label {
             width: parent.width

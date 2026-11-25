@@ -23,9 +23,7 @@ Rectangle {
     implicitHeight: 36
     radius: height / 2
     color: selected ? Config.state(Config.primary, ink, area.containsMouse, area.pressed)
-                    : Config.layer(area.containsMouse, area.pressed)
-    border.width: selected ? 0 : 1
-    border.color: Config.outline
+                    : Config.state(Config.fill3, Config.text, area.containsMouse, area.pressed)
     Behavior on color { ColorAnimation { duration: Config.durationFast } }
 
     Row {

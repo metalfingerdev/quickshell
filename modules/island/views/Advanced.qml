@@ -91,7 +91,7 @@ Item {
         width: parent.width
         height: 56
         radius: Config.innerRadius + 4
-        color: Config.container
+        color: Config.fill3
 
         Column {
             anchors { left: parent.left; leftMargin: Config.spaceL; right: control.left; rightMargin: Config.spaceM; verticalCenter: parent.verticalCenter }
