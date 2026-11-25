@@ -28,28 +28,31 @@ Item {
 
     implicitWidth: 760 + 2 * pad
     implicitHeight: column.implicitHeight + 2 * pad
-    Component.onCompleted: Glass.readDescriptions()
+    Component.onCompleted: {
+        Glass.readDescriptions()
+        // back from the eyedropper: the table it was filling
+        const b = Toggles.pickBack.split(":")
+        if (b[0] === "hg" || b[0] === "hl") {
+            page = b[0] === "hg" ? "hyprglass" : "hyprland"
+            if (b[0] === "hg") target = b[1]
+            mode = b[0] === "hg" ? b[2] : b[1]
+            Toggles.pickBack = ""
+        }
+    }
 
     // a row is a descriptor: what it is, and how to read, write and reset it
     function ofEntry(e) {
         return { id: e.key, label: e.label, sub: e.key, kind: e.kind, options: e.options ?? [], min: e.min ?? 0, max: e.max ?? 1, step: e.step ?? 0.01,
                  get: () => Prefs.shown(e), set: v => Prefs.set(e, v), isSet: () => Prefs.isSet(e),
-                 reset: () => Prefs.set(e, Prefs.defaults[e.key]), hint: e.p === "roles" ? Config.current[e.m] : "" }
+                 reset: () => Prefs.set(e, Prefs.defaults[e.key]), pick: "pref:" + e.key, hint: e.p === "roles" ? Config.current[e.m] : "" }
     }
     // a member of a { shared, dark, light } table property of Glass (hg or hl)
     function ofTable(prop, key, kind, label, sub, def, lo, hi, step) {
         const which = root.target
         const tables = () => prop === "hg" ? Glass.tables(which) : Glass[prop]
         const table = () => tables()[root.mode] ?? {}
-        const write = v => {
-            const own = Object.assign({}, tables())
-            const t = Object.assign({}, own[root.mode] ?? {})
-            if (v === undefined) delete t[key]; else t[key] = v
-            own[root.mode] = t
-            if (prop === "hg") Glass.hg = which === "island" ? { windows: Glass.tables("windows"), island: own } : { windows: own, island: Glass.tables("island") }
-            else Glass[prop] = own
-        }
-        return { id: prop + which + root.mode + key, label: label, sub: sub, kind: kind, options: [], min: lo, max: hi, step: step,
+        const write = v => Glass.setIn(prop, which, root.mode, key, v)
+        return { id: prop + which + root.mode + key, pick: prop + ":" + (prop === "hg" ? which + ":" : "") + root.mode + ":" + key, label: label, sub: sub, kind: kind, options: [], min: lo, max: hi, step: step,
                  get: () => table()[key] ?? (prop === "hg" ? Glass.glassValue(which, key) : def), set: write, isSet: () => key in table(), reset: () => write(undefined), hint: "" }
     }
     function rowsFor(page, query, target, mode) {
@@ -122,6 +125,11 @@ Item {
                 valueText: ""
                 step: entry.d.step / Math.max(1e-9, entry.d.max - entry.d.min)
                 onCommitted: v => entry.d.set(Math.round((entry.d.min + v * (entry.d.max - entry.d.min)) / entry.d.step) * entry.d.step)
+            }
+            EyedropButton {
+                visible: entry.d.kind === "colour" && entry.d.pick !== undefined && Toggles.has("hyprpicker")
+                anchors.verticalCenter: parent.verticalCenter
+                onClicked: { const v = Engine.view; Engine.closeThen(() => Toggles.pickColour(entry.d.pick, v)) }
             }
             Rectangle {
                 visible: entry.d.kind === "colour"

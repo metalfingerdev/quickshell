@@ -78,17 +78,26 @@ Scope {
         }
     }
 
-    // The Colours view's eyedropper: the colour picked becomes the accent, and the view comes back
-    // (Escape, and it comes back as it was).
+    // The eyedropper: the colour picked goes where Toggles.pickTarget says, and the view that asked comes
+    // back (Escape, and it comes back as it was).
+    function place(target, colour) {
+        const p = target.split(":"), alpha = (old, key) => key === "tint_color" ? String(old).slice(7, 9) || "ff" : "ff"
+        if (p[0] === "accent") { Config.accent = colour; Config.source = "accent"; Config.remember(colour) }
+        else if (p[0] === "role") {
+            const all = Object.assign({}, p[1] === "dark" ? Config.rolesDark : Config.rolesLight)
+            all[p[2]] = Config.argb(Qt.color(colour))
+            if (p[1] === "dark") Config.rolesDark = all; else Config.rolesLight = all
+        }
+        else if (p[0] === "hg") Glass.setIn("hg", p[1], p[2], p[3], colour + alpha(Glass.glassValue(p[1], p[3]), p[3]))
+        else if (p[0] === "hl") Glass.setIn("hl", "", p[1], p.slice(2).join(":"), colour + "ff")
+        else if (p[0] === "pref") { const e = Prefs.entries.find(e => e.key === p[1]); if (e) Prefs.set(e, e.p.startsWith("roles") ? Config.argb(Qt.color(colour)) : colour) }
+    }
     Connections {
         target: Toggles
         function onColourPicked(colour) {
-            if (colour !== "") {
-                Config.accent = colour
-                Config.source = "accent"
-                Config.remember(colour)
-            }
-            Engine.open(Engine.View.Colours)
+            if (colour !== "") root.place(Toggles.pickTarget, colour)
+            Toggles.pickBack = Toggles.pickTarget
+            Engine.open(Toggles.pickView >= 0 ? Toggles.pickView : Engine.View.Colours)
         }
     }
 

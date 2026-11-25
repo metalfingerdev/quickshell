@@ -59,11 +59,19 @@ Item {
     }
     onRoleChanged: load()
     onEditDarkChanged: load()
-    Component.onCompleted: load()
+    Component.onCompleted: {
+        const b = Toggles.pickBack.split(":")          // back from the eyedropper: the colour it was for
+        if (b[0] === "role") { editDark = b[1] === "dark"; role = names.find(n => key(n[0]) === b[2])?.[0] ?? "accent" }
+        Toggles.pickBack = ""
+        load()
+    }
     Component.onDestruction: if (accent) Config.remember(Config.accent)
 
     // the eyedropper (hyprpicker): the island lets go of the screen first; Triggers brings this view back
-    function pick() { Engine.closeThen(() => Toggles.pickColour()) }
+    function pick() {
+        const view = Engine.view, target = accent ? "accent" : "role:" + (editDark ? "dark" : "light") + ":" + key(role)
+        Engine.closeThen(() => Toggles.pickColour(target, view))
+    }
 
     implicitWidth: contentW + 2 * pad
     implicitHeight: column.implicitHeight + 2 * pad
@@ -84,7 +92,7 @@ Item {
             onBack: Engine.back()
 
             Pill {
-                visible: Toggles.has("hyprpicker") && root.accent
+                visible: Toggles.has("hyprpicker")
                 icon: "colorize"
                 text: "Pick from the screen"
                 implicitHeight: 48

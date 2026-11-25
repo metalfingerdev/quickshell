@@ -75,7 +75,10 @@ Item {
 
     // the Glass and blur page
     readonly property bool liquid: Glass.available && Glass.enabled
-    Component.onCompleted: Glass.readDescriptions()
+    Component.onCompleted: {
+        Glass.readDescriptions()
+        if (Toggles.pickBack.startsWith("hg:")) { section = "look"; Toggles.pickBack = "" }   // back from the eyedropper
+    }
     function hyprCurrent(key, fallback) { const o = Glass.descriptions.find(d => d.name === key); return o ? Number(o.current) : fallback }
     function hl(key, fallback) { const v = Glass.hl?.shared?.[key]; return v !== undefined ? Number(v) : hyprCurrent(key, fallback) }
     function setHl(key, value) {
@@ -167,6 +170,16 @@ Item {
             text: "Tint"
             value: glass.tint.a
             onCommitted: v => glass.setTint(Qt.rgba(glass.tint.r, glass.tint.g, glass.tint.b, v))
+        }
+        Item {
+            visible: Toggles.has("hyprpicker")
+            width: parent.width
+            height: 48
+            Label { x: Config.spaceL; anchors.verticalCenter: parent.verticalCenter; text: "Tint from the screen"; color: Config.label2 }
+            EyedropButton {
+                anchors { right: parent.right; rightMargin: Config.spaceL; verticalCenter: parent.verticalCenter }
+                onClicked: { const v = Engine.view, t = "hg:" + glass.which + ":shared:tint_color"; Engine.closeThen(() => Toggles.pickColour(t, v)) }
+            }
         }
         TintBar {
             text: "Tint hue"
@@ -486,8 +499,7 @@ Item {
 
             ListSection {
                 title: "Island"
-                footer: root.liquid ? "At 0% opacity the island draws nothing of its own: only the glass shows, and its tint below."
-                      : "At 0% opacity the island draws nothing, so the blur has no shape to fill either."
+                footer: "At 0% the island still holds its shape, so the glass and the blur stay; only its own colour is gone."
                 SwitchRow {
                     title: "Opacity like the windows"
                     checked: Config.islandOpacity < 0

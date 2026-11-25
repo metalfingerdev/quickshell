@@ -98,13 +98,6 @@ Item {
             subtitle: (root.player?.identity ?? "") + "  ·  " + Audio.label(Audio.sink)
             onBack: Engine.back()
 
-            Equalizer {
-                count: 5
-                barWidth: 4
-                height: 20
-                running: Players.playing
-                color: Config.primary
-            }
             MixerButton {}
         }
 

@@ -66,10 +66,11 @@ ClippingRectangle {
                 source: root.player?.trackArtUrl ?? ""
                 sourceSize: Qt.size(96, 96)
             }
-            Equalizer {
+            Icon {
                 anchors.centerIn: parent
                 visible: thumbArt.status !== Image.Ready
-                running: Players.playing
+                name: "music_note"
+                size: 22
                 color: Config.primary
             }
         }

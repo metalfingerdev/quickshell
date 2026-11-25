@@ -49,7 +49,10 @@ Scope {
     readonly property bool covering: Session.covering && active
     onCoveringChanged: if (covering) Engine.close()
     // covering the screen the island is solid, whatever its opacity: it hides the screen as the lock comes
-    property color fill: covering ? Qt.rgba(Config.surface.r, Config.surface.g, Config.surface.b, 1) : Config.island
+    // Never below hyprland's ignore_alpha (look.lua, 0.01) and the glass mask's threshold (plugins.lua): at 0 the
+    // island would draw nothing, and the glass, which takes its shape from what is drawn, would go with it.
+    property color fill: covering ? Qt.rgba(Config.surface.r, Config.surface.g, Config.surface.b, 1)
+                                  : Qt.rgba(Config.island.r, Config.island.g, Config.island.b, Math.max(0.02, Config.islandAlpha))
     Behavior on fill { ColorAnimation { duration: Config.durationMedium } }
     onTargetChanged: swap.restart()
 

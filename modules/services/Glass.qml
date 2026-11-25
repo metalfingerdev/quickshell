@@ -53,6 +53,15 @@ Singleton {
         all[which].shared = shared
         hg = all
     }
+    // one value in a table: prop "hg" (which: windows|island) or "hl" (which unused); mode shared|dark|light
+    function setIn(prop, which, mode, key, value) {
+        const own = Object.assign({}, prop === "hg" ? tables(which) : hl)
+        const t = Object.assign({}, own[mode] ?? {})
+        if (value === undefined) delete t[key]; else t[key] = value
+        own[mode] = t
+        if (prop === "hl") hl = own
+        else hg = which === "island" ? { windows: tables("windows"), island: own } : { windows: own, island: tables("island") }
+    }
     function resetGlass(which, keys) {
         const all = { windows: Object.assign({}, tables("windows")), island: Object.assign({}, tables("island")) }
         for (const mode of ["shared", "dark", "light"]) {

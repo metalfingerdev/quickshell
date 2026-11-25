@@ -136,12 +136,11 @@ Item {
                 visible: status === Image.Ready
                 opacity: Players.playing ? 1 : 0.5
             }
-            Equalizer {
+            Icon {
                 anchors.centerIn: parent
                 visible: cover.status !== Image.Ready
-                running: Players.playing
-                barWidth: 2
-                height: 12
+                name: "music_note"
+                size: 14
                 color: Config.primary
             }
         }
@@ -154,14 +153,14 @@ Item {
             font.features: { "tnum": 1 }
         }
 
-        // bars beside a cover too, so "playing" reads at a glance
-        Equalizer {
-            visible: Players.hasTrack && Players.playing && cover.status === Image.Ready
+        // paused reads at a glance beside the cover; playing needs no mark
+        Icon {
+            visible: Players.hasTrack && !Players.playing
             anchors.verticalCenter: parent.verticalCenter
-            running: Players.playing
-            barWidth: 2
-            height: 12
-            color: Config.primary
+            name: "pause"
+            size: 14
+            filled: true
+            color: Config.label2
         }
 
         Icon {

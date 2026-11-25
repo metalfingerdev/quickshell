@@ -43,6 +43,14 @@ Item {
             title: "Power"
             subtitle: Session.uptimeText
             onBack: Engine.back()
+
+            Pill {
+                visible: Session.restarts.length > 0
+                icon: "expand_more"
+                text: "Restart into…"
+                shortcut: "i"
+                onClicked: menu.open = !menu.open
+            }
         }
 
         Row {
@@ -90,31 +98,20 @@ Item {
             }
         }
 
-        Item {
-            visible: Session.restarts.length > 0
-            width: parent.width
-            height: 44
-
-            Pill {
-                id: into
-                icon: "expand_more"
-                text: "Restart into…"
-                shortcut: "i"
-                onClicked: menu.open = !menu.open
-            }
-            Menu {
-                id: menu
-                x: 0; y: -height - Config.spaceXs
-                width: 240
-                items: Session.restarts.map(r => ({ key: r.id, label: r.label, icon: r.icon }))
-                onChosen: key => root.press(Session.restarts.find(r => r.id === key))
-            }
-        }
-
         KeyHints {
             width: parent.width
             keys: [["↵", "run (ending the session asks first)"], ["⌫", "back"]]
         }
+    }
+
+    // under the header's button, at the right edge: a child of the header would be laid out in its row
+    Menu {
+        id: menu
+        x: parent.width - width - 24
+        y: 24 + 56 + Config.spaceXs
+        width: 240
+        items: Session.restarts.map(r => ({ key: r.id, label: r.label, icon: r.icon }))
+        onChosen: key => root.press(Session.restarts.find(r => r.id === key))
     }
 
     Sheet {
