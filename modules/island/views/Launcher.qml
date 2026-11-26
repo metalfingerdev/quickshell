@@ -316,7 +316,7 @@ Item {
 
     implicitWidth: 880
     readonly property real listTop: modes.y + modes.height + 12
-    implicitHeight: listTop + (results.length === 0 ? 56 : emojiMode ? grid.height + 44 : list.height) + 18 + (hints.visible ? 34 : 0)
+    implicitHeight: listTop + (results.length === 0 ? 56 : emojiMode ? grid.height + 44 : list.height) + 18 + (hints.visible ? hints.implicitHeight + Config.spaceXs : 0)
 
     BackButton {
         id: back
@@ -328,7 +328,7 @@ Item {
     // under the results, while the keyboard is in use (the field is where you type, so these are all there is)
     KeyHints {
         id: hints
-        x: 36; y: root.implicitHeight - 34
+        x: 36; y: root.implicitHeight - hints.implicitHeight - Config.spaceXs
         width: parent.width - 72
         keys: [["↑ ↓", "choose"], ["↵", "open"], ["Tab", "filter"], ["Ctrl P", "pin"], ["Esc", "close"]]
     }
