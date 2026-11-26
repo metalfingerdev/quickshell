@@ -14,6 +14,7 @@ Item {
     property alias title: header.title
     property alias subtitle: header.subtitle
     property alias actions: header.actions
+    property int spacing: Config.spaceM        // between the header, the content and the hints, and inside the content
     property var keys: []                      // KeyHints' pairs, [["key", "what it does"], ...]
     default property alias content: body.data
 
@@ -25,7 +26,7 @@ Item {
         x: root.pad
         y: root.pad
         width: parent.width - 2 * root.pad
-        spacing: Config.spaceM
+        spacing: root.spacing
 
         Header {
             id: header
@@ -35,7 +36,7 @@ Item {
         Column {
             id: body
             width: parent.width
-            spacing: Config.spaceM
+            spacing: root.spacing
         }
         KeyHints {
             width: parent.width

@@ -3,11 +3,10 @@ import Quickshell
 import qs.modules.island
 import qs.modules.components
 import qs.modules.services
+import qs.modules.parts
 
-Item {
+Panel {
     id: root
-
-    readonly property int pad: 24
 
     SystemClock {
         id: clock
@@ -44,138 +43,124 @@ Item {
     }
 
     implicitWidth: 780
-    implicitHeight: column.implicitHeight + 2 * pad
 
-    Column {
-        id: column
-        x: root.pad; y: root.pad
-        width: parent.width - 2 * root.pad
-        spacing: Config.spaceL
+    icon: Config.symbol.calendar
+    title: "Calendar"
+    actions: [
+        Pill { visible: root.shift !== 0 || root.picked !== null; implicitHeight: 48; kind: "text"; text: "Today"; shortcut: "t"; onClicked: { root.shift = 0; root.picked = null } },
+        Pill { icon: "chevron_left";  implicitHeight: 48; iconSize: 24; shortcut: "["; onClicked: root.shift-- },
+        Pill { icon: "chevron_right"; implicitHeight: 48; iconSize: 24; shortcut: "]"; onClicked: root.shift++ }
+    ]
+    spacing: Config.spaceL
+    keys: [["[ ]", "month"], ["T", "today"], ["⌫", "back"], ["Esc", "close"]]
 
-        Header {
-            width: parent.width
-            icon: Config.symbol.calendar
-            title: "Calendar"
-            onBack: Engine.back()
+    Row {
+        width: parent.width
+        spacing: Config.spaceM
 
-            Pill { visible: root.shift !== 0 || root.picked !== null; implicitHeight: 48; kind: "text"; text: "Today"; shortcut: "t"; onClicked: { root.shift = 0; root.picked = null } }
-            Pill { icon: "chevron_left";  implicitHeight: 48; iconSize: 24; shortcut: "["; onClicked: root.shift-- }
-            Pill { icon: "chevron_right"; implicitHeight: 48; iconSize: 24; shortcut: "]"; onClicked: root.shift++ }
-        }
+        // the time and the day on a card of their own, as tall as the month beside them
+        Rectangle {
+            width: parent.width - card.width - parent.spacing
+            height: Math.max(card.height, today.implicitHeight + 2 * Config.spaceL)
+            radius: Config.cardRadius
+            color: Config.tile
 
-        Row {
-            width: parent.width
-            spacing: Config.spaceM
+            Column {
+                id: today
+                anchors { left: parent.left; right: parent.right; margins: Config.spaceL; verticalCenter: parent.verticalCenter }
+                spacing: Config.spaceS
 
-            // the time and the day on a card of their own, as tall as the month beside them
-            Rectangle {
-                width: parent.width - card.width - parent.spacing
-                height: Math.max(card.height, today.implicitHeight + 2 * Config.spaceL)
-                radius: Config.cardRadius
-                color: Config.tile
-
-                Column {
-                    id: today
-                    anchors { left: parent.left; right: parent.right; margins: Config.spaceL; verticalCenter: parent.verticalCenter }
+                Row {
                     spacing: Config.spaceS
 
-                    Row {
-                        spacing: Config.spaceS
+                    Label {
+                        id: time
+                        text: Qt.formatDateTime(clock.date, Config.timeFormat)
+                        font.pixelSize: 88
+                        font.weight: Font.Light
+                        font.features: { "tnum": 1 }
+                    }
+                    Label {
+                        anchors.baseline: time.baseline
+                        text: Qt.formatDateTime(clock.date, "ss")
+                        color: Config.primary
+                        font.pixelSize: Config.headline
+                        font.features: { "tnum": 1 }
+                    }
+                }
+                Label {
+                    text: Qt.formatDateTime(clock.date, "dddd")
+                    font.pixelSize: Config.title
+                }
+                Label {
+                    text: Qt.formatDateTime(clock.date, "d MMMM yyyy") + "  ·  week " + root.week
+                    color: Config.dim
+                    font.pixelSize: Config.large
+                }
 
-                        Label {
-                            id: time
-                            text: Qt.formatDateTime(clock.date, Config.timeFormat)
-                            font.pixelSize: 88
-                            font.weight: Font.Light
-                            font.features: { "tnum": 1 }
-                        }
-                        Label {
-                            anchors.baseline: time.baseline
-                            text: Qt.formatDateTime(clock.date, "ss")
-                            color: Config.primary
-                            font.pixelSize: Config.headline
-                            font.features: { "tnum": 1 }
-                        }
+                // the picked day's events (today's at first), when there are calendars to have them
+                Column {
+                    visible: Calendar.any
+                    width: parent.width
+                    topPadding: Config.spaceM
+                    spacing: Config.spaceXs
+
+                    SectionLabel {
+                        text: root.picked === null ? "Today" : Qt.formatDateTime(root.day, "dddd d MMMM")
                     }
                     Label {
-                        text: Qt.formatDateTime(clock.date, "dddd")
-                        font.pixelSize: Config.title
-                    }
-                    Label {
-                        text: Qt.formatDateTime(clock.date, "d MMMM yyyy") + "  ·  week " + root.week
+                        visible: root.dayEvents.length === 0
+                        text: "Nothing on"
                         color: Config.dim
-                        font.pixelSize: Config.large
                     }
+                    Repeater {
+                        model: root.dayEvents.slice(0, 3)
 
-                    // the picked day's events (today's at first), when there are calendars to have them
-                    Column {
-                        visible: Calendar.any
-                        width: parent.width
-                        topPadding: Config.spaceM
-                        spacing: Config.spaceXs
-
-                        SectionLabel {
-                            text: root.picked === null ? "Today" : Qt.formatDateTime(root.day, "dddd d MMMM")
-                        }
                         Label {
-                            visible: root.dayEvents.length === 0
-                            text: "Nothing on"
-                            color: Config.dim
-                        }
-                        Repeater {
-                            model: root.dayEvents.slice(0, 3)
-
-                            Label {
-                                required property var modelData
-                                width: parent.width
-                                elide: Text.ElideRight
-                                text: (modelData.allDay ? "All day" : Qt.formatDateTime(new Date(modelData.start * 1000), Config.timeFormat))
-                                      + "   " + Calendar.title(modelData)
-                            }
-                        }
-                        Label {
-                            visible: root.dayEvents.length > 3
-                            text: "and " + (root.dayEvents.length - 3) + " more"
-                            color: Config.dim
+                            required property var modelData
+                            width: parent.width
+                            elide: Text.ElideRight
+                            text: (modelData.allDay ? "All day" : Qt.formatDateTime(new Date(modelData.start * 1000), Config.timeFormat))
+                                  + "   " + Calendar.title(modelData)
                         }
                     }
-                }
-            }
-
-            Rectangle {
-                id: card
-                width: month.implicitWidth + 32
-                height: month.implicitHeight + 32
-                radius: Config.cardRadius
-                color: Config.tile
-
-                Column {
-                    id: month
-                    x: 16; y: 16
-                    spacing: Config.spaceS
-
                     Label {
-                        leftPadding: Config.spaceS
-                        text: Qt.formatDateTime(root.shown, "MMMM yyyy")
-                        font.pixelSize: Config.large
-                        font.weight: Font.Medium
-                    }
-                    CalendarGrid {
-                        cell: 44
-                        year: root.shown.getFullYear()
-                        month: root.shown.getMonth()
-                        today: clock.date
-                        marked: root.marked
-                        selected: root.picked
-                        onPicked: d => root.picked = d
+                        visible: root.dayEvents.length > 3
+                        text: "and " + (root.dayEvents.length - 3) + " more"
+                        color: Config.dim
                     }
                 }
             }
         }
 
-        KeyHints {
-            width: parent.width
-            keys: [["[ ]", "month"], ["T", "today"], ["⌫", "back"], ["Esc", "close"]]
+        Rectangle {
+            id: card
+            width: month.implicitWidth + 32
+            height: month.implicitHeight + 32
+            radius: Config.cardRadius
+            color: Config.tile
+
+            Column {
+                id: month
+                x: 16; y: 16
+                spacing: Config.spaceS
+
+                Label {
+                    leftPadding: Config.spaceS
+                    text: Qt.formatDateTime(root.shown, "MMMM yyyy")
+                    font.pixelSize: Config.large
+                    font.weight: Font.Medium
+                }
+                CalendarGrid {
+                    cell: 44
+                    year: root.shown.getFullYear()
+                    month: root.shown.getMonth()
+                    today: clock.date
+                    marked: root.marked
+                    selected: root.picked
+                    onPicked: d => root.picked = d
+                }
+            }
         }
     }
 }

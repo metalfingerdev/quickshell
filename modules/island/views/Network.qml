@@ -3,12 +3,12 @@ import Quickshell
 import qs.modules.island
 import qs.modules.components
 import qs.modules.services
+import qs.modules.parts
 
 // While a panel is open the list keeps its order, so nothing moves under you.
-Item {
+Panel {
     id: root
 
-    readonly property int pad: 24
     readonly property int tileH: 72
     readonly property int maxRows: 4
 
@@ -51,299 +51,283 @@ Item {
     Keys.onEscapePressed: event => { if (root.selected) { root.close(); Engine.key() } else event.accepted = false }
 
     implicitWidth: 720
-    implicitHeight: column.implicitHeight + 2 * pad
 
-    Column {
-        id: column
-        x: root.pad
-        y: root.pad
-        width: parent.width - 2 * root.pad
-        spacing: Config.spaceL
+    icon: "language"
+    title: "Internet"
+    subtitle: Net.attempt ? "Connecting to " + Net.attempt.name + "…" : Net.summary
+    spacing: Config.spaceL
+    keys: [["1–9", "a network"], ["W", "Wi-Fi on/off"], ["I", "details"], ["⌫", "back"], ["Esc", root.selected ? "close the panel" : "close"]]
 
-        Header {
-            width: parent.width
-            icon: "language"
-            title: "Internet"
-            subtitle: Net.attempt ? "Connecting to " + Net.attempt.name + "…" : Net.summary
-            onBack: Engine.back()
+    ListSection {
+        ListEntry {
+            flat: true
+            focus: !Net.wifiEnabled || Net.networks.length === 0
+            lit: Net.wifiEnabled
+            icon: Net.wifiEnabled ? "wifi" : "wifi_off"
+            title: "Wi-Fi"
+            subtitle: Net.wifiBlocked ? "Blocked by a hardware switch or rfkill"
+                    : !Net.wifiEnabled ? "Off" : Net.current ? Net.current.name : "On"
+            shortcut: "w"
+            enabled: Net.available && !Net.wifiBlocked
+            onClicked: Net.setWifi(!Net.wifiEnabled)
         }
+        ListEntry {
+            flat: true
+            visible: Net.ethernet
+            height: visible ? implicitHeight : 0
+            activeFocusOnTab: false
+            lit: Net.ethernet
+            icon: "lan"
+            title: "Ethernet"
+            subtitle: Net.linkSpeed > 0 ? "Connected  ·  " + Net.linkSpeed + " Mb/s" : "Connected"
+        }
+    }
 
-        ListSection {
-            ListEntry {
+    EmptyState {
+        visible: title !== ""
+        width: parent.width
+        compact: true
+        icon: !Net.wifiEnabled ? "wifi_off" : "wifi_find"
+        title: !Net.available ? "NetworkManager isn't running"
+             : Net.wifi === null ? "No Wi-Fi device"
+             : !Net.wifiEnabled ? "Turn Wi-Fi on to see networks"
+             : Net.networks.length === 0 ? "Searching…" : ""
+    }
+
+    // known networks first, as System Settings has them; each row opens the panel below
+    ScrollList {
+        id: list
+        visible: Net.wifiEnabled && root.shown.length > 0
+        width: parent.width
+        maxHeight: Math.min(6 * 68 + 2 * 48 + 2 * inset, Engine.room - 420)
+
+        Column {
+            width: list.innerWidth
+            spacing: Config.spaceM
+
+            component NetworkRow: ListEntry {
+                id: row
+                required property var net
+                required property int number
                 flat: true
-                focus: !Net.wifiEnabled || Net.networks.length === 0
-                lit: Net.wifiEnabled
-                icon: Net.wifiEnabled ? "wifi" : "wifi_off"
-                title: "Wi-Fi"
-                subtitle: Net.wifiBlocked ? "Blocked by a hardware switch or rfkill"
-                        : !Net.wifiEnabled ? "Off" : Net.current ? Net.current.name : "On"
-                shortcut: "w"
-                enabled: Net.available && !Net.wifiBlocked
-                onClicked: Net.setWifi(!Net.wifiEnabled)
+                focus: number === 0
+                lit: net.connected
+                icon: Net.glyph(net.signalStrength)
+                title: net.name
+                subtitle: root.status(net)
+                shortcut: number < 9 ? String(number + 1) : ""
+                active: root.selected === net
+                onClicked: root.choose(net)
+
+                Icon { visible: net.connected; name: "check"; size: 20; color: Config.primary }
+                Icon { visible: Net.secured(net); name: "lock"; size: 16; color: Config.dim }
             }
-            ListEntry {
-                flat: true
-                visible: Net.ethernet
-                height: visible ? implicitHeight : 0
-                activeFocusOnTab: false
-                lit: Net.ethernet
-                icon: "lan"
-                title: "Ethernet"
-                subtitle: Net.linkSpeed > 0 ? "Connected  ·  " + Net.linkSpeed + " Mb/s" : "Connected"
+
+            ListSection {
+                title: "My networks"
+                visible: mine.count > 0
+                Repeater {
+                    id: mine
+                    model: ScriptModel { values: Net.wifiEnabled ? root.shown.filter(n => n.known || n.connected) : []; objectProp: "name" }
+                    NetworkRow { required property var modelData; required property int index; net: modelData; number: index }
+                }
+            }
+            ListSection {
+                title: "Other networks"
+                visible: other.count > 0
+                Repeater {
+                    id: other
+                    model: ScriptModel { values: Net.wifiEnabled ? root.shown.filter(n => !(n.known || n.connected)) : []; objectProp: "name" }
+                    NetworkRow { required property var modelData; required property int index; net: modelData; number: index + mine.count }
+                }
             }
         }
+    }
 
-        EmptyState {
-            visible: title !== ""
-            width: parent.width
-            compact: true
-            icon: !Net.wifiEnabled ? "wifi_off" : "wifi_find"
-            title: !Net.available ? "NetworkManager isn't running"
-                 : Net.wifi === null ? "No Wi-Fi device"
-                 : !Net.wifiEnabled ? "Turn Wi-Fi on to see networks"
-                 : Net.networks.length === 0 ? "Searching…" : ""
-        }
+    Rectangle {
+        visible: root.selected !== null
+        width: parent.width
+        height: panel.implicitHeight + 32
+        radius: Config.cardRadius
+        color: Config.tile
 
-        // known networks first, as System Settings has them; each row opens the panel below
-        ScrollList {
-            id: list
-            visible: Net.wifiEnabled && root.shown.length > 0
-            width: parent.width
-            maxHeight: Math.min(6 * 68 + 2 * 48 + 2 * inset, Engine.room - 420)
+        Column {
+            id: panel
+            x: 16; y: 16
+            width: parent.width - 32
+            spacing: Config.spaceM
 
-            Column {
-                width: list.innerWidth
+            Label {
+                leftPadding: Config.spaceXs
+                text: !root.selected ? "" : root.asking ? "Connect to " + root.selected.name : root.selected.name
+                font.pixelSize: Config.large
+                font.weight: Font.Medium
+            }
+
+            Row {
+                visible: root.asking
+                width: parent.width
                 spacing: Config.spaceM
 
-                component NetworkRow: ListEntry {
-                    id: row
-                    required property var net
-                    required property int number
-                    flat: true
-                    focus: number === 0
-                    lit: net.connected
-                    icon: Net.glyph(net.signalStrength)
-                    title: net.name
-                    subtitle: root.status(net)
-                    shortcut: number < 9 ? String(number + 1) : ""
-                    active: root.selected === net
-                    onClicked: root.choose(net)
+                Rectangle {
+                    width: parent.width - join.width - cancel.width - 2 * parent.spacing
+                    height: 52
+                    radius: height / 2
+                    color: Config.raised
+                    border.width: password.activeFocus ? 2 : 0
+                    border.color: Config.primary
 
-                    Icon { visible: net.connected; name: "check"; size: 20; color: Config.primary }
-                    Icon { visible: Net.secured(net); name: "lock"; size: 16; color: Config.dim }
-                }
+                    TextInput {
+                        id: password
+                        anchors { fill: parent; leftMargin: Config.spaceXl; rightMargin: Config.spaceXl }
+                        verticalAlignment: TextInput.AlignVCenter
+                        echoMode: TextInput.Password
+                        enabled: !root.connecting
+                        color: Config.text
+                        font.family: Config.font
+                        font.pixelSize: Config.large
+                        clip: true
 
-                ListSection {
-                    title: "My networks"
-                    visible: mine.count > 0
-                    Repeater {
-                        id: mine
-                        model: ScriptModel { values: Net.wifiEnabled ? root.shown.filter(n => n.known || n.connected) : []; objectProp: "name" }
-                        NetworkRow { required property var modelData; required property int index; net: modelData; number: index }
+                        // the field accepts its keys, so ViewLoader never sees them: report them here
+                        Keys.onPressed: event => { Engine.key(); event.accepted = false }
+                        Keys.onReturnPressed: join.activate()
+                        Keys.onEnterPressed:  join.activate()
+                        Keys.onEscapePressed: root.close()
+
+                        Text {
+                            visible: password.text === ""
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: root.connecting ? "Connecting…" : "Password"
+                            color: Config.dim
+                            font: password.font
+                        }
                     }
                 }
-                ListSection {
-                    title: "Other networks"
-                    visible: other.count > 0
-                    Repeater {
-                        id: other
-                        model: ScriptModel { values: Net.wifiEnabled ? root.shown.filter(n => !(n.known || n.connected)) : []; objectProp: "name" }
-                        NetworkRow { required property var modelData; required property int index; net: modelData; number: index + mine.count }
+                Pill {
+                    id: join
+                    implicitHeight: 52
+                    kind: "filled"
+                    text: root.connecting ? "Connecting…" : "Connect"
+                    enabled: password.text.length >= 8 && !root.connecting      // WPA: 8..63 characters
+                    onClicked: {
+                        Net.connect(root.selected, password.text)
+                        password.text = ""
                     }
+                }
+                Pill {
+                    id: cancel
+                    implicitHeight: 52
+                    kind: "text"
+                    text: "Cancel"
+                    onClicked: root.close()
+                }
+            }
+
+            Row {
+                visible: root.selected !== null && !root.asking
+                spacing: Config.spaceM
+
+                Pill {
+                    implicitHeight: 52
+                    icon: "link_off"
+                    text: "Disconnect"
+                    shortcut: "x"
+                    onClicked: Net.disconnect(root.selected)
+                }
+                Pill {
+                    implicitHeight: 52
+                    icon: "delete"
+                    text: "Forget"
+                    shortcut: "f"
+                    onClicked: { Net.forget(root.selected); root.close() }
+                }
+                Pill {
+                    implicitHeight: 52
+                    kind: "text"
+                    text: "Cancel"
+                    onClicked: root.close()
                 }
             }
         }
+    }
+
+    // Noctalia's info, out of the way: the row opens it, and a value copies with a click
+    ListEntry {
+        visible: Net.details.length > 0
+        width: parent.width
+        filled: true
+        icon: "info"
+        title: "Details"
+        subtitle: Net.details.map(d => d.device + "  " + d.facts[0][1].split("/")[0]).join("  ·  ")
+        shortcut: "i"
+        onClicked: root.details = !root.details
+
+        Icon { name: root.details ? "expand_less" : "expand_more"; size: 22; color: Config.dim }
+    }
+    Repeater {
+        model: root.details ? Net.details : []
 
         Rectangle {
-            visible: root.selected !== null
+            id: card
+            required property var modelData
             width: parent.width
-            height: panel.implicitHeight + 32
-            radius: Config.cardRadius
+            height: facts.implicitHeight + 2 * Config.spaceM
+            radius: Config.innerRadius + 4
             color: Config.tile
 
             Column {
-                id: panel
-                x: 16; y: 16
-                width: parent.width - 32
-                spacing: Config.spaceM
+                id: facts
+                x: Config.spaceL
+                y: Config.spaceM
+                width: parent.width - 2 * Config.spaceL
 
-                Label {
-                    leftPadding: Config.spaceXs
-                    text: !root.selected ? "" : root.asking ? "Connect to " + root.selected.name : root.selected.name
-                    font.pixelSize: Config.large
-                    font.weight: Font.Medium
-                }
+                SectionLabel { text: card.modelData.device + (card.modelData.connection ? "  ·  " + card.modelData.connection : "") }
+                Repeater {
+                    model: card.modelData.facts
 
-                Row {
-                    visible: root.asking
-                    width: parent.width
-                    spacing: Config.spaceM
+                    Item {
+                        id: fact
+                        required property var modelData
+                        width: facts.width
+                        height: 32
+                        activeFocusOnTab: true
+                        function activate() { Toggles.launch(["wl-copy", "--", fact.modelData[1]]); done.restart() }
+                        Accessible.role: Accessible.Button
+                        Accessible.name: "Copy " + fact.modelData[0]
+                        Accessible.onPressAction: activate()
+                        FocusRing { on: fact.activeFocus && Config.focusVisible }
 
-                    Rectangle {
-                        width: parent.width - join.width - cancel.width - 2 * parent.spacing
-                        height: 52
-                        radius: height / 2
-                        color: Config.raised
-                        border.width: password.activeFocus ? 2 : 0
-                        border.color: Config.primary
-
-                        TextInput {
-                            id: password
-                            anchors { fill: parent; leftMargin: Config.spaceXl; rightMargin: Config.spaceXl }
-                            verticalAlignment: TextInput.AlignVCenter
-                            echoMode: TextInput.Password
-                            enabled: !root.connecting
-                            color: Config.text
-                            font.family: Config.font
-                            font.pixelSize: Config.large
-                            clip: true
-
-                            // the field accepts its keys, so ViewLoader never sees them: report them here
-                            Keys.onPressed: event => { Engine.key(); event.accepted = false }
-                            Keys.onReturnPressed: join.activate()
-                            Keys.onEnterPressed:  join.activate()
-                            Keys.onEscapePressed: root.close()
-
-                            Text {
-                                visible: password.text === ""
-                                anchors.verticalCenter: parent.verticalCenter
-                                text: root.connecting ? "Connecting…" : "Password"
-                                color: Config.dim
-                                font: password.font
-                            }
+                        Label { anchors.verticalCenter: parent.verticalCenter; width: 4 * Config.spaceXl; text: fact.modelData[0]; color: Config.dim }
+                        Label {
+                            anchors { left: parent.left; leftMargin: 4 * Config.spaceXl; right: copied.left; verticalCenter: parent.verticalCenter }
+                            text: fact.modelData[1]
+                            elide: Text.ElideRight
+                            font.family: Config.mono
                         }
-                    }
-                    Pill {
-                        id: join
-                        implicitHeight: 52
-                        kind: "filled"
-                        text: root.connecting ? "Connecting…" : "Connect"
-                        enabled: password.text.length >= 8 && !root.connecting      // WPA: 8..63 characters
-                        onClicked: {
-                            Net.connect(root.selected, password.text)
-                            password.text = ""
+                        Icon {
+                            id: copied
+                            anchors { right: parent.right; verticalCenter: parent.verticalCenter }
+                            visible: copyArea.containsMouse || done.running || fact.activeFocus
+                            name: done.running ? "check" : "content_copy"
+                            color: done.running ? Config.good : Config.dim
                         }
-                    }
-                    Pill {
-                        id: cancel
-                        implicitHeight: 52
-                        kind: "text"
-                        text: "Cancel"
-                        onClicked: root.close()
-                    }
-                }
-
-                Row {
-                    visible: root.selected !== null && !root.asking
-                    spacing: Config.spaceM
-
-                    Pill {
-                        implicitHeight: 52
-                        icon: "link_off"
-                        text: "Disconnect"
-                        shortcut: "x"
-                        onClicked: Net.disconnect(root.selected)
-                    }
-                    Pill {
-                        implicitHeight: 52
-                        icon: "delete"
-                        text: "Forget"
-                        shortcut: "f"
-                        onClicked: { Net.forget(root.selected); root.close() }
-                    }
-                    Pill {
-                        implicitHeight: 52
-                        kind: "text"
-                        text: "Cancel"
-                        onClicked: root.close()
+                        ClickArea {
+                            id: copyArea
+                            onClicked: fact.activate()
+                        }
+                        Timer { id: done; interval: 1500 }
                     }
                 }
             }
         }
+    }
 
-        // Noctalia's info, out of the way: the row opens it, and a value copies with a click
-        ListEntry {
-            visible: Net.details.length > 0
-            width: parent.width
-            filled: true
-            icon: "info"
-            title: "Details"
-            subtitle: Net.details.map(d => d.device + "  " + d.facts[0][1].split("/")[0]).join("  ·  ")
-            shortcut: "i"
-            onClicked: root.details = !root.details
-
-            Icon { name: root.details ? "expand_less" : "expand_more"; size: 22; color: Config.dim }
-        }
-        Repeater {
-            model: root.details ? Net.details : []
-
-            Rectangle {
-                id: card
-                required property var modelData
-                width: parent.width
-                height: facts.implicitHeight + 2 * Config.spaceM
-                radius: Config.innerRadius + 4
-                color: Config.tile
-
-                Column {
-                    id: facts
-                    x: Config.spaceL
-                    y: Config.spaceM
-                    width: parent.width - 2 * Config.spaceL
-
-                    SectionLabel { text: card.modelData.device + (card.modelData.connection ? "  ·  " + card.modelData.connection : "") }
-                    Repeater {
-                        model: card.modelData.facts
-
-                        Item {
-                            id: fact
-                            required property var modelData
-                            width: facts.width
-                            height: 32
-                            activeFocusOnTab: true
-                            function activate() { Toggles.launch(["wl-copy", "--", fact.modelData[1]]); done.restart() }
-                            Accessible.role: Accessible.Button
-                            Accessible.name: "Copy " + fact.modelData[0]
-                            Accessible.onPressAction: activate()
-                            FocusRing { on: fact.activeFocus && Config.focusVisible }
-
-                            Label { anchors.verticalCenter: parent.verticalCenter; width: 4 * Config.spaceXl; text: fact.modelData[0]; color: Config.dim }
-                            Label {
-                                anchors { left: parent.left; leftMargin: 4 * Config.spaceXl; right: copied.left; verticalCenter: parent.verticalCenter }
-                                text: fact.modelData[1]
-                                elide: Text.ElideRight
-                                font.family: Config.mono
-                            }
-                            Icon {
-                                id: copied
-                                anchors { right: parent.right; verticalCenter: parent.verticalCenter }
-                                visible: copyArea.containsMouse || done.running || fact.activeFocus
-                                name: done.running ? "check" : "content_copy"
-                                color: done.running ? Config.good : Config.dim
-                            }
-                            ClickArea {
-                                id: copyArea
-                                onClicked: fact.activate()
-                            }
-                            Timer { id: done; interval: 1500 }
-                        }
-                    }
-                }
-            }
-        }
-
-        Label {
-            visible: Net.lastError !== ""
-            width: parent.width
-            leftPadding: Config.spaceM
-            text: Net.lastError
-            elide: Text.ElideRight
-            color: Config.bad
-        }
-
-        KeyHints {
-            width: parent.width
-            keys: [["1–9", "a network"], ["W", "Wi-Fi on/off"], ["I", "details"], ["⌫", "back"], ["Esc", root.selected ? "close the panel" : "close"]]
-        }
+    Label {
+        visible: Net.lastError !== ""
+        width: parent.width
+        leftPadding: Config.spaceM
+        text: Net.lastError
+        elide: Text.ElideRight
+        color: Config.bad
     }
 }

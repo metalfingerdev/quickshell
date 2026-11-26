@@ -2,20 +2,18 @@ import QtQuick
 import qs.modules.island
 import qs.modules.components
 import qs.modules.services
+import qs.modules.parts
 
 // The machine at a glance: processor, memory, temperature, the disk and the network, read only while this
 // is open (SysStats.watch), and the local model's state from the agent. The GPU is never polled: asking the
 // GTX 1650 would wake it.
-Item {
+Panel {
     id: root
-
-    readonly property int pad: Config.spaceXl
 
     Component.onCompleted: SysStats.watch(true)
     Component.onDestruction: SysStats.watch(false)
 
     implicitWidth: 560
-    implicitHeight: column.implicitHeight + 2 * pad
 
     // One reading on a card of its own: its value and its last minute as a graph; a bar instead for
     // what barely moves in a minute (the disk). A second graph, dimmer, shares the first one's scale.
@@ -79,90 +77,76 @@ Item {
         }
     }
 
-    Column {
-        id: column
-        x: root.pad; y: root.pad
-        width: parent.width - 2 * root.pad
-        spacing: Config.spaceL
+    icon: "monitor_heart"
+    title: "System"
+    subtitle: "The last minute, live while this is open"
+    spacing: Config.spaceL
+    keys: [["⌫", "back"], ["Esc", "close"]]
 
-        Header {
-            width: parent.width
-            icon: "monitor_heart"
-            title: "System"
-            subtitle: "The last minute, live while this is open"
-            onBack: Engine.back()
-        }
+    Grid {
+        id: grid
+        width: parent.width
+        columns: 2
+        spacing: Config.spaceM
+        readonly property real cell: (width - spacing) / 2
 
-        Grid {
-            id: grid
-            width: parent.width
-            columns: 2
-            spacing: Config.spaceM
-            readonly property real cell: (width - spacing) / 2
-
-            Reading {
-                width: grid.cell
-                icon: "developer_board"; name: "Processor"
-                value: Math.round(SysStats.cpu * 100) + " %"
-                history: SysStats.history.cpu
-            }
-            Reading {
-                width: grid.cell
-                icon: "memory"; name: "Memory"
-                value: SysStats.mem > 0 ? SysStats.memGB.toFixed(1) + " GB" : ""
-                aside: SysStats.mem > 0 ? "of " + (SysStats.memGB / SysStats.mem).toFixed(1) + " GB" : ""
-                note: "Reading…"
-                history: SysStats.history.mem
-            }
-            Reading {
-                width: grid.cell
-                icon: "thermostat"; name: "Temperature"
-                value: SysStats.temp > 0 ? Math.round(SysStats.temp) + " °C" : ""
-                note: "No sensor found"
-                history: SysStats.history.temp
-                max: 100
-                tone: SysStats.temp >= 85 ? Config.bad : SysStats.temp >= 70 ? Config.warn : Config.primary
-            }
-            Reading {
-                width: grid.cell
-                icon: "hard_drive"; name: "Disk (/)"
-                value: SysStats.diskTotalGB > 0 ? SysStats.diskUsedGB.toFixed(0) + " GB" : ""
-                aside: "of " + SysStats.diskTotalGB.toFixed(0) + " GB"
-                note: "Reading…"
-                fraction: SysStats.diskTotalGB > 0 ? SysStats.diskUsedGB / SysStats.diskTotalGB : 0
-                tone: SysStats.diskUsedGB / Math.max(1, SysStats.diskTotalGB) >= 0.9 ? Config.bad : Config.primary
-            }
-        }
-
-        // down in the primary colour, up dimmer, on one scale so the two compare
         Reading {
-            width: parent.width
-            icon: "swap_vert"; name: "Network" + (SysStats.iface !== "" ? "  ·  " + SysStats.iface : "")
-            value: SysStats.iface !== "" ? "↓ " + SysStats.rate(SysStats.rx) : ""
-            aside: "↑ " + SysStats.rate(SysStats.tx)
-            note: "No network route"
-            history: SysStats.history.rx
-            history2: SysStats.history.tx
-            max: Math.max(1, ...SysStats.history.rx, ...SysStats.history.tx)
+            width: grid.cell
+            icon: "developer_board"; name: "Processor"
+            value: Math.round(SysStats.cpu * 100) + " %"
+            history: SysStats.history.cpu
         }
+        Reading {
+            width: grid.cell
+            icon: "memory"; name: "Memory"
+            value: SysStats.mem > 0 ? SysStats.memGB.toFixed(1) + " GB" : ""
+            aside: SysStats.mem > 0 ? "of " + (SysStats.memGB / SysStats.mem).toFixed(1) + " GB" : ""
+            note: "Reading…"
+            history: SysStats.history.mem
+        }
+        Reading {
+            width: grid.cell
+            icon: "thermostat"; name: "Temperature"
+            value: SysStats.temp > 0 ? Math.round(SysStats.temp) + " °C" : ""
+            note: "No sensor found"
+            history: SysStats.history.temp
+            max: 100
+            tone: SysStats.temp >= 85 ? Config.bad : SysStats.temp >= 70 ? Config.warn : Config.primary
+        }
+        Reading {
+            width: grid.cell
+            icon: "hard_drive"; name: "Disk (/)"
+            value: SysStats.diskTotalGB > 0 ? SysStats.diskUsedGB.toFixed(0) + " GB" : ""
+            aside: "of " + SysStats.diskTotalGB.toFixed(0) + " GB"
+            note: "Reading…"
+            fraction: SysStats.diskTotalGB > 0 ? SysStats.diskUsedGB / SysStats.diskTotalGB : 0
+            tone: SysStats.diskUsedGB / Math.max(1, SysStats.diskTotalGB) >= 0.9 ? Config.bad : Config.primary
+        }
+    }
 
-        ListEntry {
-            width: parent.width
-            filled: true
-            icon: "psychology"
-            title: !Agent.ready ? "Local model: checking…"
-                 : !Agent.reachable ? "Local model: Ollama isn't running"
-                 : Agent.inUse === "" ? "Local model: none installed"
-                 : "Local model: " + Agent.inUse
-            subtitle: !Agent.ready ? ""
-                    : !Agent.reachable ? "The assistant can't answer until it is started."
-                    : Agent.inUse === "" ? "Models are managed in the flake's ollama module."
-                    : Agent.loaded ? "In memory, ready" : "Not loaded: the first answer is slower"
-        }
+    // down in the primary colour, up dimmer, on one scale so the two compare
+    Reading {
+        width: parent.width
+        icon: "swap_vert"; name: "Network" + (SysStats.iface !== "" ? "  ·  " + SysStats.iface : "")
+        value: SysStats.iface !== "" ? "↓ " + SysStats.rate(SysStats.rx) : ""
+        aside: "↑ " + SysStats.rate(SysStats.tx)
+        note: "No network route"
+        history: SysStats.history.rx
+        history2: SysStats.history.tx
+        max: Math.max(1, ...SysStats.history.rx, ...SysStats.history.tx)
+    }
 
-        KeyHints {
-            width: parent.width
-            keys: [["⌫", "back"], ["Esc", "close"]]
-        }
+    ListEntry {
+        width: parent.width
+        filled: true
+        icon: "psychology"
+        title: !Agent.ready ? "Local model: checking…"
+             : !Agent.reachable ? "Local model: Ollama isn't running"
+             : Agent.inUse === "" ? "Local model: none installed"
+             : "Local model: " + Agent.inUse
+        subtitle: !Agent.ready ? ""
+                : !Agent.reachable ? "The assistant can't answer until it is started."
+                : Agent.inUse === "" ? "Models are managed in the flake's ollama module."
+                : Agent.loaded ? "In memory, ready" : "Not loaded: the first answer is slower"
     }
 }

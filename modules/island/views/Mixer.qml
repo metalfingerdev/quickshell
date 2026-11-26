@@ -6,7 +6,7 @@ import qs.modules.components
 import qs.modules.services
 
 // A stream each, so a browser's tabs are apart.
-Item {
+Panel {
     id: root
 
     // which device it is, when there is a choice: one chip each, the one in use lit
@@ -37,161 +37,143 @@ Item {
         }
     }
 
-    readonly property int pad: 24
     readonly property int maxRows: 4
     readonly property int rowH: 66
     readonly property int rowGap: 14
 
     implicitWidth: 640
-    implicitHeight: column.implicitHeight + 2 * pad
 
-    Column {
-        id: column
-        x: root.pad
-        y: root.pad
-        width: parent.width - 2 * root.pad
-        spacing: Config.spaceL
+    icon: Config.symbol.mixer
+    title: "Mixer"
+    subtitle: Audio.streams.length === 0 ? "No app is playing sound"
+            : Audio.streams.length === 1 ? "1 app playing sound" : Audio.streams.length + " apps playing sound"
+    actions: Pill {
+        kind: "text"
+        icon: Config.symbol.media
+        iconSize: 22
+        shortcut: "m"
+        onClicked: Engine.open(Engine.View.Media)
+    }
+    spacing: Config.spaceL
+    keys: [["← →", "volume, on a slider"], ["Space", "mute"], ["⌫", "back"], ["Esc", "close"]]
 
-        Header {
+    Card {
+        title: "Output  ·  " + Audio.label(Audio.sink)
+        VolumeSlider {
             width: parent.width
-            icon: Config.symbol.mixer
-            title: "Mixer"
-            subtitle: Audio.streams.length === 0 ? "No app is playing sound"
-                    : Audio.streams.length === 1 ? "1 app playing sound" : Audio.streams.length + " apps playing sound"
-            onBack: Engine.back()
+            focus: true
+            enabled: Audio.sink !== null
+        }
+        Devices { nodes: Audio.sinks; current: Audio.sink; onPicked: node => Audio.setSink(node) }
+    }
 
-            Pill {
-                kind: "text"
-                icon: Config.symbol.media
-                iconSize: 22
-                shortcut: "m"
-                onClicked: Engine.open(Engine.View.Media)
-            }
+    Card {
+        visible: Audio.hasMic
+        title: "Microphone  ·  " + Audio.label(Audio.source)
+        VolumeSlider {
+            width: parent.width
+            node: Audio.source
+            icon: silent ? "mic_off" : "mic"
+        }
+        Devices { visible: nodes.length > 1; nodes: Audio.sources; current: Audio.source; onPicked: node => Audio.setSource(node) }
+    }
+
+    Card {
+        title: "Apps"
+        EmptyState {
+            visible: Audio.streams.length === 0
+            width: parent.width
+            compact: true
+            icon: Config.symbol.muted
+            title: "Nothing is playing sound right now"
+            color: Config.raised
         }
 
-        Card {
-            title: "Output  ·  " + Audio.label(Audio.sink)
-            VolumeSlider {
-                width: parent.width
-                focus: true
-                enabled: Audio.sink !== null
-            }
-            Devices { nodes: Audio.sinks; current: Audio.sink; onPicked: node => Audio.setSink(node) }
-        }
+        // out by its inset, so the rows line up with the sliders above
+        ScrollList {
+            id: list
+            visible: Audio.streams.length > 0
+            x: -inset
+            width: parent.width + 2 * inset
+            spacing: root.rowGap
+            maxHeight: root.maxRows * (root.rowH + root.rowGap) - root.rowGap + 2 * inset
 
-        Card {
-            visible: Audio.hasMic
-            title: "Microphone  ·  " + Audio.label(Audio.source)
-            VolumeSlider {
-                width: parent.width
-                node: Audio.source
-                icon: silent ? "mic_off" : "mic"
-            }
-            Devices { visible: nodes.length > 1; nodes: Audio.sources; current: Audio.source; onPicked: node => Audio.setSource(node) }
-        }
+            Repeater {
+                model: Audio.streams
 
-        Card {
-            title: "Apps"
-            EmptyState {
-                visible: Audio.streams.length === 0
-                width: parent.width
-                compact: true
-                icon: Config.symbol.muted
-                title: "Nothing is playing sound right now"
-                color: Config.raised
-            }
+                Item {
+                    id: app
+                    required property var modelData
+                    readonly property string iconPath: Audio.appIcon(modelData)
 
-            // out by its inset, so the rows line up with the sliders above
-            ScrollList {
-                id: list
-                visible: Audio.streams.length > 0
-                x: -inset
-                width: parent.width + 2 * inset
-                spacing: root.rowGap
-                maxHeight: root.maxRows * (root.rowH + root.rowGap) - root.rowGap + 2 * inset
-
-                Repeater {
-                    model: Audio.streams
+                    width: list.innerWidth
+                    height: root.rowH
 
                     Item {
-                        id: app
-                        required property var modelData
-                        readonly property string iconPath: Audio.appIcon(modelData)
+                        id: lead
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 44
+                        height: 44
 
-                        width: list.innerWidth
-                        height: root.rowH
+                        IconImage {
+                            visible: app.iconPath !== ""
+                            anchors.centerIn: parent
+                            implicitSize: 40
+                            asynchronous: true
+                            source: app.iconPath
+                        }
+                        Rectangle {
+                            visible: app.iconPath === ""
+                            anchors.fill: parent
+                            radius: 22
+                            color: Config.raised
+
+                            Icon {
+                                anchors.centerIn: parent
+                                name: Config.symbol.media
+                                size: 22
+                                color: Config.text
+                            }
+                        }
+                    }
+
+                    Column {
+                        id: info
+                        anchors { left: lead.right; leftMargin: Config.spaceL; right: parent.right; verticalCenter: parent.verticalCenter }
+                        spacing: Config.spaceS
 
                         Item {
-                            id: lead
-                            anchors.verticalCenter: parent.verticalCenter
-                            width: 44
-                            height: 44
+                            width: parent.width
+                            height: name.implicitHeight
 
-                            IconImage {
-                                visible: app.iconPath !== ""
-                                anchors.centerIn: parent
-                                implicitSize: 40
-                                asynchronous: true
-                                source: app.iconPath
+                            Label {
+                                id: name
+                                x: 2
+                                width: Math.min(implicitWidth, parent.width - 2)
+                                text: Audio.appName(app.modelData)
+                                elide: Text.ElideRight
+                                font.pixelSize: Config.body + 1
+                                font.weight: Font.Medium
                             }
-                            Rectangle {
-                                visible: app.iconPath === ""
-                                anchors.fill: parent
-                                radius: 22
-                                color: Config.raised
-
-                                Icon {
-                                    anchors.centerIn: parent
-                                    name: Config.symbol.media
-                                    size: 22
-                                    color: Config.text
-                                }
+                            Label {
+                                anchors { left: name.right; leftMargin: Config.spaceS; right: parent.right; baseline: name.baseline }
+                                visible: text !== ""
+                                text: Audio.mediaName(app.modelData)
+                                elide: Text.ElideRight
+                                color: Config.dim
+                                font.pixelSize: Config.small + 1
                             }
                         }
 
-                        Column {
-                            id: info
-                            anchors { left: lead.right; leftMargin: Config.spaceL; right: parent.right; verticalCenter: parent.verticalCenter }
-                            spacing: Config.spaceS
-
-                            Item {
-                                width: parent.width
-                                height: name.implicitHeight
-
-                                Label {
-                                    id: name
-                                    x: 2
-                                    width: Math.min(implicitWidth, parent.width - 2)
-                                    text: Audio.appName(app.modelData)
-                                    elide: Text.ElideRight
-                                    font.pixelSize: Config.body + 1
-                                    font.weight: Font.Medium
-                                }
-                                Label {
-                                    anchors { left: name.right; leftMargin: Config.spaceS; right: parent.right; baseline: name.baseline }
-                                    visible: text !== ""
-                                    text: Audio.mediaName(app.modelData)
-                                    elide: Text.ElideRight
-                                    color: Config.dim
-                                    font.pixelSize: Config.small + 1
-                                }
-                            }
-
-                            VolumeSlider {
-                                width: parent.width
-                                implicitHeight: 40
-                                node: app.modelData
-                            }
+                        VolumeSlider {
+                            width: parent.width
+                            implicitHeight: 40
+                            node: app.modelData
                         }
                     }
                 }
             }
-
         }
 
-        KeyHints {
-            width: parent.width
-            keys: [["← →", "volume, on a slider"], ["Space", "mute"], ["⌫", "back"], ["Esc", "close"]]
-        }
     }
 }

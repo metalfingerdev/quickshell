@@ -2,6 +2,7 @@ import QtQuick
 import qs.modules.island
 import qs.modules.components
 import qs.modules.services
+import qs.modules.parts
 import "../../services/PrefsSchema.js" as Schema
 import "../../services/GlassSchema.js" as GlassSchema
 import "../../services/HyprLua.js" as HyprLua
@@ -9,10 +10,9 @@ import "../../services/HyprLua.js" as HyprLua
 // Every setting there is, as settings.json holds it. Nothing here is clamped to be sensible: a number
 // field takes any number, and a colour any colour, so the island can be broken on purpose. The way back
 // is the Reset buttons, `qs ipc call prefs reset`, or deleting ~/.config/island/settings.json.
-Item {
+Panel {
     id: root
 
-    readonly property int pad: 24
     property string page: "colours"
     property string query: ""
     property string mode: "shared"                    // the table the hyprglass and Hyprland pages edit
@@ -27,7 +27,6 @@ Item {
     readonly property var modes: [{ key: "shared", label: "Both" }, { key: "dark", label: "Dark" }, { key: "light", label: "Light" }]
 
     implicitWidth: 760 + 2 * pad
-    implicitHeight: column.implicitHeight + 2 * pad
     Component.onCompleted: {
         Glass.readDescriptions()
         // back from the eyedropper: the table it was filling
@@ -184,115 +183,102 @@ Item {
         }
     }
 
-    Column {
-        id: column
-        x: root.pad; y: root.pad
-        width: parent.width - 2 * root.pad
-        spacing: Config.spaceM
+    icon: "tune"
+    title: "Advanced"
+    subtitle: Prefs.file
+    actions: [
+        Pill { icon: "edit_document"; text: "Open file"; implicitHeight: 48; shortcut: "o"; onClicked: Toggles.open(Prefs.file) },
+        Pill {
+            icon: root.armed ? "warning" : "restart_alt"
+            text: root.armed ? "Reset everything?" : "Reset all"
+            implicitHeight: 48
+            active: root.armed
+            onClicked: { if (root.armed) { Prefs.reset(""); root.armed = false } else { root.armed = true; disarm.restart() } }
+        }
+    ]
+    keys: [["Tab", "next setting"], ["O", "open the file"], ["⌫", "back"], ["Esc", "close"]]
 
-        Header {
-            width: parent.width
-            icon: "tune"
-            title: "Advanced"
-            subtitle: Prefs.file
-            onBack: Engine.back()
+    Timer { id: disarm; interval: 3000; onTriggered: root.armed = false }
 
-            Pill { icon: "edit_document"; text: "Open file"; implicitHeight: 48; shortcut: "o"; onClicked: Toggles.open(Prefs.file) }
-            Pill {
-                icon: root.armed ? "warning" : "restart_alt"
-                text: root.armed ? "Reset everything?" : "Reset all"
-                implicitHeight: 48
-                active: root.armed
-                onClicked: { if (root.armed) { Prefs.reset(""); root.armed = false } else { root.armed = true; disarm.restart() } }
-            }
-        }
-        Timer { id: disarm; interval: 3000; onTriggered: root.armed = false }
+    SearchBar {
+        width: parent.width
+        height: 48
+        placeholder: "Search every setting"
+        onTextChanged: root.query = text
+        onKey: Engine.key()
+        onEscaped: { if (text !== "") text = ""; else Engine.close() }
+    }
 
-        SearchBar {
-            width: parent.width
-            height: 48
-            placeholder: "Search every setting"
-            onTextChanged: root.query = text
-            onKey: Engine.key()
-            onEscaped: { if (text !== "") text = ""; else Engine.close() }
+    Flow {
+        visible: root.query === ""
+        width: parent.width
+        spacing: Config.spaceS
+        Repeater {
+            model: root.pages
+            Chip { required property var modelData; text: modelData.label; selected: root.page === modelData.key; onClicked: root.page = modelData.key }
         }
+    }
+    Segmented {
+        visible: root.query === "" && root.page === "hyprglass"
+        width: parent.width
+        options: [{ key: "windows", label: "Windows" }, { key: "island", label: "Island" }]
+        current: root.target
+        onPicked: key => root.target = key
+    }
+    Segmented {
+        visible: root.tabled || root.query !== ""
+        width: parent.width
+        options: root.modes
+        current: root.mode
+        onPicked: key => root.mode = key
+    }
+    Rectangle {
+        visible: root.query === "" && root.page === "hyprland" && Glass.descriptions.length === 0
+        width: parent.width
+        height: readingNote.implicitHeight + 2 * Config.spaceS
+        radius: Math.min(height / 2, Config.innerRadius)
+        color: Config.tile
 
-        Flow {
-            visible: root.query === ""
-            width: parent.width
-            spacing: Config.spaceS
-            Repeater {
-                model: root.pages
-                Chip { required property var modelData; text: modelData.label; selected: root.page === modelData.key; onClicked: root.page = modelData.key }
-            }
+        Label {
+            id: readingNote
+            anchors { left: parent.left; right: parent.right; margins: Config.spaceM; verticalCenter: parent.verticalCenter }
+            text: "Reading Hyprland's options…"
+            color: Config.dim
         }
-        Segmented {
-            visible: root.query === "" && root.page === "hyprglass"
-            width: parent.width
-            options: [{ key: "windows", label: "Windows" }, { key: "island", label: "Island" }]
-            current: root.target
-            onPicked: key => root.target = key
-        }
-        Segmented {
-            visible: root.tabled || root.query !== ""
-            width: parent.width
-            options: root.modes
-            current: root.mode
-            onPicked: key => root.mode = key
-        }
-        Rectangle {
-            visible: root.query === "" && root.page === "hyprland" && Glass.descriptions.length === 0
-            width: parent.width
-            height: readingNote.implicitHeight + 2 * Config.spaceS
-            radius: Math.min(height / 2, Config.innerRadius)
-            color: Config.tile
+    }
+    Rectangle {
+        visible: root.query === "" && root.page === "colours"
+        width: parent.width
+        height: rolesNote.implicitHeight + 2 * Config.spaceS
+        radius: Math.min(height / 2, Config.innerRadius)
+        color: Config.tile
 
-            Label {
-                id: readingNote
-                anchors { left: parent.left; right: parent.right; margins: Config.spaceM; verticalCenter: parent.verticalCenter }
-                text: "Reading Hyprland's options…"
-                color: Config.dim
-            }
+        Label {
+            id: rolesNote
+            anchors { left: parent.left; right: parent.right; margins: Config.spaceM; verticalCenter: parent.verticalCenter }
+            wrapMode: Text.Wrap
+            text: "With “Keep colours readable” off nothing is adjusted: a colour is drawn as you set it, readable or not."
+            color: Config.dim
+            font.pixelSize: Config.small + 1
         }
-        Rectangle {
-            visible: root.query === "" && root.page === "colours"
-            width: parent.width
-            height: rolesNote.implicitHeight + 2 * Config.spaceS
-            radius: Math.min(height / 2, Config.innerRadius)
-            color: Config.tile
+    }
 
-            Label {
-                id: rolesNote
-                anchors { left: parent.left; right: parent.right; margins: Config.spaceM; verticalCenter: parent.verticalCenter }
-                wrapMode: Text.Wrap
-                text: "With “Keep colours readable” off nothing is adjusted: a colour is drawn as you set it, readable or not."
-                color: Config.dim
-                font.pixelSize: Config.small + 1
-            }
-        }
+    ScrollList {
+        width: parent.width
+        maxHeight: Math.min(520, Engine.room - 340)
+        spacing: Config.spaceXs
+        visible: root.rows.length > 0
 
-        ScrollList {
-            width: parent.width
-            maxHeight: Math.min(520, Engine.room - 340)
-            spacing: Config.spaceXs
-            visible: root.rows.length > 0
-
-            Repeater {
-                model: root.rows
-                Entry {}
-            }
+        Repeater {
+            model: root.rows
+            Entry {}
         }
-        EmptyState {
-            width: parent.width
-            compact: true
-            visible: root.rows.length === 0 && !(root.page === "hyprland" && Glass.descriptions.length === 0)
-            icon: "search_off"
-            title: "No setting matches"
-        }
-
-        KeyHints {
-            width: parent.width
-            keys: [["Tab", "next setting"], ["O", "open the file"], ["⌫", "back"], ["Esc", "close"]]
-        }
+    }
+    EmptyState {
+        width: parent.width
+        compact: true
+        visible: root.rows.length === 0 && !(root.page === "hyprland" && Glass.descriptions.length === 0)
+        icon: "search_off"
+        title: "No setting matches"
     }
 }
