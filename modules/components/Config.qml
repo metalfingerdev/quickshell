@@ -51,7 +51,7 @@ QtObject {
     // `wallpaperSeed` is used, at `wallpaperSaturation` and `wallpaperTone`.
     property string source: "accent"
     property string name: "teal"
-    property color accent: "#4f9d8f"
+    property color accent: "#ddba5f"                // Amber, as views/Theme.qml's list draws it
     property color wallpaperSeed: "#4f9d8f"
     property real wallpaperSaturation: 0.8
     property real wallpaperTone: 0.72              // the primary's lightness in dark mode; light mode mirrors it
