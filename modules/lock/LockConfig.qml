@@ -12,7 +12,7 @@ Singleton {
 
 	// Shipped with the island (assets/): shown when you've set none or yours doesn't load. On battery saver the
 	// background is its still, as the wallpaper is; the avatar keeps playing.
-	readonly property string defaultImage: saving ? Quickshell.shellPath("assets/wallpapers/lockscreen.jpg") : Quickshell.shellPath("assets/wallpapers/lockscreen.gif")
+	readonly property string defaultImage: saving ? Quickshell.shellPath("assets/wallpapers/lockscreen.webp") : Quickshell.shellPath("assets/wallpapers/lockscreen.gif")
 	readonly property string defaultAvatar: Quickshell.shellPath("assets/avatar.gif")
 
 	property string image: ""
