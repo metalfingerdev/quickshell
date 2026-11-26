@@ -53,7 +53,7 @@ Item {
         Config.recentAccents.forEach(h => add(h, h.toUpperCase()))
         const yours = all.findIndex(c => c.name === "Yours")
         if (yours > 0) all.unshift(all.splice(yours, 1)[0])
-        return all.slice(0, 12)
+        return all.slice(0, 11)     // and Other: twelve to a row
     }
     function customScheme(c) {
         return Config.scheme(c, Config.surfaceFollows ? Math.max(0, c.hslHue) : Config.surfaceHue, Config.tint, Config.dark)
@@ -71,7 +71,7 @@ Item {
         property string name: ""
         property bool chosen: false
         signal picked()
-        width: 64
+        width: 62
         spacing: Config.spaceXs
 
         PaletteDot {
@@ -103,7 +103,7 @@ Item {
         property alias colourAt: bar.colourAt
         signal moved(real value)
         width: parent.width
-        height: 32
+        height: 28
 
         Label {
             anchors { left: parent.left; leftMargin: Config.spaceXs; verticalCenter: parent.verticalCenter }
@@ -132,7 +132,7 @@ Item {
         x: root.pad
         y: root.pad
         width: root.contentW
-        spacing: Config.spaceM
+        spacing: Config.spaceS
 
         Header {
             width: parent.width
@@ -243,7 +243,7 @@ Item {
 
             Flow {
                 width: parent.width
-                spacing: Config.spaceS
+                spacing: Config.spaceXs
                 topPadding: Config.spaceXs
 
                 Repeater {
@@ -284,7 +284,7 @@ Item {
                 // any colour: the full picker, where the custom colour and every role are set
                 Column {
                     visible: !root.wallpaper || Wallpaper.options.length > 0
-                    width: 64
+                    width: 62
                     spacing: Config.spaceXs
                     Pill {
                         anchors.horizontalCenter: parent.horizontalCenter
@@ -418,7 +418,7 @@ Item {
                 id: strip
                 visible: Wallpaper.files.length > 0
                 width: parent.width
-                height: 100
+                height: 88
                 orientation: ListView.Horizontal
                 spacing: Config.spaceS
                 clip: true
@@ -443,8 +443,8 @@ Item {
                 delegate: WallpaperThumb {
                     required property string modelData
                     required property int index
-                    width: 160
-                    height: 100
+                    width: 140
+                    height: 88
                     path: modelData
                     picked: strip.activeFocus && ListView.isCurrentItem
                     onClicked: { strip.currentIndex = index; Wallpaper.set(modelData) }
