@@ -154,7 +154,7 @@ Item {
             width: parent.width
             visible: !root.any
             icon: Config.symbol.wallpaper
-            title: "No images in " + Wallpaper.dir
+            title: "No images in your wallpaper folders"
             hint: "Put pictures there (png, jpg, webp) and they show up here."
         }
 

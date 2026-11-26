@@ -24,8 +24,9 @@ Item {
         restoreMode: Binding.RestoreNone
     }
 
-    implicitWidth: peek ? 560 : 780
-    implicitHeight: peek ? Math.max(84, peekText.implicitHeight + 36) : column.implicitHeight + 2 * pad
+    // wider than a notification popup (480): an answer, not a line
+    implicitWidth: peek ? 600 : 780
+    implicitHeight: peek ? peekCard.height + 16 : column.implicitHeight + 2 * pad
 
     // the model loads while you get to the question (as Nilo does while you type)
     Component.onCompleted: { Agent.refresh(); if (!Engine.toast) { Agent.warm(); Agent.fresh = false } }
@@ -47,6 +48,7 @@ Item {
         if (Agent.busy) return
         Agent.ask(field.text)
         field.text = ""
+        list.stick()                // asking is wanting to see the answer, wherever you had scrolled
     }
     function host(url) { const m = String(url).match(/^\w+:\/\/([^/]+)/); return m ? m[1].replace(/^www\./, "") : url }
     // Only the web: the model reads pages now, and a page could have it write a file:// link to a script.
@@ -75,45 +77,61 @@ Item {
         : Agent.warming ? "Loading " + Agent.inUse
         : Agent.loaded ? Agent.inUse + ", in memory" : Agent.inUse + ", asleep: it loads with the first question"
 
-    // The peek
-    Row {
+    // The peek: a card laid out as a notification popup's (parts/NotificationCard), never words on the bare
+    // glass, which a busy wallpaper behind it would swallow
+    Rectangle {
+        id: peekCard
         visible: root.peek
-        anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter; leftMargin: Config.spaceXl; rightMargin: Config.spaceXl }
-        spacing: Config.spaceL
+        x: 8; y: 8
+        width: parent.width - 16
+        height: Math.max(72, peekText.implicitHeight + 32)
+        radius: Config.innerRadius + 4
+        color: Config.tile
 
         Rectangle {
-            anchors.verticalCenter: parent.verticalCenter
-            width: 44; height: 44; radius: 22
-            color: Config.primary
+            x: 16; y: 16
+            width: 40; height: 40; radius: 20
+            color: Config.raised
 
             Icon {
                 anchors.centerIn: parent
                 name: "smart_toy"
-                size: 22
+                size: 20
                 filled: true
-                color: Config.primaryInk
+                color: Config.primary
             }
         }
         Column {
             id: peekText
-            anchors.verticalCenter: parent.verticalCenter
-            width: parent.width - 58
+            anchors { left: parent.left; leftMargin: 16 + 40 + Config.spaceL; right: parent.right; rightMargin: Config.spaceL; top: parent.top; topMargin: Config.spaceL }
             spacing: Config.spaceHair
 
             Label {
                 width: parent.width
-                text: Agent.asking ? "The agent asks, in the conversation" : Agent.lastQuestion
+                text: "Agent" + (Agent.busy ? "  ·  " + Agent.activity : "")
                 elide: Text.ElideRight
                 color: Config.dim
-                font.pixelSize: Config.small + 1
+                font.pixelSize: Config.small
             }
             Label {
                 width: parent.width
+                text: Agent.asking ? "The agent asks, in the conversation" : Agent.lastQuestion
+                textFormat: Text.PlainText
+                elide: Text.ElideRight
+                color: Config.text
+                font.pixelSize: Config.body + 1
+                font.weight: Font.DemiBold
+            }
+            Label {
+                width: parent.width
+                visible: text !== ""
                 text: Agent.asking ? root.question(Agent.asking) : root.plain(Agent.lastAnswer)
+                textFormat: Text.PlainText
                 wrapMode: Text.Wrap
                 maximumLineCount: 3
                 elide: Text.ElideRight
-                textFormat: Text.PlainText
+                color: Config.dim
+                font.pixelSize: Config.small + 1
             }
         }
     }
@@ -198,237 +216,280 @@ Item {
             }
         }
 
-        ListView {
-            id: list
+        Item {
             visible: Agent.messages.count > 0
             width: parent.width
-            height: Math.min(contentHeight, 440)
-            spacing: Config.spaceL
-            clip: true
-            boundsBehavior: Flickable.StopAtBounds
-            model: Agent.messages
-            // the answer being written stays in sight
-            onContentHeightChanged: if (Agent.busy) positionViewAtEnd()
-            onCountChanged: Qt.callLater(positionViewAtEnd)
+            height: list.height
 
-            delegate: Item {
-                id: msg
-                required property int index
-                required property string role
-                required property string content
-                required property string thinking
-                required property int thought
-                required property bool open
-                required property string steps
-                required property string sources
-                required property string by
-                required property bool streaming
-                required property string error
-                readonly property bool mine: role === "user"
-                readonly property bool thinkingNow: streaming && Agent.phase === "thinking"
-                readonly property var links: { try { return JSON.parse(sources) } catch (e) { return [] } }
-                readonly property var tools: { try { return JSON.parse(steps) } catch (e) { return [] } }
+            ListView {
+                id: list
+                width: parent.width
+                height: Math.min(contentHeight, 440)
+                spacing: Config.spaceL
+                clip: true
+                boundsBehavior: Flickable.StopAtBounds
+                model: Agent.messages
 
-                width: list.width
-                height: mine ? bubble.height : answer.implicitHeight + 2 * Config.spaceM
-
-                // the question, on the right
-                Rectangle {
-                    id: bubble
-                    visible: msg.mine
-                    anchors.right: parent.right
-                    width: question.width + 32
-                    height: question.implicitHeight + 20
-                    radius: Config.innerRadius + 4
-                    color: Config.secondary
-
-                    Label {
-                        id: question
-                        x: 16
-                        y: 10
-                        width: Math.min(implicitWidth, msg.width * 0.8 - 32)
-                        text: msg.content
-                        wrapMode: Text.Wrap
-                        textFormat: Text.PlainText
-                        color: Config.secondaryInk
+                // Follows the answer only while you're at the end, as web chats do (after StackBlitz's
+                // use-stick-to-bottom): scrolling up by any amount lets go, and new text never pulls you back;
+                // scrolling down to within 70 px of the end, sending a question or the arrow takes hold again.
+                // A ListView keeps contentY when content grows (it measures rows as they're made, moving
+                // originY), so growth is never mistaken for you; the one move that isn't yours is the clamp
+                // when content shrinks under the very end. Unlike the library, shrinking doesn't take hold
+                // again: a ListView re-measures rows as you scroll, and that would undo your scroll up.
+                property bool stuck: true
+                property bool own: false
+                property real lastY: 0
+                readonly property real gap: originY + contentHeight - height - contentY
+                readonly property bool nearEnd: gap <= 70
+                function toEnd() { own = true; positionViewAtEnd(); own = false; lastY = contentY }
+                function stick() { stuck = true; Qt.callLater(settle) }
+                // checked when it runs: a scroll of yours in between (making rows) may have let go
+                function settle() { if (stuck) toEnd() }
+                function follow() { Qt.callLater(settle) }
+                onContentYChanged: {
+                    // worked out here: `gap` is a binding on contentY and may not have caught up yet
+                    const left = originY + contentHeight - height - contentY
+                    if (!own) {
+                        if (contentY < lastY - 0.5 && left > 0.5) stuck = false
+                        else if (contentY > lastY + 0.5 && left <= 70) stuck = true
                     }
+                    lastY = contentY
                 }
+                onContentHeightChanged: follow()
+                onOriginYChanged: follow()
+                onCountChanged: follow()
+                onHeightChanged: follow()
 
-                // the answer on a card, so it reads on clear glass
-                Rectangle {
-                    visible: !msg.mine
-                    anchors.fill: parent
-                    radius: Config.cardRadius
-                    color: Config.tile
-                }
+                delegate: Item {
+                    id: msg
+                    required property int index
+                    required property string role
+                    required property string content
+                    required property string thinking
+                    required property int thought
+                    required property bool open
+                    required property string steps
+                    required property string sources
+                    required property string by
+                    required property bool streaming
+                    required property string error
+                    readonly property bool mine: role === "user"
+                    readonly property bool thinkingNow: streaming && Agent.phase === "thinking"
+                    readonly property var links: { try { return JSON.parse(sources) } catch (e) { return [] } }
+                    readonly property var tools: { try { return JSON.parse(steps) } catch (e) { return [] } }
 
-                // the answer: what it thought, the tools it used, then the words, as Markdown
-                Column {
-                    id: answer
-                    visible: !msg.mine
-                    x: Config.spaceM
-                    y: Config.spaceM
-                    width: parent.width - 2 * Config.spaceM
-                    spacing: Config.spaceS
+                    width: list.width
+                    height: mine ? bubble.height : answer.implicitHeight + 2 * Config.spaceM
 
-                    // The thinking as the model wrote it, folded to its latest words while it goes on; a
-                    // click opens all of it. Laid out only when open: it can run to thousands of words.
+                    // the question, on the right
+                    Rectangle {
+                        id: bubble
+                        visible: msg.mine
+                        anchors.right: parent.right
+                        width: question.width + 32
+                        height: question.implicitHeight + 20
+                        radius: Config.innerRadius + 4
+                        color: Config.secondary
+
+                        Label {
+                            id: question
+                            x: 16
+                            y: 10
+                            width: Math.min(implicitWidth, msg.width * 0.8 - 32)
+                            text: msg.content
+                            wrapMode: Text.Wrap
+                            textFormat: Text.PlainText
+                            color: Config.secondaryInk
+                        }
+                    }
+
+                    // the answer on a card, so it reads on clear glass
+                    Rectangle {
+                        visible: !msg.mine
+                        anchors.fill: parent
+                        radius: Config.cardRadius
+                        color: Config.tile
+                    }
+
+                    // the answer: what it thought, the tools it used, then the words, as Markdown
                     Column {
-                        visible: msg.thinking !== ""
-                        width: parent.width
+                        id: answer
+                        visible: !msg.mine
+                        x: Config.spaceM
+                        y: Config.spaceM
+                        width: parent.width - 2 * Config.spaceM
                         spacing: Config.spaceS
 
-                        Item {
+                        // The thinking as the model wrote it, folded to its latest words while it goes on; a
+                        // click opens all of it. Laid out only when open: it can run to thousands of words.
+                        Column {
+                            visible: msg.thinking !== ""
                             width: parent.width
-                            height: 24
-                            activeFocusOnTab: true
-                            function activate() { Agent.messages.setProperty(msg.index, "open", !msg.open) }
-                            Accessible.role: Accessible.Button
-                            Accessible.name: "Thinking"
-                            Accessible.onPressAction: activate()
-                            FocusRing { on: parent.activeFocus && Config.focusVisible }
+                            spacing: Config.spaceS
 
-                            Row {
-                                anchors.verticalCenter: parent.verticalCenter
-                                spacing: Config.spaceXs
+                            Item {
+                                width: parent.width
+                                height: 24
+                                activeFocusOnTab: true
+                                function activate() { Agent.messages.setProperty(msg.index, "open", !msg.open) }
+                                Accessible.role: Accessible.Button
+                                Accessible.name: "Thinking"
+                                Accessible.onPressAction: activate()
+                                FocusRing { on: parent.activeFocus && Config.focusVisible }
 
-                                Icon {
+                                Row {
                                     anchors.verticalCenter: parent.verticalCenter
-                                    name: "chevron_right"
-                                    size: 18
-                                    color: Config.dim
-                                    rotation: msg.open ? 90 : 0
-                                    Behavior on rotation { Motion {} }
-                                }
-                                Label {
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    text: (msg.thinkingNow ? "Thinking" : "Thought") + (msg.thought > 0 ? " for " + msg.thought + " s" : "")
-                                    color: Config.dim
-                                }
-                            }
-                            ClickArea { onClicked: parent.activate() }
-                        }
-                        Label {
-                            visible: !msg.open && msg.thinkingNow
-                            width: parent.width
-                            leftPadding: Config.spaceXl
-                            text: msg.thinking.slice(-160).replace(/\s+/g, " ")
-                            elide: Text.ElideLeft
-                            font.italic: true
-                            color: Config.dim
-                        }
-                        Loader {
-                            active: msg.open
-                            visible: active
-                            sourceComponent: Rectangle {
-                                width: answer.width
-                                height: thoughts.implicitHeight + 24
-                                radius: Config.innerRadius
-                                color: Config.raised
+                                    spacing: Config.spaceXs
 
-                                Text {
-                                    id: thoughts
-                                    x: 14
-                                    y: 12
-                                    width: parent.width - 28
-                                    text: msg.thinking
-                                    textFormat: Text.PlainText
-                                    wrapMode: Text.Wrap
-                                    color: Config.dim
-                                    font.family: Config.font
-                                    font.pixelSize: Config.small + 1
+                                    Icon {
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        name: "chevron_right"
+                                        size: 18
+                                        color: Config.dim
+                                        rotation: msg.open ? 90 : 0
+                                        Behavior on rotation { Motion {} }
+                                    }
+                                    Label {
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        text: (msg.thinkingNow ? "Thinking" : "Thought") + (msg.thought > 0 ? " for " + msg.thought + " s" : "")
+                                        color: Config.dim
+                                    }
                                 }
-                            }
-                        }
-                    }
-
-                    // a row for each tool, its dot beating while it works
-                    Repeater {
-                        model: msg.tools
-
-                        Row {
-                            id: tool
-                            required property var modelData
-                            spacing: Config.spaceM
-
-                            Rectangle {
-                                id: dot
-                                anchors.verticalCenter: parent.verticalCenter
-                                width: 6
-                                height: 6
-                                radius: 3
-                                color: tool.modelData.status === "failed" ? Config.bad : tool.modelData.status === "running" ? Config.text : Config.dim
-                                SequentialAnimation on opacity {
-                                    running: tool.modelData.status === "running"
-                                    loops: Animation.Infinite
-                                    onRunningChanged: if (!running) dot.opacity = 1
-                                    NumberAnimation { to: 0.2; duration: Config.durationMedium * 2 }
-                                    NumberAnimation { to: 1; duration: Config.durationMedium * 2 }
-                                }
+                                ClickArea { onClicked: parent.activate() }
                             }
                             Label {
-                                width: answer.width - 16
-                                text: root.step(tool.modelData)
-                                elide: Text.ElideRight
+                                visible: !msg.open && msg.thinkingNow
+                                width: parent.width
+                                leftPadding: Config.spaceXl
+                                text: msg.thinking.slice(-160).replace(/\s+/g, " ")
+                                elide: Text.ElideLeft
+                                font.italic: true
                                 color: Config.dim
-                                font.family: Config.mono
-                                font.pixelSize: Config.small
+                            }
+                            Loader {
+                                active: msg.open
+                                visible: active
+                                sourceComponent: Rectangle {
+                                    width: answer.width
+                                    height: thoughts.implicitHeight + 24
+                                    radius: Config.innerRadius
+                                    color: Config.raised
+
+                                    Text {
+                                        id: thoughts
+                                        x: 14
+                                        y: 12
+                                        width: parent.width - 28
+                                        text: msg.thinking
+                                        textFormat: Text.PlainText
+                                        wrapMode: Text.Wrap
+                                        color: Config.dim
+                                        font.family: Config.font
+                                        font.pixelSize: Config.small + 1
+                                    }
+                                }
                             }
                         }
-                    }
 
-                    Label {
-                        visible: msg.streaming && msg.content === "" && !Agent.toolAtWork && !(msg.thinkingNow && msg.thinking !== "")
-                        width: parent.width
-                        elide: Text.ElideRight
-                        font.italic: true
-                        color: Config.dim
-                        text: Agent.activity + "…"
-                    }
-                    Text {
-                        visible: msg.content !== ""
-                        width: parent.width
-                        text: msg.content + (msg.streaming ? " ▍" : "")
-                        textFormat: Text.MarkdownText
-                        wrapMode: Text.Wrap
-                        color: Config.text
-                        linkColor: Config.primary
-                        font.family: Config.font
-                        font.pixelSize: Config.body + 1
-                        onLinkActivated: link => root.follow(link)
-                        onHoveredLinkChanged: root.pointing = hoveredLink
-                    }
-                    Label {
-                        visible: msg.error !== ""
-                        width: parent.width
-                        wrapMode: Text.Wrap
-                        text: msg.error
-                        color: msg.error === "Stopped" ? Config.dim : Config.bad
-                    }
-                    // where it read it, and the answer to take away
-                    Flow {
-                        visible: !msg.streaming && msg.content !== ""
-                        width: parent.width
-                        spacing: Config.spaceS
-
+                        // a row for each tool, its dot beating while it works
                         Repeater {
-                            model: msg.links
+                            model: msg.tools
 
-                            Chip {
+                            Row {
+                                id: tool
                                 required property var modelData
-                                required property int index
-                                icon: "link"
-                                text: "[" + (index + 1) + "] " + root.host(modelData.url)
-                                onClicked: Toggles.open(modelData.url)
+                                spacing: Config.spaceM
+
+                                Rectangle {
+                                    id: dot
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    width: 6
+                                    height: 6
+                                    radius: 3
+                                    color: tool.modelData.status === "failed" ? Config.bad : tool.modelData.status === "running" ? Config.text : Config.dim
+                                    SequentialAnimation on opacity {
+                                        running: tool.modelData.status === "running"
+                                        loops: Animation.Infinite
+                                        onRunningChanged: if (!running) dot.opacity = 1
+                                        NumberAnimation { to: 0.2; duration: Config.durationMedium * 2 }
+                                        NumberAnimation { to: 1; duration: Config.durationMedium * 2 }
+                                    }
+                                }
+                                Label {
+                                    width: answer.width - 16
+                                    text: root.step(tool.modelData)
+                                    elide: Text.ElideRight
+                                    color: Config.dim
+                                    font.family: Config.mono
+                                    font.pixelSize: Config.small
+                                }
                             }
                         }
-                        Chip {
-                            icon: "content_copy"
-                            text: "Copy"
-                            onClicked: Quickshell.clipboardText = msg.content
+
+                        Label {
+                            visible: msg.streaming && msg.content === "" && !Agent.toolAtWork && !(msg.thinkingNow && msg.thinking !== "")
+                            width: parent.width
+                            elide: Text.ElideRight
+                            font.italic: true
+                            color: Config.dim
+                            text: Agent.activity + "…"
+                        }
+                        Text {
+                            visible: msg.content !== ""
+                            width: parent.width
+                            text: msg.content + (msg.streaming ? " ▍" : "")
+                            textFormat: Text.MarkdownText
+                            wrapMode: Text.Wrap
+                            color: Config.text
+                            linkColor: Config.primary
+                            font.family: Config.font
+                            font.pixelSize: Config.body + 1
+                            onLinkActivated: link => root.follow(link)
+                            onHoveredLinkChanged: root.pointing = hoveredLink
+                        }
+                        Label {
+                            visible: msg.error !== ""
+                            width: parent.width
+                            wrapMode: Text.Wrap
+                            text: msg.error
+                            color: msg.error === "Stopped" ? Config.dim : Config.bad
+                        }
+                        // where it read it, and the answer to take away
+                        Flow {
+                            visible: !msg.streaming && msg.content !== ""
+                            width: parent.width
+                            spacing: Config.spaceS
+
+                            Repeater {
+                                model: msg.links
+
+                                Chip {
+                                    required property var modelData
+                                    required property int index
+                                    icon: "link"
+                                    text: "[" + (index + 1) + "] " + root.host(modelData.url)
+                                    onClicked: Toggles.open(modelData.url)
+                                }
+                            }
+                            Chip {
+                                icon: "content_copy"
+                                text: "Copy"
+                                onClicked: Quickshell.clipboardText = msg.content
+                            }
                         }
                     }
                 }
+            }
+
+            // back to the end, when you've scrolled away from it (and something is below)
+            Pill {
+                anchors { horizontalCenter: parent.horizontalCenter; bottom: parent.bottom; bottomMargin: Config.spaceS }
+                visible: !list.stuck && !list.nearEnd
+                implicitHeight: 36
+                icon: "arrow_downward"
+                iconSize: 20
+                onClicked: list.stick()
             }
         }
 

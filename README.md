@@ -151,6 +151,5 @@ Bar: Loader shows Registry.get(view).url
 | `Notifier.qml` | `dnd` | `false` | Do not disturb: only critical notifications pop up; remembered |
 | `Toggles.qml` | `warmth` | 4500 | night light colour temperature (K), via hyprsunset; remembered |
 | `Energy.qml` | `lowAt` / `criticalAt` | 15 / 5 | battery warnings (a toast; critical interrupts) |
-| `Wallpaper.qml` | `dir`, `transition`, `duration` | `~/Pictures/Wallpapers`, fade, 0.8 | awww |
-| | `basePath` / `stillPath` | `""` | Settings → Wallpaper: the wallpaper set on a first login and its still for battery saver; `""` = the environment's |
+| `Wallpaper.qml` | `folders`, `transition`, `duration` | `[~/Pictures/Wallpapers]`, fade, 0.8 | the folders the picker shows (Settings → Wallpaper), listed with the island's own `assets/wallpapers`; awww. A GIF with a same-named still beside it shows the still on battery saver |
 | `modules/overview/OverviewConfig.qml` | `rows` / `columns`, `previewMode`, ... | 2 / 5, live | the workspace overview |

@@ -16,10 +16,25 @@ Singleton {
 	readonly property string defaultAvatar: Quickshell.shellPath("assets/avatar.gif")
 
 	property string image: ""
-	// shown instead of the background on battery saver; "" leaves the background as it is
-	property string imageStill: ""
+	// On battery saver a GIF background shows its still, as the wallpaper does: the same name as .jpg, .png
+	// or .webp beside it, wherever it is.
 	readonly property bool saving: Toggles.profile === "power-saver"
-	readonly property string chosen: saving && imageStill !== "" ? imageStill : image
+	property string still: ""
+	readonly property string chosen: saving && still !== "" ? still : image
+	onImageChanged: lookForStill()
+	Component.onCompleted: lookForStill()
+	function lookForStill() {
+		still = ""
+		if (!/\.gif$/i.test(image)) return
+		// set here, not bound: a binding on `image` may not have caught up when imageChanged runs this
+		stillFinder.command = ["sh", "-c", Wallpaper.stillScript, "sh", image]
+		stillFinder.running = false
+		stillFinder.running = true
+	}
+	Process {
+		id: stillFinder
+		stdout: StdioCollector { onStreamFinished: root.still = text.trim() }
+	}
 	property string avatar: ""
 	property string avatarShape: "circle"
 	property string name: ""
@@ -30,7 +45,6 @@ Singleton {
 	property Store store: Store {
 		category: "lock"
 		property alias image: root.image
-		property alias imageStill: root.imageStill
 		property alias avatar: root.avatar
 		property alias avatarShape: root.avatarShape
 		property alias name: root.name

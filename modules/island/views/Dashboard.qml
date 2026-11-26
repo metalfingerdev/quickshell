@@ -178,7 +178,7 @@ Item {
         s.run(x)
     }
 
-    Component.onCompleted: { Toggles.readProfile(); if (Engine.editControls) { Engine.editControls = false; editing = true } }
+    Component.onCompleted: { if (Engine.editControls) { Engine.editControls = false; editing = true } }
 
     // levels from anywhere in the view (the tiles' letters are their shortcuts); in Edit, Shift+arrows move
     // the module with the focus and Delete takes it off

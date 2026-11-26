@@ -5,6 +5,7 @@ import QtCore
 import Quickshell
 import Quickshell.Io
 import Quickshell.Hyprland
+import Quickshell.Services.UPower
 import qs.modules.components
 
 // Each one needs a program; `has(tool)` says whether it's installed, and the dashboard only shows
@@ -22,7 +23,6 @@ Singleton {
         stdout: StdioCollector {
             onStreamFinished: {
                 root.tools = text.split("\n").filter(t => t !== "")
-                root.readProfile()
             }
         }
     }
@@ -162,25 +162,21 @@ Singleton {
         }
     }
 
-    property string profile: ""
+    // Live from power-profiles-daemon over D-Bus, so a change made anywhere (powerprofilesctl, a key, the
+    // daemon on low battery) shows at once. "" where the daemon isn't installed.
+    readonly property string profile: !has("powerprofilesctl") ? ""
+        : PowerProfiles.profile === PowerProfile.PowerSaver ? "power-saver"
+        : PowerProfiles.profile === PowerProfile.Performance ? "performance" : "balanced"
     readonly property var profiles: [
         { key: "power-saver", label: "Saver",       icon: "eco" },
         { key: "balanced",    label: "Balanced",    icon: "balance" },
         { key: "performance", label: "Performance", icon: "speed" }
     ]
-    function readProfile() { if (has("powerprofilesctl")) profileGet.running = true }
     function setProfile(p) {
         if (!has("powerprofilesctl")) return
-        profile = p
-        profileSet.command = ["powerprofilesctl", "set", p]
-        profileSet.running = true
+        PowerProfiles.profile = p === "power-saver" ? PowerProfile.PowerSaver
+            : p === "performance" ? PowerProfile.Performance : PowerProfile.Balanced
     }
-    Process {
-        id: profileGet
-        command: ["powerprofilesctl", "get"]
-        stdout: StdioCollector { onStreamFinished: root.profile = text.trim() }
-    }
-    Process { id: profileSet; onExited: root.readProfile() }
 
     function screenshot() {
         if (!has("grimblast")) return

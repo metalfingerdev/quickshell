@@ -443,7 +443,7 @@ Panel {
             width: parent.width
             compact: true
             icon: Config.symbol.wallpaper
-            title: "No images in " + Wallpaper.dir
+            title: "No images in your wallpaper folders"
             color: Config.raised
         }
     }

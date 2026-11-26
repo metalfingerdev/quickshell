@@ -104,7 +104,7 @@ Item {
         { name: "Colours", description: "Palettes, an accent, dark or light", icon: Config.symbol.colours, keys: "color palette accent dark light mode", run: view(Engine.View.Colours) },
         { name: "Wallpaper", description: "Pick from every image", icon: Config.symbol.wallpaper, keys: "wallpapers background image", run: view(Engine.View.Wallpapers) },
         { name: "Settings", description: "The island's size, shape and hiding", icon: Config.symbol.settings, keys: "preferences options size notch autohide", run: view(Engine.View.Settings) },
-        { name: "Random wallpaper", description: "From ~/Pictures/Wallpapers", icon: "wallpaper", keys: "background", run: () => Wallpaper.random() },
+        { name: "Random wallpaper", description: "From your wallpaper folders", icon: "wallpaper", keys: "background", run: () => Wallpaper.random() },
         { name: "Do not disturb", description: Notifier.dnd ? "On: turn it off" : "Off: turn it on", icon: Config.symbol.dnd, keys: "dnd quiet silence", run: quit(() => Notifier.dnd = !Notifier.dnd) },
         { name: "Screenshot", description: "Select an area; saved and copied", icon: Config.symbol.screenshot, keys: "capture grab", run: quit(() => Toggles.screenshot()) },
         { name: Toggles.recording ? "Stop recording the screen" : "Record the screen",

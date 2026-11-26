@@ -4,7 +4,8 @@ import qs.modules.components
 import qs.modules.parts
 import qs.modules.services
 
-// Settings: the wallpaper, and the still shown in its place on battery saver.
+// Settings: the folders the wallpaper picker shows. The island's own pictures are always among them,
+// listed like any other (Wallpaper.qml), so there is nothing here about them.
 Item {
     id: root
 
@@ -27,7 +28,7 @@ Item {
             width: parent.width
             icon: Config.symbol.wallpaper
             title: "Wallpaper"
-            subtitle: Wallpaper.baseName(Wallpaper.base)
+            subtitle: Wallpaper.files.length + (Wallpaper.files.length === 1 ? " image" : " images")
             onBack: Engine.back()
         }
 
@@ -35,27 +36,36 @@ Item {
             width: parent.width
             spacing: Config.spaceM
 
-            SectionLabel { text: "Pictures"; topPadding: Config.spaceS }
-            PictureField {
-                icon: Config.symbol.wallpaper
-                placeholder: "Wallpaper: the default one"
-                value: Wallpaper.basePath
-                onChosen: path => root.pathError = Wallpaper.setPicture("base", path)
-
-                Pill {
-                    implicitHeight: 38
-                    kind: "text"
-                    icon: "keep"
-                    iconSize: 20
-                    shortcut: "w"
-                    onClicked: { root.pathError = ""; Wallpaper.setPicture("base", Wallpaper.current) }
+            ListSection {
+                title: "Folders"
+                footer: "A GIF with a still of the same name beside it (.jpg, .png, .webp) shows the still on battery saver."
+                Repeater {
+                    model: Wallpaper.folders
+                    ListEntry {
+                        required property string modelData
+                        flat: true
+                        icon: "folder"
+                        title: Wallpaper.baseName(modelData)
+                        subtitle: modelData
+                        Pill {
+                            implicitHeight: 38
+                            kind: "text"
+                            icon: "close"
+                            iconSize: 20
+                            onClicked: Wallpaper.removeFolder(modelData)
+                        }
+                    }
                 }
             }
             PictureField {
-                icon: "battery_saver"
-                placeholder: "On battery saver: the default still"
-                value: Wallpaper.stillPath
-                onChosen: path => root.pathError = Wallpaper.setPicture("still", path)
+                id: adding
+                icon: "create_new_folder"
+                placeholder: "Add a folder: its path"
+                onChosen: path => {
+                    if (path === "") return
+                    root.pathError = Wallpaper.addFolder(path)
+                    if (root.pathError === "") adding.text = ""
+                }
             }
             Rectangle {
                 visible: root.pathError !== ""
@@ -77,7 +87,7 @@ Item {
 
         KeyHints {
             width: parent.width
-            keys: [["⏎", "apply"], ["⌫", "back"], ["Esc", "close"]]
+            keys: [["⏎", "add"], ["⌫", "back"], ["Esc", "close"]]
         }
     }
 }

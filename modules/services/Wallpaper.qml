@@ -9,7 +9,9 @@ import qs.modules.components
 Singleton {
     id: root
 
-    property string dir: Quickshell.env("HOME") + "/Pictures/Wallpapers"
+    // The folders the picker shows (Settings → Wallpaper): any, anywhere. The island's own pictures are
+    // always listed with them, nothing to tell them apart; they're only what a first install starts with.
+    property var folders: [Quickshell.env("HOME") + "/Pictures/Wallpapers"]
     property string transition: "fade"       // awww: none fade simple wipe grow center outer wave any random
     property real duration: 0.8
 
@@ -37,19 +39,14 @@ Singleton {
     readonly property string optionKey: current + "|" + optionIndex       // which image, which option
     function pick(index) { pickedIndex = index; pickedFor = current }
 
-    // The pictures that come with the island, listed beside `dir`. shellPath keeps ~/.config/quickshell, a
-    // link that follows rebuilds, where a store path would be gone after the next garbage collection.
+    // shellPath keeps ~/.config/quickshell, a link that follows rebuilds, where a store path would be gone
+    // after the next garbage collection.
     readonly property string shipped: Quickshell.shellPath("assets/wallpapers")
-    // Settings → Wallpaper: the wallpaper a first login gets and battery saver swaps; "" = the shipped one
-    property string basePath: ""
-    property string stillPath: ""
-    readonly property string base: basePath || shipped + "/wallpaper.gif"
-    readonly property string still: stillPath || shipped + "/wallpaper.jpg"
 
     property Store store: Store {
         category: "wallpaper"
-        property alias basePath: root.basePath
-        property alias stillPath: root.stillPath
+        property alias folders: root.folders
+        property alias animated: root.animated
         property alias pickedIndex: root.pickedIndex
         property alias pickedFor: root.pickedFor
     }
@@ -59,34 +56,48 @@ Singleton {
 
     function reload() { lister.running = true }
 
-    // Says what's wrong ("" = fine). Choosing the base also shows it, and clearing it brings the shipped one back.
-    function setPicture(key, path) {
-        if (path !== "" && !path.startsWith("/")) return `not an absolute path: ${path}`
-        root[key + "Path"] = path
-        if (key === "base") set(base)
-        else applySaver()
+    // Says what's wrong ("" = fine).
+    function addFolder(path) {
+        path = path.replace(/\/+$/, "")
+        if (!path.startsWith("/")) return `not an absolute path: ${path}`
+        if (!folders.includes(path)) folders = folders.concat([path])
         return ""
     }
+    function removeFolder(path) { folders = folders.filter(f => f !== path) }
+    // next tick: the listing's command is a binding on `folders`, not updated yet when this runs
+    onFoldersChanged: Qt.callLater(reload)
 
-    // First login: awww has nothing to restore, so the base is set once both the query and the listing are
-    // done and nothing shows.
+    // A first login: awww has nothing to restore, so the island's own wallpaper goes up once both the query
+    // and the listing are done and nothing shows. From then on awww restores whatever was picked last.
     property bool queried: false
     property bool listed: false
     function firstWallpaper() {
-        if (queried && listed && current === "" && base && (basePath !== "" || files.includes(base))) { set(base); applySaver() }
+        if (queried && listed && current === "") { set(shipped + "/wallpaper.gif"); applySaver() }
     }
 
-    // Battery saver: awww keeps decoding an animated GIF's frames, so the base wallpaper is shown as its
-    // still meanwhile, and comes back when the profile leaves power-saver. A wallpaper picked from the
-    // list is left alone.
+    // Battery saver: awww keeps decoding an animated GIF's frames, so a GIF with a still (the same name as
+    // .jpg, .png or .webp beside it, wherever it is) shows the still meanwhile, and comes back when the
+    // profile leaves power-saver. `animated` is remembered, so a restart while saving still brings it back.
     readonly property bool saving: Toggles.profile === "power-saver"
     property string animated: ""
+    // prints the still beside the GIF given, or nothing (LockConfig asks the same)
+    readonly property string stillScript: 'for e in jpg jpeg png webp JPG JPEG PNG WEBP; do f="${1%.*}.$e"; [ -f "$f" ] && { echo "$f"; exit 0; }; done'
     function applySaver() {
-        if (!still) return
         if (saving) {
-            if (current === base) { const gif = current; set(still); animated = gif }
+            if (/\.gif$/i.test(current)) { stillFinder.from = current; stillFinder.running = true }
         } else if (animated !== "") {
             set(animated)
+        }
+    }
+    Process {
+        id: stillFinder
+        property string from: ""
+        command: ["sh", "-c", root.stillScript, "sh", from]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const still = text.trim()
+                if (still && root.saving && root.current === stillFinder.from) { root.set(still); root.animated = stillFinder.from }
+            }
         }
     }
     onSavingChanged: applySaver()
@@ -133,14 +144,25 @@ Singleton {
 
     Process {
         id: lister
-        command: ["find", "-L", root.dir, root.shipped, "-maxdepth", "1", "-type", "f", "(",
+        // each folder, then the island's own; a missing folder is only skipped
+        command: ["find", "-L"].concat(root.folders, [root.shipped, "-maxdepth", "1", "-type", "f", "(",
                   "-iname", "*.png", "-o", "-iname", "*.jpg", "-o", "-iname", "*.jpeg", "-o",
-                  "-iname", "*.webp", "-o", "-iname", "*.gif", "-o", "-iname", "*.bmp", ")"]
+                  "-iname", "*.webp", "-o", "-iname", "*.gif", "-o", "-iname", "*.bmp", ")", "-printf", "%s\t%p\n"])
         stdout: StdioCollector {
             onStreamFinished: {
-                root.files = text.split("\n").filter(s => s.length > 0).sort((a, b) => a.localeCompare(b))
+                // A copy (same name and size) is the same picture, listed once: the first folder's, so
+                // yours rather than the island's.
+                const seen = {}, out = []
+                for (const line of text.split("\n")) {
+                    const tab = line.indexOf("\t")
+                    if (tab < 0) continue
+                    const path = line.slice(tab + 1), key = line.slice(0, tab) + "/" + root.baseName(path)
+                    if (!seen[key]) { seen[key] = true; out.push(path) }
+                }
+                root.files = out.sort((a, b) => root.baseName(a).localeCompare(root.baseName(b)))
                 root.listed = true
                 root.firstWallpaper()
+                root.applySaver()
             }
         }
     }

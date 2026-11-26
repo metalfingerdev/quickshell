@@ -68,11 +68,6 @@ Item {
                 }
             }
             LockPicture {
-                setting: "imageStill"
-                icon: "battery_saver"
-                placeholder: "Background on battery saver: the default still"
-            }
-            LockPicture {
                 setting: "avatar"
                 icon: "person"
                 placeholder: "Profile picture: the default, or a path (GIFs play)"

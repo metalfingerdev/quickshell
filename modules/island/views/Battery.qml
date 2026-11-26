@@ -9,7 +9,6 @@ import qs.modules.services
 Item {
     id: root
 
-    Component.onCompleted: Toggles.readProfile()
 
     Keys.onPressed: event => {
         const t = event.text
