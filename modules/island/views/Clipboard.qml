@@ -3,19 +3,31 @@ import Quickshell.Widgets
 import qs.modules.island
 import qs.modules.components
 import qs.modules.services
+import qs.modules.parts
 
 // The clipboard history (ClipHistory), newest first. Enter or a click pastes one into the window you
 // were in (ClipHistory.paste: one line is typed there, more lines and pictures are only copied), Delete
 // forgets it. Held: Super+Shift+V again moves down the list, and letting go of Super pastes the one
 // reached (Held). The launcher's Clipboard filter searches the same history.
-Item {
+Panel {
     id: root
 
-    readonly property int pad: 24
     readonly property int rowH: 64
 
-    implicitWidth: 640
-    implicitHeight: column.implicitHeight + 2 * pad
+    icon: "content_paste"
+    title: "Clipboard"
+    subtitle: !ClipHistory.enabled ? "Needs cliphist and wl-clipboard"
+            : ClipHistory.items.length === 0 ? "What you copy shows here, until the session ends"
+            : ClipHistory.items.length + (ClipHistory.items.length === 1 ? " copy" : " copies") + ", kept in memory"
+    keys: [["Enter", "paste"], ["Del", "forget"]]
+    actions: Pill {
+        visible: ClipHistory.items.length > 0
+        implicitHeight: 48
+        icon: "delete_sweep"
+        text: "Clear"
+        shortcut: "x"
+        onClicked: ClipHistory.wipe()
+    }
 
     Component.onCompleted: ClipHistory.refresh()
 
@@ -40,80 +52,48 @@ Item {
         }
     }
 
-    Column {
-        id: column
-        x: root.pad
-        y: root.pad
-        width: parent.width - 2 * root.pad
-        spacing: Config.spaceM
+    ScrollList {
+        width: parent.width
+        visible: ClipHistory.items.length > 0
+        maxHeight: 6 * (root.rowH + spacing) + 14
+        spacing: Config.spaceXs
 
-        Header {
-            width: parent.width
-            icon: "content_paste"
-            title: "Clipboard"
-            subtitle: !ClipHistory.enabled ? "Needs cliphist and wl-clipboard"
-                    : ClipHistory.items.length === 0 ? "What you copy shows here, until the session ends"
-                    : ClipHistory.items.length + (ClipHistory.items.length === 1 ? " copy" : " copies") + ", kept in memory"
-            onBack: Engine.back()
+        Repeater {
+            id: rows
+            model: ClipHistory.items
 
-            Pill {
-                visible: ClipHistory.items.length > 0
-                implicitHeight: 48
-                icon: "delete_sweep"
-                text: "Clear"
-                shortcut: "x"
-                onClicked: ClipHistory.wipe()
-            }
-        }
+            ListEntry {
+                id: row
+                required property var modelData
+                required property int index
 
-        ScrollList {
-            width: parent.width
-            visible: ClipHistory.items.length > 0
-            maxHeight: 6 * (root.rowH + spacing) + 14
-            spacing: Config.spaceXs
+                width: parent.width
+                filled: true
+                focus: index === 0
+                icon: /^\s*https?:\/\//.test(modelData.text) ? "link" : "notes"
+                title: modelData.picture !== "" ? "Picture" : modelData.text.replace(/\s+/g, " ").trim()
+                subtitle: modelData.info
+                lead: modelData.picture !== "" ? thumb : null
+                onClicked: root.copy(modelData)
+                Keys.onDeletePressed: { Engine.key(); ClipHistory.remove(modelData) }
 
-            Repeater {
-                id: rows
-                model: ClipHistory.items
-
-                ListEntry {
-                    id: row
-                    required property var modelData
-                    required property int index
-
-                    width: parent.width
-                    filled: true
-                    focus: index === 0
-                    icon: /^\s*https?:\/\//.test(modelData.text) ? "link" : "notes"
-                    title: modelData.picture !== "" ? "Picture" : modelData.text.replace(/\s+/g, " ").trim()
-                    subtitle: modelData.info
-                    lead: modelData.picture !== "" ? thumb : null
-                    onClicked: root.copy(modelData)
-                    Keys.onDeletePressed: { Engine.key(); ClipHistory.remove(modelData) }
-
-                    property Component thumb: Component {
-                        ClippingRectangle {
-                            width: 44; height: 44; radius: 22
-                            color: Config.raised
-                            CoverImage { source: row.modelData.picture; sourceSize: Qt.size(88, 88) }
-                        }
+                property Component thumb: Component {
+                    ClippingRectangle {
+                        width: 44; height: 44; radius: 22
+                        color: Config.raised
+                        CoverImage { source: row.modelData.picture; sourceSize: Qt.size(88, 88) }
                     }
                 }
             }
         }
+    }
 
-        EmptyState {
-            width: parent.width
-            visible: ClipHistory.items.length === 0
-            icon: ClipHistory.enabled ? "content_paste" : "content_paste_off"
-            title: ClipHistory.enabled ? "Nothing copied yet" : "Clipboard history is off"
-            hint: ClipHistory.enabled ? "What you copy shows here, until the session ends."
-                                      : "It needs cliphist and wl-clipboard installed."
-        }
-
-        KeyHints {
-            width: parent.width
-            keys: [["Enter", "paste"], ["Del", "forget"]]
-        }
+    EmptyState {
+        width: parent.width
+        visible: ClipHistory.items.length === 0
+        icon: ClipHistory.enabled ? "content_paste" : "content_paste_off"
+        title: ClipHistory.enabled ? "Nothing copied yet" : "Clipboard history is off"
+        hint: ClipHistory.enabled ? "What you copy shows here, until the session ends."
+                                  : "It needs cliphist and wl-clipboard installed."
     }
 }

@@ -52,8 +52,9 @@ for (const dir of dirs) {
         })
         if (dir === "island/views" && PANELS.includes(name)) {
             const text = lines.join("\n")
-            if (!/\bHeader\s*\{/.test(text)) hit("header", -1, "no Header")
-            if (!/\bKeyHints\s*\{/.test(text)) hit("hints", -1, "no KeyHints")
+            const onPanel = /^Panel\s*\{/m.test(text)   // parts/Panel.qml has the Header and the KeyHints; the view says what they show
+            if (!(onPanel ? /^\s*title:/m.test(text) : /\bHeader\s*\{/.test(text))) hit("header", -1, onPanel ? "Panel without a title" : "no Header")
+            if (!(onPanel ? /^\s*keys:/m.test(text) : /\bKeyHints\s*\{/.test(text))) hit("hints", -1, onPanel ? "Panel without keys" : "no KeyHints")
             if (LISTS.includes(name) && !/\bEmptyState\s*\{/.test(text)) hit("empty", -1, "no EmptyState")
         }
     }
