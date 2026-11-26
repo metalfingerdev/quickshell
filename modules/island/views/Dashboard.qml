@@ -56,7 +56,7 @@ Item {
     // What is on the grid
     property bool editing: false
     readonly property var ids: { const c = ControlLayout.clean(Config.controlLayout); return c.length > 0 ? c : ControlLayout.defaults }
-    // what this machine lacks (a power mode, the agents of the ai bundle) leaves no hole, except while
+    // what this machine lacks (a power mode, the agents of the agents bundle) leaves no hole, except while
     // editing, where it can be taken off
     readonly property var missing: ({ profile: Toggles.profile === "", agent: !Toggles.has("nilo-agent"), codeagent: !Toggles.has("crush") })
     readonly property var shownIds: editing ? ids : ids.filter(id => !missing[id])
