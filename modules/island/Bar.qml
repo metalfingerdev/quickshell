@@ -103,6 +103,12 @@ Scope {
     // over it (a notch), in the overlay's own top strip. That holds the island but isn't "on" it.
     // A notch's top strip over the island is the island's own, unless auto-hide is on: then it is the edge
     // that reveals it.
+    // The tray is the island's too, though it's a window of its own: passing between them keeps a peek, the
+    // pointer on it pauses countdowns, and auto-hide can't take the tray from under the pointer. One flag for
+    // both, so the crossing sends nothing when the two touch, and only the grace when they don't.
+    readonly property bool hovering: overlay.onIsland || trayHover.hovered
+    onHoveringChanged: Engine.hover(hovering, !overlay.onIsland)
+
     readonly property bool atEdge: !covering && (edgeHover.hovered
         || (pointer.hovered && pointer.point.position.y < hotZone && (Engine.autoHide || !root.notch || !overlay.overX(pointer.point.position.x))))
     onAtEdgeChanged: Engine.edge(atEdge, screen.name)
@@ -256,7 +262,6 @@ Scope {
             && overX(pointer.point.position.x)
             && pointer.point.position.y >= (Engine.autoHide || !root.notch ? Math.max(proxy.y, root.hotZone) : proxy.y)
             && pointer.point.position.y < proxy.y + proxy.height
-        onOnIslandChanged: Engine.hover(onIsland)
 
         // the final rects of the anti-corners (AntiCorner draws them from the animated one)
         component CornerBox: Item {
@@ -411,6 +416,9 @@ Scope {
         WlrLayershell.namespace: "quickshell:beside"
         WlrLayershell.layer: WlrLayer.Overlay
         WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+
+        // the mask is the tray alone, so this is the pointer on the tray
+        HoverHandler { id: trayHover }
 
         // beside the island whatever it shows, as the lights are; this window takes its own clicks, so a
         // view's click-outside doesn't reach it

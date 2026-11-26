@@ -17,7 +17,7 @@ Singleton {
 
     Process {
         running: true
-        command: ["sh", "-c", "for t in systemd-inhibit hyprsunset wf-recorder powerprofilesctl grimblast gsettings notify-send xdg-open uwsm pw-play hyprpicker wtype pw-record; "
+        command: ["sh", "-c", "for t in systemd-inhibit hyprsunset wf-recorder powerprofilesctl grimblast gsettings notify-send xdg-open uwsm pw-play hyprpicker wtype pw-record nilo-agent crush; "
                             + "do command -v \"$t\" >/dev/null 2>&1 && echo \"$t\"; done"]
         stdout: StdioCollector {
             onStreamFinished: {

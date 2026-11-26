@@ -53,11 +53,13 @@ Item {
         else if (pointed === item) pointed = null
     }
 
-    // ── what is on the grid ──────────────────────────────────────────────────────────────────────────
+    // What is on the grid
     property bool editing: false
     readonly property var ids: { const c = ControlLayout.clean(Config.controlLayout); return c.length > 0 ? c : ControlLayout.defaults }
-    // a power mode the machine doesn't have leaves no hole, except while editing, where it can be taken off
-    readonly property var shownIds: editing ? ids : ids.filter(id => id !== "profile" || Toggles.profile !== "")
+    // what this machine lacks (a power mode, the agents of the ai bundle) leaves no hole, except while
+    // editing, where it can be taken off
+    readonly property var missing: ({ profile: Toggles.profile === "", agent: !Toggles.has("nilo-agent"), codeagent: !Toggles.has("crush") })
+    readonly property var shownIds: editing ? ids : ids.filter(id => !missing[id])
     readonly property var packed: ControlLayout.pack(shownIds, 6)
     function setIds(next) { Config.controlLayout = next }
     function remove(id) { setIds(ControlLayout.without(ids, id)) }
@@ -85,7 +87,7 @@ Item {
     }
     function edit(on) { editing = on; if (!on) pointed = null }
 
-    // ── the modules ──────────────────────────────────────────────────────────────────────────────────
+    // The modules
     // `kind` says how it is drawn; the rest is what a small tile or a catalogue entry needs. Functions, not
     // values: the lists stay put when a setting flips, so the tile with the keyboard focus isn't rebuilt under it.
     readonly property var defs: ({

@@ -48,7 +48,8 @@ QtObject {
         SettingsGlass,
         SettingsAlerts,
         SettingsEnergy,
-        SettingsLock
+        SettingsLock,
+        SettingsWallpaper
     }
 
     readonly property int restView: Engine.View.Compact
@@ -96,7 +97,7 @@ QtObject {
         send({ type: on ? Machine.Event.Reach : Machine.Event.Retreat })
     }
     function setAutoHide(on)   { send({ type: Machine.Event.Mode, on: on }) }
-    function hover(on)     { send({ type: on ? Machine.Event.Hover : Machine.Event.Leave }) }
+    function hover(on, beside) { send({ type: on ? Machine.Event.Hover : Machine.Event.Leave, beside: !!beside }) }
     function peek(on)      { send({ type: on ? Machine.Event.Peek : Machine.Event.Unpeek }) }
     // The peek key as one binding: press to show, press again to hide. Reads the snapshot, so it never
     // gets out of step: anything that clears `peeking` (a hover peek, a view opening) resets it too.

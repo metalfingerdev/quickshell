@@ -49,15 +49,15 @@ QtObject {
 
     // A wallpaper's own colours are often too dark or too muddy to read as they are, so only the hue of
     // `wallpaperSeed` is used, at `wallpaperSaturation` and `wallpaperTone`.
-    property string source: "preset"
+    property string source: "accent"
     property string name: "teal"
     property color accent: "#4f9d8f"
     property color wallpaperSeed: "#4f9d8f"
     property real wallpaperSaturation: 0.8
     property real wallpaperTone: 0.72              // the primary's lightness in dark mode; light mode mirrors it
     // The surfaces' own tint, apart from the accent: its hue (0..1), and how much of it they take (0 = grey).
-    property real surfaceHue: 0.47
-    property real tint: 0.5
+    property real surfaceHue: 0.005
+    property real tint: 0.62
     property bool darkMode: true
     // The surfaces of a custom accent take its hue, as Android's do, rather than surfaceHue of their own
     // (Theme's Surfaces: Matched; Custom and Neutral leave it off). A wallpaper option sets its own.

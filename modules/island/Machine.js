@@ -141,9 +141,11 @@ function toastEnd(s, e, cfg) {
     return s.autoHide ? toHidden(s, e, cfg) : rest(s, e, cfg)
 }
 
-// With no peek view, hovering just holds the linger timer (rearm sees "holding" and drops it).
+// With no peek view, hovering just holds the linger timer (rearm sees "holding" and drops it). So does the
+// tray beside the island (`beside`): a peek would grow the island and slide the tray, which rides its edge,
+// out from under the pointer.
 function intent(s, e, cfg) {
-    if (cfg.peekView < 0) return rearm(s)
+    if (cfg.peekView < 0 || e.beside) return rearm(s)
     return cfg.hoverMs > 0 ? set(s, { timer: { ms: cfg.hoverMs, kind: "intent" } }) : toPeek(s, e, cfg)
 }
 

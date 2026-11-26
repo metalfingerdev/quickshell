@@ -26,21 +26,12 @@ Item {
         onBackspaceEmpty: Engine.back()
     }
 
-    // a picture's path: applied on Enter and on leaving the field
     property string pathError: ""
-    component PathField: Field {
-        id: path
+    component LockPicture: PictureField {
         property string setting: ""
-        text: LockConfig[setting]
-        function apply() { root.pathError = LockConfig.setPicture(setting, text.trim()) }
-        onAccepted: apply()
-
-        Connections {
-            target: path.field
-            function onActiveFocusChanged() { if (!path.field.activeFocus && path.text !== LockConfig[path.setting]) path.apply() }
-        }
+        value: LockConfig[setting]
+        onChosen: path => root.pathError = LockConfig.setPicture(setting, path)
     }
-
 
     Column {
         id: column
@@ -62,10 +53,10 @@ Item {
             spacing: Config.spaceM
 
             SectionLabel { text: "Pictures"; topPadding: Config.spaceS }
-            PathField {
+            LockPicture {
                 setting: "image"
                 icon: Config.symbol.wallpaper
-                placeholder: "Background: follows the wallpaper"
+                placeholder: "Background: the default picture"
 
                 Pill {
                     implicitHeight: 38
@@ -76,10 +67,15 @@ Item {
                     onClicked: { root.pathError = ""; LockConfig.image = Wallpaper.current }
                 }
             }
-            PathField {
+            LockPicture {
+                setting: "imageStill"
+                icon: "battery_saver"
+                placeholder: "Background on battery saver: the default still"
+            }
+            LockPicture {
                 setting: "avatar"
                 icon: "person"
-                placeholder: "Profile picture: a path, GIFs play"
+                placeholder: "Profile picture: the default, or a path (GIFs play)"
             }
             Segmented {
                 width: parent.width

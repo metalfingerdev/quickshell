@@ -76,6 +76,24 @@ test("a timer of another kind is never reused for the linger", () => {
     assert.notStrictEqual(s.timer, intent)
 })
 
+console.log("the tray beside the island")
+test("hovering the tray holds the island but never starts a peek", () => {
+    const s = run(M.initial(V.Compact, false), { type: E.Hover, beside: true })
+    assert.strictEqual(s.phase, P.Rest); assert.strictEqual(s.timer, null)
+})
+test("hovering the tray stops auto-hide's linger", () => {
+    const s = run(M.initial(V.Compact, true), E.Reach, E.Retreat, { type: E.Hover, beside: true })
+    assert.strictEqual(s.timer, null)
+})
+test("from the island to the tray, a peek survives the gap between them", () => {
+    const s = run(M.initial(V.Compact, false), E.Hover, E.Expire, E.Leave, { type: E.Hover, beside: true })
+    assert.strictEqual(s.phase, P.Peek); assert.strictEqual(s.timer, null)
+})
+test("the tray pauses a pinned view's countdown", () => {
+    const s = run(M.initial(V.Compact, false), open(V.Network), { type: E.Hover, beside: true })
+    assert.strictEqual(s.timer, null)
+})
+
 console.log("rest view")
 test("open <restView> goes home instead of pinning with no timeout", () => {
     const s = run(M.initial(V.Compact, false), open(V.Network), open(V.Compact))

@@ -60,9 +60,13 @@ Rectangle {
 
 		AnimatedImage {
 			id: background
-			// the lock image, or the wallpaper if there is none or it can't be loaded (it moved, say)
+			// your lock image, else the shipped default, else the wallpaper: each is skipped when it
+			// can't be loaded (it moved, say)
 			property string broken: ""
-			readonly property string path: LockConfig.image !== "" && LockConfig.image !== broken ? LockConfig.image : Wallpaper.current
+			property string brokenDefault: ""
+			readonly property string path: LockConfig.chosen !== "" && LockConfig.chosen !== broken ? LockConfig.chosen
+				: LockConfig.defaultImage !== "" && LockConfig.defaultImage !== brokenDefault ? LockConfig.defaultImage
+				: Wallpaper.current
 
 			anchors.fill: parent
 			source: path ? Wallpaper.fileUrl(path) : ""
@@ -73,7 +77,10 @@ Rectangle {
 			cache: false
 			opacity: status === Image.Ready ? 1 : 0
 			// not right away: a missing file errors while `source` is being set, from `path`'s own binding
-			onStatusChanged: if (status === Image.Error) Qt.callLater(() => broken = LockConfig.image);
+			onStatusChanged: if (status === Image.Error) Qt.callLater(() => {
+				if (path === LockConfig.chosen) broken = path;
+				else if (path === LockConfig.defaultImage) brokenDefault = path;
+			});
 			Behavior on opacity { NumberAnimation { duration: Config.motionMs } }
 
 			// awake, it softens and dims behind the sign-in; at rest no effect runs at all
@@ -135,8 +142,14 @@ Rectangle {
 
 				AnimatedImage {
 					id: avatar
+					// your picture, else the shipped one when yours is empty or can't be loaded
+					property string broken: ""
+					readonly property string shown: LockConfig.avatar !== "" && LockConfig.avatar !== broken ? LockConfig.avatar : LockConfig.defaultAvatar
+					onStatusChanged: if (status === Image.Error) Qt.callLater(() => {
+						if (shown === LockConfig.avatar) broken = shown;
+					});
 					anchors.fill: parent
-					source: LockConfig.avatar ? Wallpaper.fileUrl(LockConfig.avatar) : ""
+					source: shown ? Wallpaper.fileUrl(shown) : ""
 					fillMode: Image.PreserveAspectCrop
 					asynchronous: true
 					// It turns itself off for a still picture and wouldn't start the next GIF: the status

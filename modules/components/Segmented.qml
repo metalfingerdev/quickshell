@@ -7,7 +7,6 @@ Item {
 
     property var options: []
     property string current: ""
-    property bool showCheck: true
     signal picked(string key)
 
     implicitWidth: 320

@@ -30,7 +30,7 @@ Singleton {
     property real activeOpacity: 0.9     // -1 = look.lua's
     property real inactiveOpacity: 0.9
     // hyprglass's settings, for the windows and for the island: each { shared, dark, light }
-    property var hg: ({ windows: { shared: {}, dark: {}, light: {} }, island: { shared: {}, dark: {}, light: {} } })
+    property var hg: ({ windows: { shared: {}, dark: {}, light: {} }, island: { shared: { tint_color: "#1a1a1a00" }, dark: {}, light: {} } })
     // an older settings.json had one { shared, dark, light } for everything: that was the windows'
     function tables(which) { return hg?.[which] ?? (which === "windows" && hg?.shared ? hg : {}) }
     property var hl: ({ shared: {}, dark: {}, light: {} })

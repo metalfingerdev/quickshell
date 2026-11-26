@@ -11,8 +11,9 @@ import "Generations.js" as Read
 Singleton {
     id: root
 
+    // NIXOS_FLAKE: set by the quickshell unit, from Home Manager's session variable of the same name
     // its config/* clones (the dotfiles, each a repo of its own and an input) are checked against the lock
-    property string flake: Quickshell.env("HOME") + "/nixos-dotfiles"
+    property string flake: Quickshell.env("NIXOS_FLAKE") || Quickshell.env("HOME") + "/nixos-dotfiles"
     property Store store: Store {
         category: "generations"
         property alias flake: root.flake

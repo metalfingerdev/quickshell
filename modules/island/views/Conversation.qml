@@ -75,7 +75,7 @@ Item {
         : Agent.warming ? "Loading " + Agent.inUse
         : Agent.loaded ? Agent.inUse + ", in memory" : Agent.inUse + ", asleep: it loads with the first question"
 
-    // ---- the peek ----
+    // The peek
     Row {
         visible: root.peek
         anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter; leftMargin: Config.spaceXl; rightMargin: Config.spaceXl }
@@ -118,7 +118,7 @@ Item {
         }
     }
 
-    // ---- the conversation ----
+    // The conversation
     Column {
         id: column
         visible: !root.peek

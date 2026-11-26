@@ -32,6 +32,7 @@ Panel {
         Category { view: Engine.View.SettingsAlerts; icon: "notifications"; title: "Notifications"; subtitle: "Popups, sounds, toasts"; shortcut: "a" }
         Category { view: Engine.View.SettingsEnergy; icon: "bolt"; title: "Energy"; subtitle: "Dim, lock and sleep when idle"; shortcut: "i" }
         Category { view: Engine.View.SettingsLock; icon: "lock"; title: "Lock screen"; subtitle: "Picture, profile"; shortcut: "l" }
+        Category { view: Engine.View.SettingsWallpaper; icon: Config.symbol.wallpaper; title: "Wallpaper"; subtitle: "Default, battery saver still"; shortcut: "w" }
     }
     ListSection {
         ListEntry {

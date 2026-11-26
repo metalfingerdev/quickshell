@@ -117,11 +117,11 @@ Item {
           icon: Toggles.memoRecording ? "stop_circle" : "mic", keys: "record audio voice memo note microphone dictaphone", run: quit(() => Toggles.voiceMemo(!Toggles.memoRecording)) },
         { name: "Clipboard", description: "Everything copied this session", icon: "content_paste", keys: "history paste copied", run: () => { bar.text = ""; root.filter = "clipboard" } },
         { name: "Emoji", description: "Emoji, symbols and kaomoji", icon: "mood", keys: "smiley symbols kaomoji characters", run: () => { bar.text = ""; root.filter = "emoji" } },
-        { name: "Agent", description: "Ask the local model; ? before a question does it from here", icon: "smart_toy", keys: "ai assistant llm chat ask ollama", run: view(Engine.View.Agent) },
-        { name: "Coding agent", description: "Crush, in a terminal, for work in a repository", icon: "terminal", keys: "ai crush code agent repository", run: quit(() => Toggles.launch([terminal, "-e", agent])) },
+        { hidden: !Toggles.has("nilo-agent"), name: "Agent", description: "Ask the local model; ? before a question does it from here", icon: "smart_toy", keys: "ai assistant llm chat ask ollama", run: view(Engine.View.Agent) },
+        { hidden: !Toggles.has("crush"), name: "Coding agent", description: "Crush, in a terminal, for work in a repository", icon: "terminal", keys: "ai crush code agent repository", run: quit(() => Toggles.launch([terminal, "-e", agent])) },
         { name: "Lock", description: "Lock the session", icon: "lock", run: quit(() => Session.run("lock")) },
         { name: "Suspend", description: "Sleep", icon: "bedtime", keys: "sleep", run: quit(() => Session.run("suspend")) },
-        { name: "Hibernate", description: "Save the session to disk and power off", icon: "ac_unit", keys: "sleep disk", run: quit(() => Session.run("hibernate")) },
+        { hidden: !Session.canHibernate, name: "Hibernate", description: "Save the session to disk and power off", icon: "ac_unit", keys: "sleep disk", run: quit(() => Session.run("hibernate")) },
         { name: "Power", description: "Log out, restart, shut down", icon: Config.symbol.power, keys: "logout reboot restart shutdown poweroff", run: view(Engine.View.Power) }
     ]
     readonly property var actionRows: {

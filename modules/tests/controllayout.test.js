@@ -23,7 +23,7 @@ t("the first rows are the ones it always had", () => {
     assert.deepStrictEqual([at("wifi").row, at("bluetooth").col, at("airplane").col], [0, 3, 5])
     assert.deepStrictEqual([at("volume").row, at("mic").col, at("mixer").col], [1, 4, 5])
     assert.deepStrictEqual([at("agent").row, at("agent").col, at("screenshot").col, at("screenshot").row], [4, 0, 2, 4])
-    assert.strictEqual(at("picker").row, 5)
+    assert.strictEqual(at("picker").row, 6)          // after Wallpaper and Tasks, which the marin layout adds
 })
 t("a 1x1 fills the hole beside a tall one", () => {
     const { items } = L.pack(["wallpaper", "mic", "mixer"], 6)
@@ -37,6 +37,6 @@ t("move, remove and what's left to add", () => {
     assert.deepStrictEqual(L.move(["a", "b", "c"], 0, 2), ["b", "c", "a"])
     assert.deepStrictEqual(L.move(["a", "b"], 5, 0), ["a", "b"])
     assert.deepStrictEqual(L.without(["a", "b"], "a"), ["b"])
-    assert(L.missing(L.defaults).includes("wallpaper") && !L.missing(L.defaults).includes("wifi"))
+    assert(L.missing(L.defaults).includes("shuffle") && !L.missing(L.defaults).includes("wifi"))
 })
 console.log(n + " ok")

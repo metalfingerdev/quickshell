@@ -8,7 +8,10 @@ import Quickshell.Io
 Singleton {
     id: root
 
-    readonly property var actions: [
+    // Hibernate only where logind says it can (a swap big enough to hibernate into): not every machine has one.
+    property bool canHibernate: false
+    readonly property var actions: everything.filter(a => a.id !== "hibernate" || canHibernate)
+    readonly property var everything: [
         { id: "lock",     label: "Lock",      icon: "lock",               confirm: false, key: "l" },
         { id: "suspend",  label: "Suspend",   icon: "bedtime",            confirm: false, key: "s" },
         { id: "hibernate", label: "Hibernate", icon: "ac_unit",           confirm: false, key: "h" },
@@ -41,6 +44,12 @@ Singleton {
         { id: "firmware", label: "Firmware setup", icon: "developer_board", key: "f", entry: "auto-reboot-to-firmware-setup" }
     ]
     property var restarts: []
+    Process {
+        running: true
+        command: ["busctl", "call", "org.freedesktop.login1", "/org/freedesktop/login1",
+                  "org.freedesktop.login1.Manager", "CanHibernate"]
+        stdout: StdioCollector { onStreamFinished: root.canHibernate = text.trim() === 's "yes"' }
+    }
     Process {
         running: true
         command: ["busctl", "--json=short", "get-property", "org.freedesktop.login1", "/org/freedesktop/login1",

@@ -50,7 +50,6 @@ Singleton {
     }
 
     function setVolume(percent) { setLevel(sink, percent) }
-    function toggleMute() { toggleMuted(sink) }
     function toggleMic()  { toggleMuted(source) }
     function setSink(node) { if (node) Pipewire.preferredDefaultAudioSink = node }
     function setSource(node) { if (node) Pipewire.preferredDefaultAudioSource = node }

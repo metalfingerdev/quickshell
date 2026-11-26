@@ -19,8 +19,8 @@ const sizes = {
 const defaults = [
     "wifi", "bluetooth", "airplane", "volume", "mic", "mixer", "brightness", "nightlight", "dark",
     "dnd", "notifications", "caffeine", "battery", "agent",
-    "screenshot", "record", "recordmic", "memo", "clipboard", "emoji", "codeagent", "picker",
-    "weather", "event", "system", "profile", "session"
+    "screenshot", "record", "wallpaper", "recordmic", "memo", "clipboard", "emoji", "tasks", "codeagent",
+    "picker", "weather", "event", "profile", "session", "nixos", "system"
 ]
 
 function known(id) { return Object.prototype.hasOwnProperty.call(sizes, id) }

@@ -37,8 +37,19 @@ Singleton {
     readonly property string optionKey: current + "|" + optionIndex       // which image, which option
     function pick(index) { pickedIndex = index; pickedFor = current }
 
+    // The pictures that come with the island, listed beside `dir`. shellPath keeps ~/.config/quickshell, a
+    // link that follows rebuilds, where a store path would be gone after the next garbage collection.
+    readonly property string shipped: Quickshell.shellPath("assets/wallpapers")
+    // Settings → Wallpaper: the wallpaper a first login gets and battery saver swaps; "" = the shipped one
+    property string basePath: ""
+    property string stillPath: ""
+    readonly property string base: basePath || shipped + "/wallpaper.gif"
+    readonly property string still: stillPath || shipped + "/wallpaper.jpg"
+
     property Store store: Store {
         category: "wallpaper"
+        property alias basePath: root.basePath
+        property alias stillPath: root.stillPath
         property alias pickedIndex: root.pickedIndex
         property alias pickedFor: root.pickedFor
     }
@@ -48,8 +59,41 @@ Singleton {
 
     function reload() { lister.running = true }
 
+    // Says what's wrong ("" = fine). Choosing the base also shows it, and clearing it brings the shipped one back.
+    function setPicture(key, path) {
+        if (path !== "" && !path.startsWith("/")) return `not an absolute path: ${path}`
+        root[key + "Path"] = path
+        if (key === "base") set(base)
+        else applySaver()
+        return ""
+    }
+
+    // First login: awww has nothing to restore, so the base is set once both the query and the listing are
+    // done and nothing shows.
+    property bool queried: false
+    property bool listed: false
+    function firstWallpaper() {
+        if (queried && listed && current === "" && base && (basePath !== "" || files.includes(base))) { set(base); applySaver() }
+    }
+
+    // Battery saver: awww keeps decoding an animated GIF's frames, so the base wallpaper is shown as its
+    // still meanwhile, and comes back when the profile leaves power-saver. A wallpaper picked from the
+    // list is left alone.
+    readonly property bool saving: Toggles.profile === "power-saver"
+    property string animated: ""
+    function applySaver() {
+        if (!still) return
+        if (saving) {
+            if (current === base) { const gif = current; set(still); animated = gif }
+        } else if (animated !== "") {
+            set(animated)
+        }
+    }
+    onSavingChanged: applySaver()
+
     function set(path) {
         if (!path) return
+        animated = ""            // a pick of your own ends the saver's swap
         current = path
         // waits (up to ~10 s) for awww-daemon, so it's safe right after login
         Quickshell.execDetached(["sh", "-c",
@@ -80,17 +124,24 @@ Singleton {
             onStreamFinished: {
                 const m = text.match(/image:\s*(.+)$/m)
                 if (m && root.current === "") root.current = m[1].trim()
+                root.queried = true
+                root.firstWallpaper()
+                root.applySaver()
             }
         }
     }
 
     Process {
         id: lister
-        command: ["find", "-L", root.dir, "-maxdepth", "1", "-type", "f", "(",
+        command: ["find", "-L", root.dir, root.shipped, "-maxdepth", "1", "-type", "f", "(",
                   "-iname", "*.png", "-o", "-iname", "*.jpg", "-o", "-iname", "*.jpeg", "-o",
                   "-iname", "*.webp", "-o", "-iname", "*.gif", "-o", "-iname", "*.bmp", ")"]
         stdout: StdioCollector {
-            onStreamFinished: root.files = text.split("\n").filter(s => s.length > 0).sort((a, b) => a.localeCompare(b))
+            onStreamFinished: {
+                root.files = text.split("\n").filter(s => s.length > 0).sort((a, b) => a.localeCompare(b))
+                root.listed = true
+                root.firstWallpaper()
+            }
         }
     }
 

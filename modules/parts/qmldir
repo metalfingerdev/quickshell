@@ -1,6 +1,7 @@
 module qs.modules.parts
 
 WorkspaceDots    1.0 WorkspaceDots.qml
+PictureField     1.0 PictureField.qml
 StatusGroup      1.0 StatusGroup.qml
 MediaCard        1.0 MediaCard.qml
 RecordingCard    1.0 RecordingCard.qml

@@ -38,6 +38,7 @@ QtObject {
         { name: "alerts", priority: 2, timeout: 8000, view: Engine.View.SettingsAlerts, url: Qt.resolvedUrl("views/SettingsAlerts.qml") },
         { name: "energy", priority: 2, timeout: 8000, view: Engine.View.SettingsEnergy, url: Qt.resolvedUrl("views/SettingsEnergy.qml") },
         { name: "lockscreen", priority: 2, timeout: 8000, view: Engine.View.SettingsLock, url: Qt.resolvedUrl("views/SettingsLock.qml") },
+        { name: "wallpaper-settings", priority: 2, timeout: 8000, view: Engine.View.SettingsWallpaper, url: Qt.resolvedUrl("views/SettingsWallpaper.qml") },
         { name: "workspaces", priority: 2, timeout: 8000, view: Engine.View.Workspaces, url: Qt.resolvedUrl("views/Workspaces.qml") },
         { name: "clipboard",  aliases: ["history"], priority: 2, timeout: 10000, view: Engine.View.Clipboard, url: Qt.resolvedUrl("views/Clipboard.qml") },
         // timeout 0: a conversation stays until Escape or a click outside; as a toast (an answer that

@@ -13,9 +13,6 @@ Singleton {
 
     property bool enabled: true
     property real volume: 0.5               // 0..1, pw-play's own scale
-    property Store store: Store {
-        category: "sounds"
-    }
 
     // The first theme folder that has it, then the system's (a service may get a short XDG_DATA_DIRS).
     readonly property string script: "IFS=:; for d in ${XDG_DATA_DIRS:-} /run/current-system/sw/share /usr/share; do "

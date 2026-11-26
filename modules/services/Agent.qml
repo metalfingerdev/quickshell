@@ -280,7 +280,7 @@ Singleton {
     }
     Process {
         id: agent
-        running: true
+        running: Toggles.has("nilo-agent")
         command: ["nilo-agent"]
         stdinEnabled: true
         stdout: SplitParser { onRead: line => root.handle(line) }

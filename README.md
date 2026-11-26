@@ -25,7 +25,7 @@ Escape, a click outside, a timer      ──► home (the clock)
 > dashboard, launcher, network, bluetooth, media, the volume mixer, notifications, workspace overview,
 > clock, battery, power, theme and wallpaper, settings, plus toasts (volume, brightness, notifications, battery,
 > workspace switch) and privacy dots.
-> See [docs/roadmap.md](docs/roadmap.md) and [docs/old-shell-notes.md](docs/old-shell-notes.md).
+> What is still open: [docs/roadmap.md](docs/roadmap.md).
 
 ## Running
 
@@ -56,65 +56,44 @@ In the session the shell runs as the `quickshell` systemd user service (nixos-do
 
 ## Layout
 
+Every file opens with a comment saying what it is and why; this is the map.
+
 ```
-shell.qml                     entry point: Ipc, Triggers, Variants { Bar } (one per screen), Wallpaper,
-                              Lock, ActivateLinux
-lock-test.qml                 the lock surface in a normal window, nothing locked (at the root, or `qs.*` won't resolve)
+shell.qml           entry point: services, one Bar per screen, the lock
+lock-test.qml       the lock surface in a normal window, nothing locked (at the root, or `qs.*` won't resolve)
+assets/             the pictures it comes with: wallpaper (and its still for battery saver), the lock
+                    screen's background (and still), the avatar
 modules/
-  lock/
-    Lock.qml                  the session lock: a LockSurface per screen, `qs ipc call lock screen`
-    LockContext.qml           what's typed and PAM, shared by every screen's surface
-    LockConfig.qml            what the lock shows (a singleton: IPC and views/Settings.qml set it)
-    LockSurface.qml           the picture; the clock top left, the avatar and name top right, the password field along the bottom
-    Idle.qml                  hypridle's job, a singleton: dim, lock, screens off, suspend; the lock before sleep
-    pam/password.conf         PAM for the lock: pam_unix (the password only)
-  activatelinux/
-    ActivateLinux.qml         a click-through text OSD in each screen's bottom-right corner
-  island/
-    Machine.js                pure statechart: reduce(state, event, cfg) -> state
-    Engine.qml                singleton: holds the snapshot, owns the one Timer, public API
-    Registry.qml              singleton: every view's name, priority, timeout, queue flag, QML file
-    Bar.qml                   per screen: the windows, the proxy/surface morph, the look (pill/notch,
-                              anti-corners, handle; the glass layer), outside-click close, privacy dots
-    ViewLoader.qml            the view slot: a Loader plus the default keyboard
-    Ipc.qml                   `qs ipc call island ...` commands
-    Held.qml                  singleton: a view gone through with its key while Super is held (Super+Tab)
-    Triggers.qml              system events -> alerts and sounds (volume, mic, brightness, battery, media,
-                              workspace switch, notifications, activities)
-    Debug.qml                 live snapshot overlay, toggled with `qs ipc call island debug true`
-    views/                    one QML file per view: Compact Expanded Tabs Dashboard Launcher Network Bluetooth
-                              Media Mixer Notification Workspaces Clock Battery Power Theme (with the
-                              full Colours and Wallpapers) Settings Clipboard Activity, and the toasts
-                              Volume Mic Brightness Switcher
-  overview/                   the Workspaces overview's tiles, live previews, special strip, options
-  parts/                      pieces several views share: WorkspaceDots (GNOME-style), StatusGroup (what's
-                              on, as a button group), MediaCard, NotificationCard, WallpaperThumb,
-                              VolumeSlider, BrightnessSlider, DateStamp
-  services/                   system state, no island logic: Audio, Backlight, Notifier, Net (Wi-Fi),
-                              Bluez, Players (MPRIS), Energy (battery), Session (power), Desktops
-                              (Hyprland), Toplevels, Privacy (mic/camera), Wallpaper (awww), Toggles
-                              (caffeine, night light, recording, airplane, power profiles, screenshots,
-                              app launches), Activities (progress over IPC, downloads), ClipHistory
-                              (cliphist, in memory), Sounds (the freedesktop theme), Emoji (Unicode's list,
-                              symbols, kaomoji: the launcher's Emoji filter), Agent (the local model, run
-                              by Nihil-Shell's agent, nilo-agent; views/Conversation.qml)
-  components/
-    Config.qml                singleton: Material 3 palettes, shape, type; remembered across restarts
-    Pill.qml                  button: tonal, filled or text; round when it's only an icon
-    QuickTile.qml             a quick settings tile (icon circle, label, state; optionally split)
-    Slider.qml                a thick pill slider (the fill carries the icon)
-    Segmented.qml Chip.qml SearchBar.qml Toggle.qml (switch) Header.qml (top app bar)
-    Icon.qml                  a Material Symbols glyph
-    Card.qml                  a container: what sits on the island sits on this (docs/design.md)
-    Swatch.qml                a round colour to pick (or a palette: its surface around its primary)
-    ColourMap.qml             every colour: hue and lightness on a map, washed by a saturation
-    ListEntry Tile ScrollList Progress Equalizer CalendarGrid
-    Label ClickArea CoverImage SectionLabel   a Text, MouseArea and Image with the island's usual settings
-    Store.qml                 Settings in the one state file (~/.local/state/quickshell/island.ini)
-  tests/
-    machine.test.js           Node tests for Machine.js
-    tst_keyboard.qml          qmltestrunner tests for the default keyboard
+  island/           the island itself
+    Machine.js      pure statechart: reduce(state, event, cfg) -> state (docs/state-machine.md)
+    Engine.qml      singleton: holds the snapshot, owns the one Timer, the public API
+    Registry.qml    every view: name, priority, timeout, queue flag, file
+    Bar.qml         per screen: the windows, the morphing surface, hover, the tray beside it
+    ViewLoader.qml  the view slot and its default keyboard
+    Ipc.qml         `qs ipc call island ...` (docs/ipc.md)
+    Triggers.qml    system events -> toasts and sounds
+    views/          one file per view (adding one: docs/adding-a-view.md)
+  overview/         the workspace overview's tiles and live previews
+  lock/             the session lock, its settings, and idle (dim, lock, screens off, suspend)
+  parts/            pieces several views share, which use services
+  components/       pure UI: Config (palette, shape, type), controls, Store
+  services/         system state, no island logic (audio, network, players, wallpaper, agent...)
+  activatelinux/    a click-through text in each screen's corner
+  tests/            node tests (Machine.js, layouts, parsers) and qmltestrunner's keyboard tests
 ```
+
+## From the environment
+
+The island is complete on its own. One value comes from nixos-dotfiles, on the `quickshell` service:
+
+| Variable | Read by | What it is |
+|---|---|---|
+| `NIXOS_FLAKE` | `Generations.qml` | where the flake is checked out (else `~/nixos-dotfiles`) |
+
+`ISLAND_DRY=1` keeps `Glass.qml` from sending anything to Hyprland, for test instances.
+
+What it offers follows what's installed: the agent tiles, actions and process need `nilo-agent` and `crush`
+(nixos-dotfiles' `ai` bundle), and Hibernate needs logind's yes (`CanHibernate`: a swap to hibernate into).
 
 ## How it fits together
 
@@ -146,9 +125,9 @@ Bar: Loader shows Registry.get(view).url
 | | `graceMs` | 140 | how long a peek stays after the pointer leaves |
 | | `hideMs` | 700 | auto-hide: how long the island lingers before hiding |
 | | initial `autoHide` | `true` | second argument to `Machine.initial(...)` |
-| `Config.qml` | `source` | `preset` | where colours come from: `preset`, `accent` or `wallpaper`; IPC `colours` |
+| `Config.qml` | `source` | `accent` | where colours come from: `preset`, `accent` or `wallpaper`; IPC `colours` |
 | | `name` | `teal` | preset palette (teal blue graphite midnight nord rose forest paper); IPC `palette` |
-| | `accent` / `surfaceHue` / `tint` / `darkMode` | / 0.47 / `0.5` / `true` | a generated scheme: its colour (made just lighter or darker if it wouldn't read on the surface, `Config.readable`), the surfaces' own hue (not the accent's) and how much of it they take (0..1), dark or light; IPC `accent` `surface` `tint` `mode` |
+| | `accent` / `surfaceHue` / `tint` / `darkMode` | / 0.005 / `0.62` / `true` | a generated scheme: its colour (made just lighter or darker if it wouldn't read on the surface, `Config.readable`), the surfaces' own hue (not the accent's) and how much of it they take (0..1), dark or light; IPC `accent` `surface` `tint` `mode` |
 | | `wallpaperSaturation` / `wallpaperTone` | `0.8` / `0.72` | how the wallpaper colour's hue becomes a primary |
 | | `scale` | 1.0 | the whole island's size (0.8 .. 1.4); IPC `size` |
 | | `style` | `pill` | `pill` floats below the edge; `notch` is flush with it, with anti-corners; IPC `style` |
@@ -173,4 +152,5 @@ Bar: Loader shows Registry.get(view).url
 | `Toggles.qml` | `warmth` | 4500 | night light colour temperature (K), via hyprsunset; remembered |
 | `Energy.qml` | `lowAt` / `criticalAt` | 15 / 5 | battery warnings (a toast; critical interrupts) |
 | `Wallpaper.qml` | `dir`, `transition`, `duration` | `~/Pictures/Wallpapers`, fade, 0.8 | awww |
+| | `basePath` / `stillPath` | `""` | Settings → Wallpaper: the wallpaper set on a first login and its still for battery saver; `""` = the environment's |
 | `modules/overview/OverviewConfig.qml` | `rows` / `columns`, `previewMode`, ... | 2 / 5, live | the workspace overview |
