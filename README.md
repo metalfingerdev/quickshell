@@ -93,7 +93,7 @@ The island is complete on its own. One value comes from nixos-dotfiles, on the `
 `ISLAND_DRY=1` keeps `Glass.qml` from sending anything to Hyprland, for test instances.
 
 What it offers follows what's installed: the agent tiles, actions and process need `nilo-agent` and `crush`
-(nixos-dotfiles' `agents` bundle), and Hibernate needs logind's yes (`CanHibernate`: a swap to hibernate into).
+(nixos-dotfiles' `agent` bundle), and Hibernate needs logind's yes (`CanHibernate`: a swap to hibernate into).
 
 ## How it fits together
 
