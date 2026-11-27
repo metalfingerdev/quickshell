@@ -34,6 +34,7 @@ Item {
     // With a card waiting, the first Enter only arms it and the second allows (as Nilo's): a question
     // typed and sent the moment the card comes up can't say yes to it.
     property string armed: ""
+    Component.onCompleted: if (Agent.access !== "chat") Agent.loadRepos()
     Connections {
         target: Agent
         function onAskingChanged() { root.armed = "" }
@@ -56,10 +57,20 @@ Item {
     property string pointing: ""      // the link under the pointer: where it goes, whatever its words say
     function step(s) {
         const verbs = ({ web_search: ["Searching", "Searched", "search"], open_url: ["Reading", "Read", "read"],
-                         system_info: ["Looking at", "Looked at", "look at"], open_app: ["Opening", "Opened", "open"] })[s.name]
+                         system_info: ["Looking at", "Looked at", "look at"], open_app: ["Opening", "Opened", "open"],
+                         read_file: ["Reading", "Read", "read"], list_files: ["Listing", "Listed", "list"],
+                         edit_file: ["Editing", "Edited", "edit"], write_file: ["Writing", "Wrote", "write"],
+                         run_command: ["Running", "Ran", "run"], git_status: ["Checking", "Checked", "check"],
+                         git_commit: ["Committing", "Committed", "commit"], list_windows: ["Listing", "Listed", "list"],
+                         look_at_screen: ["Looking at", "Looked at", "look at"], click: ["Clicking", "Clicked", "click"],
+                         use_window: ["Using", "Used", "use"], type_text: ["Typing", "Typed", "type"],
+                         press_keys: ["Pressing", "Pressed", "press"], media: ["Controlling", "Controlled", "control"],
+                         control: ["Setting", "Set", "set"] })[s.name]
             ?? [s.name, s.name, "run " + s.name]
         const what = s.name === "system_info" ? "this computer" : s.name === "web_search" ? "“" + s.arg + "”"
-            : s.name === "open_url" ? (s.title || host(s.arg)) : (s.opened || s.arg)
+            : s.name === "open_url" ? (s.title || host(s.arg))
+            : s.name === "git_status" || s.name === "git_commit" ? "git" : s.name === "list_windows" ? "the windows"
+            : s.name === "look_at_screen" ? "the screen" : s.name === "run_command" ? "`" + s.arg + "`" : (s.opened || s.arg)
         return s.status === "running" ? verbs[0] + " " + what + "…"
             : s.status === "failed" ? "Couldn't " + verbs[2] + " " + what + (s.error ? ": " + s.error : "")
             : s.status === "declined" ? "Didn't " + verbs[2] + " " + what
@@ -68,6 +79,14 @@ Item {
     // a peek reads as plain text: no Markdown marks
     function plain(text) { return String(text).replace(/```[\s\S]*?```/g, " … ").replace(/[*_`#>\[\]]/g, "").replace(/\s+/g, " ").trim() }
     function question(a) { return Agent.describe(a) }
+    // the part of a confirm too long for a sentence: a diff, a command, the files a commit takes
+    function detail(a) {
+        if (!a) return ""
+        if (a.action === "edit" || a.action === "create") return String(a.diff ?? "")
+        if (a.action === "run" || a.action === "terminal") return "$ " + a.command
+        if (a.files?.length > 0) return a.files.join("\n") + (a.more > 0 ? "\n… and " + a.more + " more" : "")
+        return ""
+    }
 
     readonly property string status: Agent.trouble !== "" ? Agent.trouble
         : !Agent.ready ? "Starting the agent"
@@ -198,6 +217,46 @@ Item {
             }
         }
 
+        // What it may do, by level (the agent asks before each change, command and desktop action): Chat
+        // answers, searches and opens apps; Terminal works in one repository; System also uses windows and
+        // the screen. A level older than the agent knows isn't offered.
+        Flow {
+            visible: Agent.has("access")
+            width: parent.width
+            spacing: Config.spaceS
+
+            Repeater {
+                model: [{ key: "chat", icon: "chat", text: "Chat" }, { key: "terminal", icon: "terminal", text: "Files and commands" },
+                        { key: "system", icon: "desktop_windows", text: "Desktop" }]
+
+                Chip {
+                    required property var modelData
+                    icon: modelData.icon
+                    text: modelData.text
+                    selected: Agent.access === modelData.key
+                    onClicked: { Agent.set("access", modelData.key); if (modelData.key !== "chat") Agent.loadRepos() }
+                }
+            }
+        }
+        // the repository it works in (Files and commands, Desktop): the ones found in the home folder
+        Flow {
+            visible: Agent.has("repos") && Agent.access !== "chat" && Agent.repos.length > 0
+            width: parent.width
+            spacing: Config.spaceS
+
+            Repeater {
+                model: Agent.repos.slice(0, 8)
+
+                Chip {
+                    required property string modelData
+                    icon: "folder"
+                    text: modelData
+                    selected: Agent.repo === modelData
+                    onClicked: Agent.set("repo", modelData)
+                }
+            }
+        }
+
         Rectangle {
             visible: Agent.messages.count === 0
             width: parent.width
@@ -210,7 +269,9 @@ Item {
                 anchors { left: parent.left; right: parent.right; margins: Config.spaceM; verticalCenter: parent.verticalCenter }
                 wrapMode: Text.Wrap
                 text: "Ask anything. The model runs on this computer: nothing leaves it unless Internet is on, "
-                    + "when it may search the web and read pages. It can also look up this computer and open apps. "
+                    + "when it may search the web and read pages. It can also look up this computer and open apps; "
+                    + "with Files and commands it works in a repository, and with Desktop it can use windows too, "
+                    + "always asking before it changes anything. "
                     + "The conversation is kept only until the shell stops. Try “?” in the launcher too."
                 color: Config.dim
             }
@@ -516,6 +577,28 @@ Item {
                     color: Config.secondaryInk
                     text: root.question(Agent.asking)
                 }
+                // what exactly is asked: the diff, the command or the files, in a box of its own
+                Rectangle {
+                    visible: detailText.text !== ""
+                    width: parent.width
+                    height: Math.min(detailText.implicitHeight, 220) + 20
+                    radius: Config.innerRadius
+                    color: Config.raised
+                    clip: true
+
+                    Text {
+                        id: detailText
+                        x: 10
+                        y: 10
+                        width: parent.width - 20
+                        text: root.detail(Agent.asking)
+                        textFormat: Text.PlainText
+                        wrapMode: Text.WrapAnywhere
+                        color: Config.text
+                        font.family: Config.mono
+                        font.pixelSize: Config.small
+                    }
+                }
                 Row {
                     spacing: Config.spaceS
 
@@ -524,6 +607,12 @@ Item {
                         text: root.armed !== "" ? "Enter again to allow" : "Allow"
                         selected: root.armed !== ""
                         onClicked: Agent.answer(true)
+                    }
+                    Chip {
+                        visible: Agent.asking?.action === "edit" || Agent.asking?.action === "create"
+                        icon: "done_all"
+                        text: "Allow edits in this answer"
+                        onClicked: { Agent.confirmAll = true; Agent.answer(true) }
                     }
                     Chip { icon: "close"; text: "Don't"; onClicked: Agent.answer(false) }
                 }

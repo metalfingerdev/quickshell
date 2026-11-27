@@ -61,6 +61,11 @@ Scope {
                 fullscreenRefresh.restart()
         }
     }
+    // the agent is about to use the screen: the island steps aside first
+    Connections {
+        target: Agent
+        function onAside() { Engine.close() }
+    }
     Timer {
         id: fullscreenRefresh
         interval: 40

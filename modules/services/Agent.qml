@@ -7,7 +7,9 @@ import Quickshell.Io
 // The conversation with the local model, run by Nihil-Shell's agent: `nilo-agent` (nixos-dotfiles,
 // features/nilo-agent), spoken to in JSON lines. The model may search the web (SearXNG) and read pages,
 // look up this computer and open apps, in as many rounds as it needs; what goes out after it has read
-// this computer waits for a yes (`asking`). Only at the agent's Chat level: nothing here raises it.
+// this computer waits for a yes (`asking`). At its Terminal level it reads and edits files, uses git and
+// runs commands in one repository, and at System it also drives windows, the screen and the quick
+// controls: each change, command and desktop action asks first, and `access` says which level it has.
 // The agent keeps the conversation while the shell runs, never on disk, and the switches (model,
 // Internet, Think). views/Conversation.qml shows it; Triggers peeks the answer when it ends with the view closed.
 Singleton {
@@ -38,6 +40,12 @@ Singleton {
     property string model: ""
     property bool web: false
     property bool think: false
+    property string access: "chat"      // chat, terminal or system: what the agent may do, set in the conversation
+    property string repo: ""            // where terminal-level work happens
+    property var repos: []              // the repositories it found in the home folder, newest first
+    property bool confirmAll: false     // an edit asks no more for the rest of this answer: the next answer asks again
+    function loadRepos() { if (has("repos")) send({ op: "repos" }) }
+    signal aside()                      // the agent is about to use the screen: the island gets out of the way
 
     // Ollama's installed models, whether it answers, and what is in memory
     property var models: []
@@ -50,6 +58,8 @@ Singleton {
         loading: "Loading " + inUse, thinking: "Thinking", answering: "Answering",
         searching: "Searching the web" + (detail !== "" ? ": " + detail : ""), reading: "Reading " + detail,
         looking: "Looking at this computer", opening: "Opening " + detail, asking: "Waiting for your answer",
+        files: "Working on files" + (detail !== "" ? ": " + detail : ""), running: "Running " + detail,
+        git: "Using git", desktop: "Using the desktop" + (detail !== "" ? ": " + detail : ""),
         stopping: "Stopping"
     })[phase] ?? "Working"
 
@@ -86,6 +96,7 @@ Singleton {
     function reset() {
         stop()
         send({ op: "reset" })
+        confirmAll = false
         messages.clear()
         lastQuestion = ""
         lastAnswer = ""
@@ -94,11 +105,28 @@ Singleton {
     // a confirm in words, for the conversation's card and Expanded
     function describe(a) {
         if (!a) return ""
-        const what = ({ search: "Search the web for", fetch: "Read", open: "Open", launch: "Open" })[a.what] ?? "Allow"
         const why = (a.why ?? []).map(w => ({ private: "this chat has read details of this computer",
             sensitive: "it looks like a password, a key or a card number", runs: "it runs a program",
-            web: "this answer has read the web" })[w]).filter(w => w)
-        return what + " “" + (a.text ?? a.path ?? "") + "”?" + (why.length > 0 ? " Asked because " + why.join(", and ") + "." : "")
+            web: "this answer has read the web", outside: "this answer has read from outside" })[w]).filter(w => w)
+        const because = why.length > 0 ? " Asked because " + why.join(", and ") + "." : ""
+        const text = a.text ?? a.path ?? ""
+        switch (a.action) {
+        case "edit": return "Change " + a.path + " (+" + a.added + " −" + a.removed + ")?"
+        case "create": return "Create " + a.path + " (" + a.added + " lines)?"
+        case "run": return "Run in " + a.cwd + (a.reason ? " (" + a.reason + ")" : "") + ": " + a.command + (a.danger?.length > 0 ? "  — risky" : "") + "?"
+        case "terminal": return "Run in a terminal, in " + a.cwd + ": " + a.command + "?"
+        case "commit": case "commit-push": case "push":
+            return (a.action === "push" ? "Push " : "Commit" + (a.action === "commit-push" ? " and push " : " ")) + (a.files?.length ?? 0)
+                + " changed file(s) in " + a.repo + (a.message ? ": “" + a.message + "”" : "") + "?"
+        case "desktop": {
+            const where = a.app ? " in " + a.app + (a.title ? " (" + a.title + ")" : "") : ""
+            const what = ({ search: "Search the web for", fetch: "Read", open: "Open", launch: "Open", read: "Read",
+                            click: "Click", type: "Type “" + (a.text ?? "") + "”", keys: "Press " + (a.keys ?? ""),
+                            send: "Send to your phone" })[a.what] ?? "Allow"
+            return what + (["search", "fetch", "open", "launch", "read"].includes(a.what) ? " “" + text + "”" : where) + "?" + because
+        }
+        }
+        return "Allow " + (a.action ?? "this") + "?" + because
     }
     function answer(ok) {
         if (asking) send({ op: "confirm", id: asking.id, ok: ok })
@@ -143,7 +171,10 @@ Singleton {
 
     property string failure: ""     // the agent's error, said before its done
     property bool afterTool: false  // the next words start a new paragraph
-    readonly property var phases: ({ web_search: "searching", open_url: "reading", system_info: "looking", open_app: "opening" })
+    readonly property var phases: ({ web_search: "searching", open_url: "reading", system_info: "looking", open_app: "opening",
+        git_status: "git", git_commit: "git", list_files: "files", read_file: "files", edit_file: "files", write_file: "files",
+        run_command: "running", list_windows: "desktop", look_at_screen: "desktop", click: "desktop", use_window: "desktop",
+        type_text: "desktop", press_keys: "desktop", media: "desktop", control: "desktop", send_to_phone: "desktop" })
 
     function handle(line) {
         let e
@@ -163,6 +194,13 @@ Singleton {
             break
         case "settings": settings(e.settings); break
         case "models": catalogue(e); break
+        case "repos": repos = Array.isArray(e.repos) ? e.repos.filter(r => typeof r === "string") : []; break
+        case "output": {
+            // a running command's last lines, live in its step
+            const text = Array.isArray(e.lines) ? e.lines.join("\n") : ""
+            if (last >= 0) step(e.id, { tail: text })
+            break
+        }
         case "state":
             if (e.ollama === true || e.ollama === false) reachable = e.ollama
             loaded = e.loaded
@@ -190,7 +228,8 @@ Singleton {
                 thinkingEnds()
                 flush()
                 phase = phases[e.name] ?? "thinking"
-                detail = String(e.args?.query ?? e.args?.url ?? e.args?.target ?? "")
+                detail = String(e.args?.query ?? e.args?.url ?? e.args?.target ?? e.args?.path ?? e.args?.command ?? e.args?.window
+                                ?? e.args?.setting ?? e.args?.action ?? "")
                 step(e.id, { name: e.name, arg: detail, status: "running" })
             } else {
                 // a no leaves the result without an error: that's how a declined search or page reads
@@ -205,6 +244,9 @@ Singleton {
         case "confirm":
             thinkingEnds()
             flush()
+            // only a change to a file may be let through for the rest of the answer: commands, commits and
+            // the desktop always ask
+            if (confirmAll && (e.action === "edit" || e.action === "create")) { send({ op: "confirm", id: e.id, ok: true }); break }
             asking = e
             phase = "asking"
             break
@@ -215,6 +257,21 @@ Singleton {
         case "launch":
             send(Object.assign({ op: "launched", id: e.id }, launch(String(e.target), e.kind)))
             break
+        case "aside":
+            // the island goes first, so a screenshot or a click lands on the app and not on it
+            aside()
+            asideIds.push(e.id)
+            asideLater.restart()
+            break
+        case "control": {
+            const done = control(String(e.setting ?? ""), String(e.value ?? ""))
+            send(Object.assign({ op: "answer", id: e.id }, done))
+            break
+        }
+        case "vector":
+            // no phone link in this island
+            send({ op: "answer", id: e.id, ok: false, error: "off" })
+            break
         case "error":
             if (e.code === "ollama-down") reachable = false
             if (busy) failure = e.code === "ollama-down" ? "Ollama isn't answering at 127.0.0.1:11434 (systemctl status ollama)"
@@ -222,6 +279,7 @@ Singleton {
             else console.log("nilo-agent: " + e.code + " " + (e.detail ?? ""))
             break
         case "done":
+            confirmAll = false
             if (busy) finish(!e.failed && !e.cancelled, e.cancelled ? "Stopped" : failure)
             break
         }
@@ -230,6 +288,8 @@ Singleton {
         model = s.model ?? ""
         web = s.web === true
         think = s.think === true
+        access = ["chat", "terminal", "system"].includes(s.access) ? s.access : "chat"
+        repo = s.repo ?? ""
     }
     function catalogue(e) {
         models = (e.models ?? []).filter(m => m.installed).map(m => m.tag)
@@ -247,6 +307,67 @@ Singleton {
         if (Toggles.has("uwsm")) Toggles.launch([app.id + ".desktop"])
         else app.execute()
         return { ok: true, name: app.name }
+    }
+
+    property var asideIds: []
+    Timer {
+        id: asideLater
+        interval: 350       // the drawer's close, so the screen is the app's by the time it looks
+        onTriggered: { for (const id of root.asideIds.splice(0)) root.send({ op: "answer", id: id, ok: true }) }
+    }
+
+    // The agent's quick controls, on this island's own services. What it has no control for answers so,
+    // and the agent tells the model.
+    function control(setting, value) {
+        const v = value.trim().toLowerCase()
+        const flag = (now) => v === "on" ? true : v === "off" ? false : v === "toggle" || v === "" ? !now : null
+        const amount = (now) => {
+            const m = v.match(/^([+-]?)(\d+)$/)
+            if (!m) return NaN
+            return m[1] === "" ? Number(m[2]) : now + (m[1] === "-" ? -1 : 1) * Number(m[2])
+        }
+        const level = (now, set, name) => {
+            const n = amount(now)
+            if (isNaN(n)) return { ok: false, error: name + " takes 0 to 100, or a step like +10" }
+            const to = Math.max(0, Math.min(100, n))
+            set(to)
+            return { ok: true, value: String(to) }
+        }
+        const sw = (now, set) => {
+            const on = flag(now)
+            if (on === null) return { ok: false, error: setting + " takes on, off or toggle" }
+            set(on)
+            return { ok: true, value: on ? "on" : "off" }
+        }
+        switch (setting) {
+        case "volume": return level(Audio.volume, p => Audio.setVolume(p), "volume")
+        case "brightness":
+            if (!Backlight.available) return { ok: false, error: "this screen has no brightness control" }
+            return level(Backlight.percent, p => Backlight.set(p), "brightness")
+        case "mute": return sw(Audio.muted, on => { if (on !== Audio.muted) Audio.toggleMuted(Audio.sink) })
+        case "mic": return sw(!Audio.micMuted, on => { if (on === Audio.micMuted) Audio.toggleMic() })
+        case "dnd": return sw(Notifier.dnd, on => Notifier.dnd = on)
+        case "caffeine": return sw(Toggles.caffeine, on => Toggles.caffeine = on)
+        case "night":
+            return sw(Toggles.nightLight, on => Toggles.nightLight = on)
+        case "glass": return sw(Glass.enabled, on => Glass.enabled = on)
+        case "wifi":
+            if (flag(Net.wifiEnabled) === null) return { ok: false, error: "joining a network by name isn't offered here: wifi takes on, off or toggle" }
+            return sw(Net.wifiEnabled, on => Net.setWifi(on))
+        case "bluetooth":
+            if (!Bluez.available) return { ok: false, error: "there is no Bluetooth adapter" }
+            if (flag(Bluez.enabled) === null) return { ok: false, error: "connecting a device by name isn't offered here: bluetooth takes on, off or toggle" }
+            return sw(Bluez.enabled, on => Bluez.setEnabled(on))
+        case "wallpaper":
+            if (v === "next" || v === "") Wallpaper.step(1)
+            else if (v === "prev" || v === "previous") Wallpaper.step(-1)
+            else return { ok: false, error: "wallpaper takes next or prev" }
+            return { ok: true, value: v || "next" }
+        case "screenshot": Toggles.screenshot(); return { ok: true, value: "region" }
+        case "record": return sw(Toggles.recording, on => { if (on !== Toggles.recording) Toggles.record(on, false) })
+        case "lock": Session.run("lock"); return { ok: true, value: "locked" }
+        }
+        return { ok: false, error: "this island has no control called " + setting }
     }
 
     function finish(ok, error) {
