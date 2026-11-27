@@ -51,6 +51,21 @@ Scope {
         if (fullscreen && !Engine.autoHide) { hidForFullscreen = true; Engine.setAutoHide(true) }
         else if (!fullscreen && hidForFullscreen) { hidForFullscreen = false; Engine.setAutoHide(false) }
     }
+    // hasFullscreen is a cached copy of Hyprland's workspace, which Quickshell doesn't refresh when a window
+    // goes fullscreen or leaves (or is closed or moved while it is): without this the island kept showing.
+    // Hyprland's own events are the trigger, coalesced since a window change sends several.
+    Connections {
+        target: Hyprland
+        function onRawEvent(event) {
+            if (["fullscreen", "workspacev2", "focusedmonv2", "openwindow", "closewindow", "movewindowv2"].includes(event.name))
+                fullscreenRefresh.restart()
+        }
+    }
+    Timer {
+        id: fullscreenRefresh
+        interval: 40
+        onTriggered: { Hyprland.refreshWorkspaces(); Hyprland.refreshMonitors() }
+    }
 
     // Priority 1 and queue: false (Registry), so it never interrupts a view and is never kept. Not over
     // Expanded either: at Peek any alert would replace it under the pointer.
