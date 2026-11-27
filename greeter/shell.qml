@@ -1,8 +1,8 @@
 //@ pragma Env QT_QPA_PLATFORM=wayland
 
 // The login screen, run by greetd inside cage (modules/system/session in nixos-dotfiles) as the `greeter`
-// user, so it can't read the island's settings or anyone's home: its few colours are its own, the picture is
-// the lock screen's from the repo, and what it needs from the machine comes as environment variables
+// user, so it can't read the island's settings or anyone's home: its few colours are its own, the pictures
+// are the repo's (assets/wallpapers/greeter.gif, assets/avatar.gif), and what it needs from the machine comes as environment variables
 // (GREETER_USER, GREETER_SESSION as a JSON command, GREETER_READY a file it touches once it is up).
 // After Nihil-Shell's greeter (MIT). Try the look without logging in: GREETER_DRY=1 qs -p greeter
 pragma ComponentBehavior: Bound
@@ -11,6 +11,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Services.Greetd
+import Quickshell.Widgets
 
 ShellRoot {
     id: root
@@ -18,6 +19,9 @@ ShellRoot {
     readonly property string user: Quickshell.env("GREETER_USER") || "admin"
     readonly property var session: { try { return JSON.parse(Quickshell.env("GREETER_SESSION")) } catch (e) { return ["uwsm", "start", "hyprland-uwsm.desktop"] } }
     readonly property bool dry: Quickshell.env("GREETER_DRY") === "1"
+    // By shellPath, as the island's lock does: a URL resolved against this file outside its own folder
+    // doesn't reach the picture (Quickshell intercepts the config's URLs)
+    function asset(name) { return "file://" + Quickshell.shellPath("../assets/" + name) }
 
     property bool asking: false         // PAM wants an answer
     property bool echo: false           // and it may be seen as typed (a username, a code)
@@ -174,24 +178,21 @@ ShellRoot {
                 width: modelData.width; height: modelData.height
                 opacity: root.shown
 
-                // the lock screen's picture: a still while you log in (cheap to load), then the animation,
-                // which waits on its first frame, the same picture, until the login is done
-                Image {
-                    anchors.fill: parent
-                    source: Qt.resolvedUrl("../assets/wallpapers/lockscreen.webp")
-                    fillMode: Image.PreserveAspectCrop
-                    asynchronous: true
-                }
+                // The greeter's picture, held on its first frame while you log in, then played once. `playing`
+                // also waits for the load: a GIF that isn't Ready yet ignores being told to play.
                 AnimatedImage {
                     id: gif
                     anchors.fill: parent
-                    source: Qt.resolvedUrl("../assets/wallpapers/lockscreen.gif")
+                    source: root.asset("wallpapers/greeter.gif")
                     fillMode: Image.PreserveAspectCrop
                     asynchronous: true
                     cache: false            // its frames are tens of megabytes: read as it plays, not kept
-                    playing: root.playGif
-                    visible: status === Image.Ready
-                    onStatusChanged: if (face.index === 0) root.gifReady = status === Image.Ready
+                    playing: root.playGif && status === Image.Ready
+                    onStatusChanged: {
+                        if (face.index !== 0) return
+                        root.gifReady = status === Image.Ready
+                        if (status === Image.Error) console.warn("greeter: the picture didn't load:", source)
+                    }
                     // one loop: from the last frame on, the screen fades into the session
                     onCurrentFrameChanged: if (face.index === 0 && root.playGif && frameCount > 1 && currentFrame === frameCount - 1) root.finish()
                 }
@@ -219,21 +220,30 @@ ShellRoot {
                     }
                     Item { width: 1; height: 56 * face.u }
 
-                    Rectangle {
+                    // the avatar the lock screen shows by default; the initial while it loads or if it can't
+                    ClippingRectangle {
                         anchors.horizontalCenter: parent.horizontalCenter
-                        width: 72 * face.u
+                        width: 96 * face.u
                         height: width
                         radius: width / 2
                         color: root.glass
-                        border.width: 1
-                        border.color: Qt.rgba(1, 1, 1, 0.25)
 
                         Text {
                             anchors.centerIn: parent
+                            visible: avatar.status !== Image.Ready
                             text: root.user.charAt(0).toUpperCase()
                             color: root.ink
-                            font.pixelSize: 30 * face.u
+                            font.pixelSize: 38 * face.u
                             font.weight: Font.Medium
+                        }
+                        AnimatedImage {
+                            id: avatar
+                            anchors.fill: parent
+                            source: root.asset("avatar.gif")
+                            fillMode: Image.PreserveAspectCrop
+                            asynchronous: true
+                            cache: false
+                            playing: status === Image.Ready
                         }
                     }
                     Item { width: 1; height: 14 * face.u }
