@@ -146,7 +146,7 @@ Bar: Loader shows Registry.get(view).url
 | `Notifier.qml` | `lowMs` / `normalMs` / `criticalMs`, `maxPopups` | 10000 / 10000 / 0, 3 | dunst-style popup timing |
 | | `graceMs` / `historySize` | 2000 / 50 | a popup's least time left once the pointer leaves it / how many the center keeps |
 | `Sounds.qml` | `enabled` / `volume` | `true` / 0.5 | the freedesktop theme's cues, via pw-play; remembered; IPC `sounds` |
-| `ClipHistory.qml` | `size` | 50 | copies the clipboard history keeps (in `$XDG_RUNTIME_DIR`, memory only) |
+| `ClipHistory.qml` | `size` | 50 | copies the clipboard history keeps, on disk in `$XDG_STATE_HOME/island/clipboard` so it survives a reboot (pictures are cached as files there, not inlined) |
 | `Triggers.qml` | `followFocus` | `true` | the idle island moves to the monitor Hyprland focuses |
 | | `switcherToasts` | `true` | switching workspace shows GNOME-style dots (`views/Switcher.qml`) |
 | `Notifier.qml` | `dnd` | `false` | Do not disturb: only critical notifications pop up; remembered |

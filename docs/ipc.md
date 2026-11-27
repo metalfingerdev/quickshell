@@ -168,8 +168,8 @@ nixos-rebuild switch ... && qs ipc call activity done rebuild || qs ipc call act
 
 ## Clipboard
 
-`ClipHistory.qml` keeps every copy with cliphist in `$XDG_RUNTIME_DIR/island-clipboard` (memory only: it
-goes with the session), never what a password manager marks secret. `open clipboard` (Super+Shift+V)
+`ClipHistory.qml` keeps every copy with cliphist in `$XDG_STATE_HOME/island/clipboard` (on disk, so
+it survives a reboot), never what a password manager marks secret. `open clipboard` (Super+Shift+V)
 shows it, and the launcher's Clipboard filter searches it. Enter pastes into the window you were in: one
 line of text is typed there (wtype), so it works in a terminal too; more lines and pictures are only
 copied. `qs ipc call clipboard wipe` forgets everything.

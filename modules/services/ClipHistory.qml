@@ -4,15 +4,20 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 
-// The clipboard history, kept by cliphist in the runtime folder: in memory, so it goes with the
-// session, and a password copied from a terminal never reaches the disk or its backups. What a
-// password manager marks secret (x-kde-passwordManagerHint, which wl-paste passes on as
-// CLIPBOARD_STATE=sensitive) cliphist never keeps. Needs cliphist and wl-clipboard.
+// The clipboard history, kept by cliphist under $XDG_STATE_HOME/island/clipboard, so it survives a reboot.
+// That puts what you copy on disk (and in its backups), which the runtime folder avoided: a password copied
+// from a terminal stays until it ages out of the last `size` or is deleted. What a password manager marks
+// secret (x-kde-passwordManagerHint, which wl-paste passes on as CLIPBOARD_STATE=sensitive) cliphist never
+// keeps. Nothing is inlined into a text file: cliphist's own database holds the entries (capped at `size`),
+// and each picture is decoded once into pictures/<id> for its thumbnail, a file the list refers to by path
+// and drops when its entry has aged out. Needs cliphist and wl-clipboard.
 Singleton {
     id: root
 
     property int size: 50
-    readonly property string dir: (Quickshell.env("XDG_RUNTIME_DIR") ?? "") !== "" ? Quickshell.env("XDG_RUNTIME_DIR") + "/island-clipboard" : ""
+    readonly property string stateHome: (Quickshell.env("XDG_STATE_HOME") ?? "") !== "" ? Quickshell.env("XDG_STATE_HOME")
+                                  : (Quickshell.env("HOME") ?? "") !== "" ? Quickshell.env("HOME") + "/.local/state" : ""
+    readonly property string dir: stateHome !== "" ? stateHome + "/island/clipboard" : ""
     property bool available: false
     readonly property bool enabled: available && dir !== ""
 
@@ -29,17 +34,20 @@ Singleton {
     Process {
         id: watcher
         running: root.enabled
-        command: ["sh", "-c", "mkdir -p \"$1\" && chmod 700 \"$1\" && exec wl-paste --watch cliphist -db-path \"$1/db\" -max-items \"$2\" store",
+        command: ["sh", "-c", "mkdir -p \"$1\" && chmod 700 \"$1\" \"$1/..\" && exec wl-paste --watch cliphist -db-path \"$1/db\" -max-items \"$2\" store",
                   "sh", root.dir, String(root.size)]
         onRunningChanged: if (!running && root.enabled) rewatch.start()
     }
     Timer { id: rewatch; interval: 3000; onTriggered: watcher.running = root.enabled }
 
-    // The list, with each picture decoded once into the runtime folder for its thumbnail.
-    readonly property string listing: "db=\"$1/db\"; pics=\"$1/pictures\"; mkdir -p \"$pics\"; "
-        + "cliphist -db-path \"$db\" list | while IFS= read -r line; do id=${line%%\t*}; "
+    // The list, with each picture decoded once into the state folder for its thumbnail; a picture whose
+    // entry has aged out of the list is deleted, so the folder doesn't outgrow `size`.
+    readonly property string listing: "db=\"$1/db\"; pics=\"$1/pictures\"; mkdir -p \"$pics\"; chmod 700 \"$pics\"; list=$(cliphist -db-path \"$db\" list); "
+        + "printf '%s\\n' \"$list\" | while IFS= read -r line; do id=${line%%\t*}; "
         + "case $line in *'[[ binary data '*) [ -s \"$pics/$id\" ] || printf '%s\\n' \"$line\" | cliphist -db-path \"$db\" decode > \"$pics/$id\";; esac; "
-        + "printf '%s\\n' \"$line\"; done"
+        + "printf '%s\\n' \"$line\"; done; "
+        + "ids=$(printf '%s\\n' \"$list\" | cut -f1); for f in \"$pics\"/*; do [ -e \"$f\" ] || continue; "
+        + "printf '%s\\n' \"$ids\" | grep -qx \"${f##*/}\" || rm -f \"$f\"; done"
 
     function refresh() { if (enabled && !lister.running) lister.running = true }
     Process {
