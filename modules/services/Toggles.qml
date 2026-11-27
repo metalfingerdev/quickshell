@@ -193,19 +193,35 @@ Singleton {
     property string pickTarget: "accent"
     property string pickBack: ""
     property int pickView: -1
+    // Every pick also copies its hex (wl-copy, held by a scope of its own: the island has no focus to
+    // set the clipboard with by then) and says so in a notification, wherever the colour is going: a pick
+    // for a setting is also a pick to paste. A second call while one is open cancels it, so a lens that
+    // got stuck never blocks the next try; it gives up by itself after two minutes. What went wrong
+    // (hyprpicker's own words) comes back as a notification instead of nothing.
+    property bool picking: false
     function pickColour(target, view) {
-        if (!has("hyprpicker") || picker.running) return
+        if (!has("hyprpicker")) return
+        if (picker.running) { picker.running = false; return }
         pickTarget = target ?? "accent"
         pickView = view ?? -1
         picker.running = true
     }
+    function copyText(text) { if (text !== "") launch(["wl-copy", "--", text]) }
+    function say(title, body) {
+        if (has("notify-send")) Quickshell.execDetached(["notify-send", "-a", "Colour picker", "-i", "colorize", title, body ?? ""])
+    }
     Process {
         id: picker
-        command: ["sh", "-c", "sleep 0.4; exec hyprpicker --no-fancy --quiet --format=hex"]
+        onRunningChanged: root.picking = running
+        // stderr into stdout: hyprpicker prints the colour, or what stopped it (--quiet leaves errors)
+        command: ["sh", "-c", "sleep 0.4; exec timeout 120 hyprpicker --no-fancy --quiet --format=hex --lowercase-hex 2>&1"]
         stdout: StdioCollector {
             onStreamFinished: {
                 const found = text.match(/#[0-9a-fA-F]{6}/)
-                root.colourPicked(found ? found[0].toLowerCase() : "")
+                const hex = found ? found[0].toLowerCase() : ""
+                if (hex !== "") { root.copyText(hex); root.say("Copied " + hex, "") }
+                else if (text.trim() !== "") root.say("The colour picker stopped", text.trim().slice(0, 200))
+                root.colourPicked(hex)
             }
         }
     }

@@ -57,7 +57,7 @@ QtObject {
     property real wallpaperTone: 0.72              // the primary's lightness in dark mode; light mode mirrors it
     // The surfaces' own tint, apart from the accent: its hue (0..1), and how much of it they take (0 = grey).
     property real surfaceHue: 0.005
-    property real tint: 0.62
+    property real tint: 0
     property bool darkMode: true
     // The surfaces of a custom accent take its hue, as Android's do, rather than surfaceHue of their own
     // (Theme's Surfaces: Matched; Custom and Neutral leave it off). A wallpaper option sets its own.

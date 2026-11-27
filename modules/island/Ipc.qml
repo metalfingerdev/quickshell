@@ -19,6 +19,10 @@ IpcHandler {
         Engine.open(Engine.View.Dashboard)
     }
 
+    // The eyedropper, for a colour to paste: the island steps aside, the pick is copied as "#rrggbb" and
+    // announced (Super+Shift+U). Called again while the lens is open, it closes it.
+    function pickColour(): void { Engine.closeThen(() => Toggles.pickColour("copy")) }
+
     // The launcher on one of its filters: all, apps, files, actions, clipboard, emoji (Super+. is emoji).
     // Already open, it switches there.
     function launch(filter: string): void {

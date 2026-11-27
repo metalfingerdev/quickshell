@@ -11,6 +11,8 @@ Item {
     property string valueText: Math.round(shown * 100) + "%"
     property bool iconClickable: false
     property real step: 0.05
+    // the wheel over it moves it; off, it passes on to whatever scrolls (a page of sliders)
+    property bool wheelNudges: true
     property bool keyboardSelected: activeFocus && Config.focusVisible
     readonly property bool dragging: drag.pressed && !overIcon
     property real dragValue: 0
@@ -135,6 +137,6 @@ Item {
             else if (!root.overIcon) root.committed(root.dragValue)
             root.overIcon = false
         }
-        onWheel: wheel => root.nudge(wheel.angleDelta.y > 0 ? 1 : -1)
+        onWheel: wheel => { if (root.wheelNudges) root.nudge(wheel.angleDelta.y > 0 ? 1 : -1); else wheel.accepted = false }
     }
 }

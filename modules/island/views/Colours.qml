@@ -73,22 +73,42 @@ Panel {
         Engine.closeThen(() => Toggles.pickColour(target, view))
     }
 
+    // the colour as typed (#rrggbb, or #rrggbbaa where it has an alpha), to the clipboard
+    property bool copied: false
+    function copyShown() {
+        Toggles.copyText(Config.hex(shown) + (accent || shown.a >= 1 ? "" : Math.round(shown.a * 255).toString(16).padStart(2, "0")))
+        copied = true
+        copiedReset.restart()
+    }
+    Timer { id: copiedReset; interval: 1500; onTriggered: root.copied = false }
+
     implicitWidth: contentW + 2 * pad
 
     icon: Config.symbol.colours
     title: "Colours"
     subtitle: (root.names.find(n => n[0] === root.role)?.[1] ?? root.role) + "  ·  " + Config.hex(root.shown) + (root.accent ? "" : Math.round(root.shown.a * 255).toString(16).padStart(2, "0"))
               + (root.overridden ? "  ·  set by you" : root.accent ? "" : "  ·  the theme's")
-    actions: Pill {
-        visible: Toggles.has("hyprpicker")
-        icon: "colorize"
-        text: "Pick from the screen"
-        implicitHeight: 48
-        shortcut: "e"
-        onClicked: root.pick()
+    actions: Row {
+        spacing: Config.spaceS
+
+        Pill {
+            icon: "content_copy"
+            text: root.copied ? "Copied" : "Copy"
+            implicitHeight: 48
+            shortcut: "c"
+            onClicked: root.copyShown()
+        }
+        Pill {
+            visible: Toggles.has("hyprpicker")
+            icon: "colorize"
+            text: "Pick from the screen"
+            implicitHeight: 48
+            shortcut: "e"
+            onClicked: root.pick()
+        }
     }
     spacing: Config.spaceL
-    keys: [["← → ↑ ↓", "saturation, brightness"], ["Tab", "hue, opacity, hex"], ["⌫", "back"], ["Esc", "close"]]
+    keys: [["← → ↑ ↓", "saturation, brightness"], ["Tab", "hue, opacity, hex"], ["C", "copy hex"], ["E", "pick from the screen"], ["⌫", "back"], ["Esc", "close"]]
 
     Segmented {
         width: parent.width

@@ -21,6 +21,7 @@ default.
 | `qs ipc call island palette <name>` | a preset palette; `palettes` lists them |
 | `qs ipc call island colours <preset\|accent\|wallpaper>` | where colours come from |
 | `qs ipc call island accent <#rrggbb>` | a scheme generated around that colour, which is its primary (lighter on dark, darker on light, only if it wouldn't read at 4.5:1 on the surface) |
+| `qs ipc call island pickColour` | the eyedropper: a colour from anywhere on the screen, copied as `#rrggbb` (Super + Shift + U); again while it is open cancels it |
 | `qs ipc call island tint <0..100>` | how much of their own hue a generated scheme's surfaces take, in percent (0: grey) |
 | `qs ipc call island surface <0..360>` | the surfaces' hue, in degrees: their own, apart from the accent's |
 | `qs ipc call island mode <dark\|light>` | a generated scheme's dark or light version |

@@ -35,7 +35,7 @@ Panel {
             ["Bluetooth", "Super B"], ["Network", "Super Y"], ["Notifications", "Super N"], ["What's running", "Super Ctrl N"],
             ["Volume mixer", "Super V"], ["Media", "Super M"], ["Battery", "Super U"],
             ["Theme and wallpaper", "Super T"], ["Colours", "Super Shift T"], ["Wallpapers: cycle / pick", "Super P / Super Ctrl P"],
-            ["Clock", "Super C"], ["Agenda", "Super Shift C"], ["Tasks", "Super Alt C"], ["Power", "Super X"],
+            ["Colour from the screen, copied", "Super Shift U"], ["Clock", "Super C"], ["Agenda", "Super Shift C"], ["Tasks", "Super Alt C"], ["Power", "Super X"],
             ["System", "Super S"], ["NixOS generations", "Super Shift S"], ["Weather", "Super O"],
             ["Clipboard: cycle / browse", "Super Shift V / Super Ctrl V"], ["Emoji", "Super ."], ["Files in the launcher", "Super Ctrl D"],
             ["Launcher actions", "Super Shift D"], ["Favourites", "Super Alt D"], ["Ask the local model", "Super /"],

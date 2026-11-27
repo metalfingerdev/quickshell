@@ -5,7 +5,7 @@ import qs.modules.parts
 import qs.modules.lock
 import qs.modules.services
 
-// Settings: what the island and the windows are made of, apart. Each footer says what Hyprland really does.
+// Settings: what the island and the windows are made of, apart. The note under each group says what Hyprland really does.
 Item {
     id: root
 
@@ -49,48 +49,44 @@ Item {
         }
 
         // Glass and blur: the island and the windows apart. A switch for a yes/no, a named choice for a kind,
-        // a slider for an amount; each footer says what Hyprland really does with it.
+        // a slider for an amount; each note says what Hyprland really does with it.
         ScrollList {
             width: parent.width
             maxHeight: Math.min(640, Engine.room - 200)
             spacing: Config.spaceL
 
-            ListSection {
-                title: "Material"
-                footer: !Glass.available ? "Liquid glass is the hyprglass plugin, which isn't loaded for this Hyprland: Hyprland's blur draws everything."
-                      : root.liquid ? "The look is where liquid glass starts; everything below changes it, for the island and the windows apart."
-                      : "Hyprland's blur. It has one blur for everything, so the island's follows the windows'."
-                Item {
+            Column {
+                width: parent.width
+                spacing: Config.spaceM
+                SectionLabel { text: "Material"; topPadding: Config.spaceS }
+                Segmented {
                     width: parent.width
-                    height: 60
-                    Segmented {
-                        x: Config.spaceM; width: parent.width - 2 * Config.spaceM
-                        anchors.verticalCenter: parent.verticalCenter
-                        height: 40
-                        enabled: Glass.available
-                        options: [{ key: "blur", label: "Blur", icon: "blur_on", shortcut: "b" }, { key: "glass", label: "Liquid glass", icon: "water_drop", shortcut: "g" }]
-                        current: root.liquid ? "glass" : "blur"
-                        onPicked: key => Glass.enabled = key === "glass"
-                    }
+                    enabled: Glass.available
+                    options: [{ key: "blur", label: "Blur", icon: "blur_on", shortcut: "b" }, { key: "glass", label: "Liquid glass", icon: "water_drop", shortcut: "g" }]
+                    current: root.liquid ? "glass" : "blur"
+                    onPicked: key => Glass.enabled = key === "glass"
                 }
-                Item {
+                Segmented {
                     visible: root.liquid
                     width: parent.width
-                    height: visible ? 60 : 0
-                    Segmented {
-                        x: Config.spaceM; width: parent.width - 2 * Config.spaceM
-                        anchors.verticalCenter: parent.verticalCenter
-                        height: 40
-                        options: Glass.presets
-                        current: Glass.preset
-                        onPicked: key => Glass.preset = key
-                    }
+                    height: visible ? implicitHeight : 0
+                    options: Glass.presets
+                    current: Glass.preset
+                    onPicked: key => Glass.preset = key
+                }
+                Label {
+                    width: parent.width
+                    wrapMode: Text.Wrap
+                    text: !Glass.available ? "Liquid glass is the hyprglass plugin, which isn't loaded for this Hyprland: Hyprland's blur draws everything." : root.liquid ? "The look is where liquid glass starts; everything below changes it, for the island and the windows apart." : "Hyprland's blur. It has one blur for everything, so the island's follows the windows'."
+                    color: Config.dim
+                    font.pixelSize: Config.small
                 }
             }
 
-            ListSection {
-                title: "Island"
-                footer: "At 0% the island still holds its shape, so the glass and the blur stay; only its own colour is gone."
+            Column {
+                width: parent.width
+                spacing: Config.spaceM
+                SectionLabel { text: "Island"; topPadding: Config.spaceS }
                 SettingTile {
                     width: parent.width
                     title: "Opacity like the windows"
@@ -122,11 +118,19 @@ Item {
                     onMoved: v => Config.shadowStrength = Math.round(v * 100) / 100
                 }
                 GlassAmounts { which: "island"; visible: root.liquid }
+                Label {
+                    width: parent.width
+                    wrapMode: Text.Wrap
+                    text: "At 0% the island still holds its shape, so the glass and the blur stay; only its own colour is gone."
+                    color: Config.dim
+                    font.pixelSize: Config.small
+                }
             }
 
-            ListSection {
-                title: "Windows"
-                footer: "Video players, Firefox and qimgv stay opaque (hypr/modules/rules.lua), so opacity doesn't show on them."
+            Column {
+                width: parent.width
+                spacing: Config.spaceM
+                SectionLabel { text: "Windows"; topPadding: Config.spaceS }
                 Amount {
                     text: "Opacity"
                     value: Glass.activeOpacity >= 0 ? Glass.activeOpacity : Config.windowOpacity
@@ -163,10 +167,19 @@ Item {
                     onCommitted: v => root.setHl("decoration:blur:contrast", Math.round(v * 200) / 100)
                 }
                 GlassAmounts { which: "windows"; visible: root.liquid }
+                Label {
+                    width: parent.width
+                    wrapMode: Text.Wrap
+                    text: "Video players, Firefox and qimgv stay opaque (hypr/modules/rules.lua), so opacity doesn't show on them."
+                    color: Config.dim
+                    font.pixelSize: Config.small
+                }
             }
 
-            ListSection {
-                title: "Shape and motion"
+            Column {
+                width: parent.width
+                spacing: Config.spaceM
+                SectionLabel { text: "Shape and motion"; topPadding: Config.spaceS }
                 Amount {
                     text: "Roundness"
                     value: Config.roundness - 0.5
