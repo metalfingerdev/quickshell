@@ -61,6 +61,12 @@ Scope {
                 fullscreenRefresh.restart()
         }
     }
+    // a program asks for root: the prompt comes up whatever is open, and goes when it is answered
+    Connections {
+        target: Auth
+        function onAsked() { Engine.alert(Engine.View.Auth, Registry.priority(Engine.View.Auth)) }
+        function onEnded() { if (Engine.view === Engine.View.Auth) Engine.close() }
+    }
     // the agent is about to use the screen: the island steps aside first
     Connections {
         target: Agent

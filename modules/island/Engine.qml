@@ -49,7 +49,8 @@ QtObject {
         SettingsAlerts,
         SettingsEnergy,
         SettingsLock,
-        SettingsWallpaper
+        SettingsWallpaper,
+        Auth                    // last: a view added in the middle renumbers the rest
     }
 
     readonly property int restView: Engine.View.Compact
