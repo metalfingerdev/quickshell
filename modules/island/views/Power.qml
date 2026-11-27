@@ -3,29 +3,21 @@ import qs.modules.island
 import qs.modules.components
 import qs.modules.services
 
-// The ones that end the session ask first, as macOS's shut-down sheet does: it counts down
-// (Config.powerCountdown seconds, 0 asks nothing) and runs by itself, or at once from the button.
+// The ones that end the session ask first: the first press arms the tile ("Again?"), a second within
+// `confirmMs` runs it. A countdown sheet was tried and put back: a second press is quicker and can't run by itself.
 Item {
     id: root
 
-    property var pending: null
-    property int remaining: 0
+    readonly property int confirmMs: 3000
+    property string armed: ""
+
     function press(a) {
-        if (a.confirm && Config.powerCountdown > 0) { pending = a; remaining = Config.powerCountdown; ask.open = true; count.restart(); return }
-        run(a)
-    }
-    function run(a) {
-        count.stop()
-        ask.open = false
+        if (a.confirm && armed !== a.id) { armed = a.id; disarm.restart(); return }
+        armed = ""
         Engine.close()                       // gone before the screen locks or the session ends
         Session.run(a.id)
     }
-    Timer {
-        id: count
-        interval: 1000
-        repeat: true
-        onTriggered: { root.remaining--; Engine.key(); if (root.remaining <= 0) root.run(root.pending) }
-    }
+    Timer { id: disarm; interval: root.confirmMs; onTriggered: root.armed = "" }
     Component.onCompleted: Session.refresh()
 
     implicitWidth: tiles.implicitWidth + 48
@@ -47,7 +39,9 @@ Item {
             Pill {
                 visible: Session.restarts.length > 0
                 icon: "expand_more"
-                text: "Restart into…"
+                readonly property var armedEntry: Session.restarts.find(r => r.id === root.armed)
+                text: armedEntry ? armedEntry.label + ": again?" : "Restart into…"
+                active: armedEntry !== undefined
                 shortcut: "i"
                 onClicked: menu.open = !menu.open
             }
@@ -67,8 +61,9 @@ Item {
                     width: 128
                     height: 128
                     radius: Config.cardRadius + 4
+                    readonly property bool waiting: root.armed === modelData.id
                     shortcut: modelData.key
-                    
+                    tint: waiting ? Config.bad : "transparent"
                     onClicked: root.press(modelData)
 
                     Column {
@@ -78,19 +73,19 @@ Item {
                         Rectangle {
                             anchors.horizontalCenter: parent.horizontalCenter
                             width: 56; height: 56; radius: 28
-                            color: Config.raised
+                            color: tile.waiting ? Qt.rgba(0, 0, 0, 0.15) : Config.raised
 
                             Icon {
                                 anchors.centerIn: parent
                                 name: tile.modelData.icon
                                 size: 28
-                                color: Config.text
+                                color: tile.waiting ? Config.surface : Config.text
                             }
                         }
                         Label {
                             anchors.horizontalCenter: parent.horizontalCenter
-                            text: tile.modelData.label
-                            color: Config.text
+                            text: tile.waiting ? "Again?" : tile.modelData.label
+                            color: tile.waiting ? Config.surface : Config.text
                             font.weight: tile.waiting ? Font.DemiBold : Font.Normal
                         }
                     }
@@ -100,7 +95,7 @@ Item {
 
         KeyHints {
             width: parent.width
-            keys: [["↵", "run (ending the session asks first)"], ["⌫", "back"]]
+            keys: [["↵", "run (twice to end the session)"], ["⌫", "back"]]
         }
     }
 
@@ -111,29 +106,7 @@ Item {
         y: 24 + 56 + Config.spaceXs
         width: 240
         items: Session.restarts.map(r => ({ key: r.id, label: r.label, icon: r.icon }))
+        // choosing an entry arms it too: the menu closes, and the entry's own pill asks again below
         onChosen: key => root.press(Session.restarts.find(r => r.id === key))
-    }
-
-    Sheet {
-        id: ask
-        title: root.pending ? root.pending.label + " in " + root.remaining + " s" : ""
-        onDismissed: count.stop()
-
-        Label {
-            width: parent.width
-            wrapMode: Text.WordWrap
-            text: "The session ends when the countdown does."
-            color: Config.dim
-        }
-        Row {
-            spacing: Config.spaceM
-            Pill {
-                kind: "filled"
-                text: root.pending ? root.pending.label + " now" : ""
-                focus: ask.open
-                onClicked: root.run(root.pending)
-            }
-            Pill { kind: "text"; text: "Cancel"; onClicked: ask.close() }
-        }
     }
 }

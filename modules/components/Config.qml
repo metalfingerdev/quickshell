@@ -374,8 +374,6 @@ QtObject {
     readonly property string timeFormat: clock24 ? "HH:mm" : "h:mm AP"
     property int firstDay: -1
     // the toasts that only echo a key: volume, brightness and the microphone; and the workspace switch
-    // seconds the shut-down sheet counts before it runs by itself; 0 runs at once
-    property int powerCountdown: 60
     property bool levelToasts: true
     property bool switcherToasts: true
 
@@ -383,10 +381,10 @@ QtObject {
     property string lastDark: "teal"
     onNameChanged: if (palettes[name]?.dark) lastDark = name
 
-    // Focus rings show only while the keyboard is being used (Material's "focus visible"): Bar sets
-    // this when a key moves focus in a view and clears it when the pointer moves over the island.
-    // True by default, so components used anywhere else always show them.
-    property bool focusVisible: true
+    // Focus rings and key hints show only once the keyboard has navigated (the web's :focus-visible):
+    // ViewLoader sets this on a navigation key, and Bar clears it when the pointer moves over the island.
+    // False by default: a click, or a keybind that opens a view, doesn't count.
+    property bool focusVisible: false
 
     // Words drawn straight on a picture (the lock screen), lifted by a dark shadow: light in either mode.
     readonly property color pictureInk: "#f5f5f7"

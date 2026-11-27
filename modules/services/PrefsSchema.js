@@ -89,7 +89,6 @@ var entries = [
  { "key": "motion.releaseMs", "t": "Engine", "p": "releaseMs", "m": "", "kind": "number", "label": "Keyboard release wait (ms)", "group": "motion", "min": 0, "max": 5000, "step": 10 },
  { "key": "clock.h24", "t": "Config", "p": "clock24", "m": "", "kind": "bool", "label": "24-hour clock", "group": "clock", "ini": "theme/clock24" },
  { "key": "clock.firstDay", "t": "Config", "p": "firstDay", "m": "", "kind": "number", "label": "First day of the week (-1 locale, 0 Sun, 1 Mon)", "group": "clock", "min": -1, "max": 6, "step": 1, "ini": "theme/firstDay" },
- { "key": "alerts.powerCountdown", "t": "Config", "p": "powerCountdown", "m": "", "kind": "number", "label": "Shut-down countdown (seconds, 0: at once)", "group": "alerts", "min": 0, "max": 600, "step": 5 },
  { "key": "alerts.levelToasts", "t": "Config", "p": "levelToasts", "m": "", "kind": "bool", "label": "Volume, brightness, mic toasts", "group": "alerts", "ini": "theme/levelToasts" },
  { "key": "alerts.switcherToasts", "t": "Config", "p": "switcherToasts", "m": "", "kind": "bool", "label": "Workspace toasts", "group": "alerts", "ini": "theme/switcherToasts" },
  { "key": "alerts.popupLength", "t": "Notifier", "p": "popupLength", "m": "", "kind": "choice", "label": "Popups stay", "group": "alerts", "options": ["short", "normal", "long"], "ini": "notifications/popupLength" },
