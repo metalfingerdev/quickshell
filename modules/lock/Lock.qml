@@ -51,15 +51,18 @@ Scope {
 	Binding { target: Idle; property: "secure"; value: session.secure }
 
 	// Locked, the shell went (a crash, a restart): the new one locks again as it starts, and
-	// Hyprland (misc.allow_session_lock_restore) hands it the session. In the runtime folder, so it
-	// goes with the session: the next login starts unlocked.
+	// Hyprland (misc.allow_session_lock_restore) hands it the session. Only within the same Hyprland:
+	// the runtime folder outlives a logout when you log back in quickly (systemd keeps the user's manager
+	// a moment), and the next session must start unlocked, not ask for the password a second time after
+	// the greeter. "unlocked" is written out, not an empty file, which was never written.
+	readonly property string instance: Quickshell.env("HYPRLAND_INSTANCE_SIGNATURE") ?? ""
 	FileView {
 		id: marker
 		path: (Quickshell.env("XDG_RUNTIME_DIR") ?? "") !== "" ? Quickshell.env("XDG_RUNTIME_DIR") + "/island-locked" : ""
 		printErrors: false
-		onLoaded: if (text().trim() === "locked") root.lock(false);
+		onLoaded: if (root.instance !== "" && text().trim() === "locked " + root.instance) root.lock(false);
 	}
-	onLockedChanged: if (marker.path !== "") marker.setText(locked ? "locked\n" : "");
+	onLockedChanged: if (marker.path !== "") marker.setText((locked ? "locked " + instance : "unlocked") + "\n");
 
 	WlSessionLock {
 		id: session
