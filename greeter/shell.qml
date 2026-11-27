@@ -26,8 +26,30 @@ ShellRoot {
     property bool wrong: false
     property int attempts: 0
     property bool going: false
-    property real shown: 0              // the faces fade in, and out on the way to the session
+    property real shown: 0              // the whole screen: in at the start, out on the way to the session
+    property real ui: 1                 // the login controls alone: they fade first, the picture stays
+    property bool playGif: false
     Behavior on shown { NumberAnimation { duration: 400; easing.type: Easing.OutCubic } }
+
+    // After a login: the controls fade away, the picture plays once (it waits on its first frame until
+    // then), and everything fades into the session. A picture still loading, or one that never ends, doesn't
+    // hold the login up: each step has its way out.
+    property bool gifReady: false
+    function farewell() {
+        if (going) return
+        going = true
+        uiOut.start()
+    }
+    function play() {
+        if (!gifReady) { finish(); return }
+        playGif = true
+        cap.restart()
+    }
+    function finish() {
+        cap.stop()
+        playGif = false
+        leave.start()
+    }
 
     // The colours: a dark glass over the picture, white ink, one red for a refusal
     readonly property color ink: "#f5f5f7"
@@ -47,7 +69,7 @@ ShellRoot {
         Greetd.respond(text)
     }
     // If launching fails, the faces come back instead of staying dark with the field off.
-    function back() { leave.stop(); going = false; shown = 1 }
+    function back() { leave.stop(); uiOut.stop(); cap.stop(); playGif = false; going = false; ui = 1; shown = 1 }
     function said(text) {
         const words = text.trim()
         if (/^authentication failure$/i.test(words)) return "Wrong password" + (attempts > 1 ? " (" + attempts + ")" : "")
@@ -95,7 +117,7 @@ ShellRoot {
             input.text = ""
             again.restart()
         }
-        function onReadyToLaunch(): void { root.going = true; leave.start() }
+        function onReadyToLaunch(): void { root.farewell() }
         function onError(error: string): void {
             root.back()
             root.wrong = true
@@ -104,6 +126,8 @@ ShellRoot {
         }
     }
     Timer { id: again; interval: 400; onTriggered: root.start() }
+    Timer { id: cap; interval: 20000; onTriggered: root.finish() }       // the longest the picture may play
+    NumberAnimation { id: uiOut; target: root; property: "ui"; to: 0; duration: 350; easing.type: Easing.InOutQuad; onFinished: root.play() }
     SystemClock { id: clock; precision: SystemClock.Minutes }
     // the start script waits for this file: without it, it falls back to the text greeter
     Process { id: ready; command: ["touch", Quickshell.env("GREETER_READY") || "/dev/null"] }
@@ -131,7 +155,8 @@ ShellRoot {
             echoMode: root.echo ? TextInput.Normal : TextInput.Password
             enabled: !root.going
             onTextEdited: root.wrong = false
-            onAccepted: { if (root.dry || !Greetd.available) { text = ""; root.wrong = true; root.note = "Dry run: nothing is sent" } else { root.submit(text); } }
+            // a dry run plays the whole sequence on Enter, and sends and starts nothing
+            onAccepted: { if (root.dry || !Greetd.available) root.farewell(); else root.submit(text) }
             Keys.onEscapePressed: text = ""
         }
 
@@ -141,94 +166,147 @@ ShellRoot {
             Item {
                 id: face
                 required property rect modelData
+                required property int index
+                // one unit for every size and gap, so the layout scales with the screen (1 at 1080 p)
+                readonly property real u: Math.max(0.7, Math.min(width, height) / 1080)
+
                 x: modelData.x; y: modelData.y
                 width: modelData.width; height: modelData.height
                 opacity: root.shown
 
+                // the lock screen's picture: a still while you log in (cheap to load), then the animation,
+                // which waits on its first frame, the same picture, until the login is done
                 Image {
                     anchors.fill: parent
                     source: Qt.resolvedUrl("../assets/wallpapers/lockscreen.webp")
                     fillMode: Image.PreserveAspectCrop
                     asynchronous: true
                 }
-                Rectangle { anchors.fill: parent; color: "#000000"; opacity: 0.35 }
-
-                Text {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    y: parent.height / 2 - 190
-                    text: Qt.formatTime(clock.date, "HH:mm")
-                    color: root.ink
-                    font.pixelSize: 140
-                    font.weight: Font.Light
+                AnimatedImage {
+                    id: gif
+                    anchors.fill: parent
+                    source: Qt.resolvedUrl("../assets/wallpapers/lockscreen.gif")
+                    fillMode: Image.PreserveAspectCrop
+                    asynchronous: true
+                    cache: false            // its frames are tens of megabytes: read as it plays, not kept
+                    playing: root.playGif
+                    visible: status === Image.Ready
+                    onStatusChanged: if (face.index === 0) root.gifReady = status === Image.Ready
+                    // one loop: from the last frame on, the screen fades into the session
+                    onCurrentFrameChanged: if (face.index === 0 && root.playGif && frameCount > 1 && currentFrame === frameCount - 1) root.finish()
                 }
-                Text {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    y: parent.height / 2 - 60
-                    text: Qt.formatDate(clock.date, "dddd, d MMMM")
-                    color: root.dim
-                    font.pixelSize: 18
-                }
-                Text {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    y: parent.height / 2 - 14
-                    text: root.user
-                    color: root.ink
-                    font.pixelSize: 20
-                    font.weight: Font.Medium
-                }
+                Rectangle { anchors.fill: parent; color: "#000000"; opacity: 0.35 * root.ui }
 
-                Rectangle {
-                    id: field
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    y: parent.height / 2 + 36
-                    width: 300
-                    height: 48
-                    radius: 24
-                    color: root.glass
-                    border.width: 1
-                    border.color: root.wrong ? root.bad : root.sent ? root.muted : Qt.rgba(1, 1, 1, 0.25)
-                    Behavior on border.color { ColorAnimation { duration: 150 } }
+                Column {
+                    id: stack
+                    anchors.centerIn: parent
+                    anchors.verticalCenterOffset: -face.height * 0.04
+                    width: 360 * face.u
+                    opacity: root.ui
 
-                    Text {          // what a prompt that may be seen asks for, as typed
-                        anchors { fill: parent; leftMargin: 18; rightMargin: 18 }
-                        visible: root.echo
-                        verticalAlignment: Text.AlignVCenter
-                        horizontalAlignment: Text.AlignHCenter
-                        elide: Text.ElideLeft
-                        text: input.text
+                    Text {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: Qt.formatTime(clock.date, "HH:mm")
                         color: root.ink
-                        font.pixelSize: 15
-                    }
-                    Row {
-                        anchors.centerIn: parent
-                        spacing: 7
-                        visible: !root.echo
-                        Repeater {
-                            model: Math.min(input.text.length, 16)
-                            Rectangle { width: 10; height: 10; radius: 5; color: root.ink }
-                        }
+                        font.pixelSize: 132 * face.u
+                        font.weight: Font.Light
                     }
                     Text {
-                        anchors.centerIn: parent
-                        visible: input.text.length === 0
-                        text: root.sent ? "Checking…" : "Password"
-                        color: root.muted
-                        font.pixelSize: 14
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: Qt.formatDate(clock.date, "dddd, d MMMM")
+                        color: root.dim
+                        font.pixelSize: 20 * face.u
                     }
-                    MouseArea { anchors.fill: parent; cursorShape: Qt.IBeamCursor; onClicked: input.forceActiveFocus() }
-                }
-                Text {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    y: field.y + field.height + 18
-                    text: root.note
-                    color: root.wrong ? root.bad : root.muted
-                    font.pixelSize: 13
+                    Item { width: 1; height: 56 * face.u }
+
+                    Rectangle {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        width: 72 * face.u
+                        height: width
+                        radius: width / 2
+                        color: root.glass
+                        border.width: 1
+                        border.color: Qt.rgba(1, 1, 1, 0.25)
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: root.user.charAt(0).toUpperCase()
+                            color: root.ink
+                            font.pixelSize: 30 * face.u
+                            font.weight: Font.Medium
+                        }
+                    }
+                    Item { width: 1; height: 14 * face.u }
+                    Text {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: root.user
+                        color: root.ink
+                        font.pixelSize: 20 * face.u
+                        font.weight: Font.Medium
+                    }
+                    Item { width: 1; height: 20 * face.u }
+
+                    Rectangle {
+                        id: field
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        width: parent.width
+                        height: 52 * face.u
+                        radius: height / 2
+                        color: root.glass
+                        border.width: 1
+                        border.color: root.wrong ? root.bad : root.sent ? root.muted : Qt.rgba(1, 1, 1, 0.25)
+                        Behavior on border.color { ColorAnimation { duration: 150 } }
+
+                        Text {          // what a prompt that may be seen asks for, as typed
+                            anchors { fill: parent; leftMargin: 20 * face.u; rightMargin: 20 * face.u }
+                            visible: root.echo
+                            verticalAlignment: Text.AlignVCenter
+                            horizontalAlignment: Text.AlignHCenter
+                            elide: Text.ElideLeft
+                            text: input.text
+                            color: root.ink
+                            font.pixelSize: 16 * face.u
+                        }
+                        Row {
+                            anchors.centerIn: parent
+                            spacing: 8 * face.u
+                            visible: !root.echo
+                            Repeater {
+                                model: Math.min(input.text.length, 16)
+                                Rectangle { width: 10 * face.u; height: width; radius: width / 2; color: root.ink }
+                            }
+                        }
+                        Text {
+                            anchors.centerIn: parent
+                            visible: input.text.length === 0
+                            text: root.sent ? "Checking…" : "Password"
+                            color: root.muted
+                            font.pixelSize: 15 * face.u
+                        }
+                        MouseArea { anchors.fill: parent; cursorShape: Qt.IBeamCursor; onClicked: input.forceActiveFocus() }
+                    }
+                    // always its height, so a message appearing never moves the field
+                    Item {
+                        width: parent.width
+                        height: 44 * face.u
+
+                        Text {
+                            anchors { horizontalCenter: parent.horizontalCenter; verticalCenter: parent.verticalCenter }
+                            width: parent.width
+                            horizontalAlignment: Text.AlignHCenter
+                            elide: Text.ElideRight
+                            text: root.note
+                            color: root.wrong ? root.bad : root.muted
+                            font.pixelSize: 14 * face.u
+                        }
+                    }
                 }
 
                 // Restart and Shut down ask twice, as the island's Power does: one click by chance doesn't turn it off
                 Row {
-                    anchors { right: parent.right; bottom: parent.bottom; margins: 36 }
-                    spacing: 20
+                    anchors { right: parent.right; bottom: parent.bottom; margins: 40 * face.u }
+                    spacing: 12 * face.u
+                    opacity: root.ui
 
                     Repeater {
                         model: [{ label: "Restart", command: ["systemctl", "reboot"] }, { label: "Shut down", command: ["systemctl", "poweroff"] }]
@@ -237,9 +315,9 @@ ShellRoot {
                             id: action
                             required property var modelData
                             property bool armed: false
-                            width: label.implicitWidth + 28
-                            height: 34
-                            radius: 17
+                            width: label.implicitWidth + 32 * face.u
+                            height: 38 * face.u
+                            radius: height / 2
                             color: armed ? root.bad : area.containsMouse ? Qt.rgba(1, 1, 1, 0.16) : root.glass
 
                             Text {
@@ -247,7 +325,7 @@ ShellRoot {
                                 anchors.centerIn: parent
                                 text: action.armed ? "Again?" : action.modelData.label
                                 color: action.armed ? "#000000" : root.ink
-                                font.pixelSize: 13
+                                font.pixelSize: 14 * face.u
                             }
                             Timer { id: disarm; interval: 3000; onTriggered: action.armed = false }
                             MouseArea {
@@ -255,6 +333,7 @@ ShellRoot {
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
+                                enabled: !root.going
                                 onClicked: {
                                     if (action.armed) { if (!root.dry) Quickshell.execDetached(action.modelData.command); return }
                                     action.armed = true
@@ -273,7 +352,7 @@ ShellRoot {
             property: "shown"
             to: 0
             duration: 250
-            onFinished: Greetd.launch(root.session, ["XDG_SESSION_TYPE=wayland"])
+            onFinished: { if (!root.dry && Greetd.available) Greetd.launch(root.session, ["XDG_SESSION_TYPE=wayland"]) }
         }
     }
 }
