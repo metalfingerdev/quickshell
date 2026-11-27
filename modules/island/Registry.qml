@@ -53,6 +53,7 @@ QtObject {
         { name: "tasks",      aliases: ["todo", "kanban", "board"], priority: 2, timeout: 0, view: Engine.View.Tasks, url: Qt.resolvedUrl("views/Board.qml") },
         { name: "dock",       aliases: ["favourites", "favorites", "apps"], priority: 2, timeout: 6000, view: Engine.View.Dock, url: Qt.resolvedUrl("views/Dock.qml") },
         { name: "advanced",   aliases: ["prefs"], priority: 2, timeout: 0, view: Engine.View.Advanced, url: Qt.resolvedUrl("views/Advanced.qml") },
+        { name: "shortcuts", aliases: ["keys", "keybinds", "binds"], priority: 2, timeout: 0, view: Engine.View.Shortcuts, url: Qt.resolvedUrl("views/Shortcuts.qml") },
         // a program asking for root (polkit): above every view but a critical alert, and it stays until answered
         { name: "auth", priority: 3, timeout: 0, view: Engine.View.Auth, url: Qt.resolvedUrl("views/Auth.qml"), queue: true },
         // `opens`: a click on the toast opens this instead of pinning the toast

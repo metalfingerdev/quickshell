@@ -76,6 +76,7 @@ Every setting is in `~/.config/island/settings.json`, nested as the code is (`co
 `island.tuning.gap`, ...). Hand edits apply at once. Only what differs from its default is written, so deleting a key
 resets it and deleting the file resets everything. Nothing is clamped. Settings, Advanced shows them all
 (`qs ipc call island open advanced`).
+`open shortcuts` is the keybind cheat-sheet, written by hand from hypr's `binds.lua`.
 
 | Command | Effect |
 |---|---|

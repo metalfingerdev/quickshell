@@ -50,6 +50,7 @@ QtObject {
         SettingsEnergy,
         SettingsLock,
         SettingsWallpaper,
+        Shortcuts,
         Auth                    // last: a view added in the middle renumbers the rest
     }
 

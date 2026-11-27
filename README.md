@@ -23,7 +23,7 @@ Escape, a click outside, a timer      ──► home (the clock)
 Status: prototype. These work: the morphing surface (pill or notch, on Hyprland's frosted glass),
 hover/peek, pinning, back-history, auto-hide, IPC and multi-monitor. So does every view: the hub (tabs),
 dashboard, launcher, network, bluetooth, media, volume mixer, notifications, workspace overview, clock,
-battery, power, theme and wallpaper, and settings. Toasts (volume, brightness, notifications, battery,
+battery, power, theme and wallpaper, settings, and the shortcuts cheat-sheet (Super + Shift + /, kept in step with hypr's `binds.lua` by hand). Toasts (volume, brightness, notifications, battery,
 workspace switch) and privacy dots work too. What is still open is in [docs/roadmap.md](docs/roadmap.md).
 
 ## Running
