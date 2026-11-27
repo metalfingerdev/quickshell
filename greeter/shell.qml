@@ -4,10 +4,13 @@
 // user, so it can't read the island's settings or anyone's home: its few colours are its own, the pictures
 // are the repo's (assets/wallpapers/greeter.gif, assets/avatar.gif), and what it needs from the machine comes as environment variables
 // (GREETER_USER, GREETER_SESSION as a JSON command, GREETER_READY a file it touches once it is up).
+// It looks as the island's lock screen does (modules/lock/LockSurface.qml), after Apple's: at rest the
+// picture and the time; a key or the pointer wakes it, and the picture softens behind the sign-in.
 // After Nihil-Shell's greeter (MIT). Try the look without logging in: GREETER_DRY=1 qs -p greeter
 pragma ComponentBehavior: Bound
 
 import QtQuick
+import QtQuick.Effects
 import Quickshell
 import Quickshell.Io
 import Quickshell.Services.Greetd
@@ -15,6 +18,16 @@ import Quickshell.Widgets
 
 ShellRoot {
     id: root
+
+    // a shadow, not a backing: the words stay readable on a bright picture and cover none of it
+    component Lifted: MultiEffect {
+        shadowEnabled: true
+        shadowColor: "#000000"
+        shadowOpacity: 0.6
+        shadowBlur: 0.6
+        shadowVerticalOffset: 1
+        blurMax: 24
+    }
 
     readonly property string user: Quickshell.env("GREETER_USER") || "admin"
     readonly property var session: { try { return JSON.parse(Quickshell.env("GREETER_SESSION")) } catch (e) { return ["uwsm", "start", "hyprland-uwsm.desktop"] } }
@@ -55,12 +68,22 @@ ShellRoot {
         leave.start()
     }
 
-    // The colours: a dark glass over the picture, white ink, one red for a refusal
+    // The lock's words-on-a-picture colours (Config.pictureInk/pictureDim), its frosted fill, Apple's red
     readonly property color ink: "#f5f5f7"
     readonly property color dim: "#c7c7cc"
-    readonly property color muted: "#8e8e93"
-    readonly property color glass: Qt.rgba(0.08, 0.09, 0.1, 0.55)
-    readonly property color bad: "#ff6b6b"
+    readonly property color muted: "#c7c7cc"
+    readonly property color glass: Qt.rgba(0.96, 0.96, 0.97, 0.18)
+    readonly property color bad: "#ff453a"
+    readonly property string font: "Inter"
+
+    // Awake: the sign-in is wanted, and the picture softens and dims behind it (the lock's veil). A while
+    // with nothing typed and it rests again; anything typed keeps it.
+    property bool awake: false
+    property real veil: awake ? 1 : 0
+    Behavior on veil { NumberAnimation { duration: 350 } }
+    function wake() { if (going) return; awake = true; rest.restart() }
+    Timer { id: rest; interval: 15000; onTriggered: if (input.text === "" && !root.sent) root.awake = false; else restart() }
+    signal refused()        // the faces shake their field
 
     function start() {
         asking = false; echo = false; sent = false
@@ -76,7 +99,7 @@ ShellRoot {
     function back() { leave.stop(); uiOut.stop(); cap.stop(); playGif = false; going = false; ui = 1; shown = 1 }
     function said(text) {
         const words = text.trim()
-        if (/^authentication failure$/i.test(words)) return "Wrong password" + (attempts > 1 ? " (" + attempts + ")" : "")
+        if (/^authentication failure$/i.test(words)) return "Incorrect password"
         return words.length > 0 ? words.charAt(0).toUpperCase() + words.slice(1) : words
     }
 
@@ -119,6 +142,7 @@ ShellRoot {
             root.asking = false
             root.sent = false
             input.text = ""
+            root.refused()
             again.restart()
         }
         function onReadyToLaunch(): void { root.farewell() }
@@ -158,10 +182,12 @@ ShellRoot {
             opacity: 0
             echoMode: root.echo ? TextInput.Normal : TextInput.Password
             enabled: !root.going
-            onTextEdited: root.wrong = false
+            onTextEdited: { root.wrong = false; root.wake() }
+            Keys.onPressed: root.wake()
             // a dry run plays the whole sequence on Enter, and sends and starts nothing
             onAccepted: { if (root.dry || !Greetd.available) root.farewell(); else root.submit(text) }
-            Keys.onEscapePressed: text = ""
+            // Escape lets it rest, as Apple's does
+            Keys.onEscapePressed: { text = ""; root.awake = false }
         }
 
         Repeater {
@@ -177,6 +203,21 @@ ShellRoot {
                 x: modelData.x; y: modelData.y
                 width: modelData.width; height: modelData.height
                 opacity: root.shown
+
+                // Under everything. Only a real move wakes it: Qt re-sends hover while something animates
+                // under a still pointer, and the picture fading in would wake it by itself.
+                MouseArea {
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    property point from: Qt.point(-1, -1)
+                    onPositionChanged: mouse => {
+                        if (from.x < 0) { from = Qt.point(mouse.x, mouse.y); return }
+                        if (Math.abs(mouse.x - from.x) + Math.abs(mouse.y - from.y) < 6) return
+                        from = Qt.point(mouse.x, mouse.y)
+                        root.wake()
+                    }
+                    onPressed: { root.wake(); input.forceActiveFocus() }
+                }
 
                 // The greeter's picture, held on its first frame while you log in, then played once. `playing`
                 // also waits for the load: a GIF that isn't Ready yet ignores being told to play.
@@ -195,8 +236,17 @@ ShellRoot {
                     }
                     // one loop: from the last frame on, the screen fades into the session
                     onCurrentFrameChanged: if (face.index === 0 && root.playGif && frameCount > 1 && currentFrame === frameCount - 1) root.finish()
+
+                    // awake, it softens and dims behind the sign-in, as the lock's does; at rest no effect runs.
+                    // The login's own fade takes the veil off with the controls, so the loop plays clear.
+                    layer.enabled: root.veil * root.ui > 0
+                    layer.effect: MultiEffect {
+                        blurEnabled: true
+                        blur: root.veil * root.ui
+                        blurMax: 64
+                        brightness: -0.18 * root.veil * root.ui
+                    }
                 }
-                Rectangle { anchors.fill: parent; color: "#000000"; opacity: 0.35 * root.ui }
 
                 Column {
                     id: stack
@@ -205,18 +255,31 @@ ShellRoot {
                     width: 360 * face.u
                     opacity: root.ui
 
-                    Text {
+                    // the date over the time, as on the lock and on a Mac
+                    Column {
                         anchors.horizontalCenter: parent.horizontalCenter
-                        text: Qt.formatTime(clock.date, "HH:mm")
-                        color: root.ink
-                        font.pixelSize: 132 * face.u
-                        font.weight: Font.Light
-                    }
-                    Text {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        text: Qt.formatDate(clock.date, "dddd, d MMMM")
-                        color: root.dim
-                        font.pixelSize: 20 * face.u
+                        layer.enabled: true
+                        layer.effect: Lifted {}
+
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: Qt.formatDate(clock.date, "dddd d MMMM")
+                            color: root.ink
+                            font.family: root.font
+                            font.pixelSize: 22 * face.u
+                            font.weight: Font.DemiBold
+                        }
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: Qt.formatTime(clock.date, "HH:mm")
+                            color: root.ink
+                            // Qt's default text renderer looks rough this big
+                            renderType: Text.NativeRendering
+                            font.family: root.font
+                            font.pixelSize: 140 * face.u
+                            font.weight: Font.DemiBold
+                            font.features: { "tnum": 1 }
+                        }
                     }
                     Item { width: 1; height: 56 * face.u }
 
@@ -233,8 +296,9 @@ ShellRoot {
                             visible: avatar.status !== Image.Ready
                             text: root.user.charAt(0).toUpperCase()
                             color: root.ink
+                            font.family: root.font
                             font.pixelSize: 38 * face.u
-                            font.weight: Font.Medium
+                            font.weight: Font.DemiBold
                         }
                         AnimatedImage {
                             id: avatar
@@ -251,49 +315,84 @@ ShellRoot {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: root.user
                         color: root.ink
-                        font.pixelSize: 20 * face.u
-                        font.weight: Font.Medium
+                        font.family: root.font
+                        font.pixelSize: 17 * face.u
+                        font.weight: Font.DemiBold
+                        layer.enabled: true
+                        layer.effect: Lifted {}
                     }
                     Item { width: 1; height: 20 * face.u }
 
+                    // the lock's field: a frosted pill, the password as dots, an arrow once something is typed
                     Rectangle {
                         id: field
                         anchors.horizontalCenter: parent.horizontalCenter
-                        width: parent.width
-                        height: 52 * face.u
+                        width: 320 * face.u
+                        height: 48 * face.u
                         radius: height / 2
                         color: root.glass
-                        border.width: 1
-                        border.color: root.wrong ? root.bad : root.sent ? root.muted : Qt.rgba(1, 1, 1, 0.25)
-                        Behavior on border.color { ColorAnimation { duration: 150 } }
+                        transform: Translate { id: nudge }
 
                         Text {          // what a prompt that may be seen asks for, as typed
-                            anchors { fill: parent; leftMargin: 20 * face.u; rightMargin: 20 * face.u }
+                            anchors { fill: parent; leftMargin: 20 * face.u; rightMargin: 52 * face.u }
                             visible: root.echo
                             verticalAlignment: Text.AlignVCenter
-                            horizontalAlignment: Text.AlignHCenter
                             elide: Text.ElideLeft
                             text: input.text
                             color: root.ink
-                            font.pixelSize: 16 * face.u
+                            font.family: root.font
+                            font.pixelSize: 15 * face.u
                         }
                         Row {
-                            anchors.centerIn: parent
-                            spacing: 8 * face.u
+                            anchors { left: parent.left; leftMargin: 20 * face.u; verticalCenter: parent.verticalCenter }
+                            spacing: 6 * face.u
                             visible: !root.echo
                             Repeater {
-                                model: Math.min(input.text.length, 16)
-                                Rectangle { width: 10 * face.u; height: width; radius: width / 2; color: root.ink }
+                                model: Math.min(input.text.length, 20)
+                                Rectangle { width: 8 * face.u; height: width; radius: width / 2; color: root.ink }
                             }
                         }
                         Text {
-                            anchors.centerIn: parent
+                            anchors { left: parent.left; leftMargin: 20 * face.u; verticalCenter: parent.verticalCenter }
                             visible: input.text.length === 0
-                            text: root.sent ? "Checking…" : "Password"
-                            color: root.muted
+                            text: "Enter Password"
+                            color: root.dim
+                            font.family: root.font
                             font.pixelSize: 15 * face.u
                         }
-                        MouseArea { anchors.fill: parent; cursorShape: Qt.IBeamCursor; onClicked: input.forceActiveFocus() }
+                        MouseArea { anchors.fill: parent; cursorShape: Qt.IBeamCursor; onClicked: { root.wake(); input.forceActiveFocus() } }
+
+                        Rectangle {
+                            anchors { right: parent.right; rightMargin: 6 * face.u; verticalCenter: parent.verticalCenter }
+                            visible: input.text !== "" && !root.sent
+                            width: 36 * face.u
+                            height: width
+                            radius: width / 2
+                            color: root.ink
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: "→"
+                                color: "#000000"
+                                font.family: root.font
+                                font.pixelSize: 18 * face.u
+                                font.weight: Font.DemiBold
+                            }
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: input.accepted()
+                            }
+                        }
+
+                        SequentialAnimation {
+                            id: shake
+                            NumberAnimation { target: nudge; property: "x"; to: -12; duration: 50 }
+                            NumberAnimation { target: nudge; property: "x"; to: 10; duration: 70 }
+                            NumberAnimation { target: nudge; property: "x"; to: -6; duration: 60 }
+                            NumberAnimation { target: nudge; property: "x"; to: 0; duration: 50 }
+                        }
+                        Connections { target: root; function onRefused() { shake.restart() } }
                     }
                     // always its height, so a message appearing never moves the field
                     Item {
@@ -301,13 +400,17 @@ ShellRoot {
                         height: 44 * face.u
 
                         Text {
-                            anchors { horizontalCenter: parent.horizontalCenter; verticalCenter: parent.verticalCenter }
+                            anchors.centerIn: parent
                             width: parent.width
                             horizontalAlignment: Text.AlignHCenter
                             elide: Text.ElideRight
-                            text: root.note
-                            color: root.wrong ? root.bad : root.muted
+                            text: root.sent ? "Checking…" : root.note
+                            color: root.wrong && !root.sent ? root.bad : root.dim
+                            font.family: root.font
                             font.pixelSize: 14 * face.u
+                            font.weight: Font.Medium
+                            layer.enabled: true
+                            layer.effect: Lifted {}
                         }
                     }
                 }
@@ -335,7 +438,9 @@ ShellRoot {
                                 anchors.centerIn: parent
                                 text: action.armed ? "Again?" : action.modelData.label
                                 color: action.armed ? "#000000" : root.ink
+                                font.family: root.font
                                 font.pixelSize: 14 * face.u
+                                font.weight: Font.Medium
                             }
                             Timer { id: disarm; interval: 3000; onTriggered: action.armed = false }
                             MouseArea {
