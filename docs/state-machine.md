@@ -61,8 +61,8 @@ Hover holds, the keyboard restarts:
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | Hidden | | | reach → Rest | reveal → Rest | | → Pinned | | | → Toast | | unhide | |
 | Rest | intent | rearm | rearm | keep | release (→ Hidden) | → Pinned | | | → Toast | | retime | lapse |
-| Peek | (cancels grace) | letGo | | | | → Pinned | → Rest | → Rest | → Toast | | | → Rest |
-| Pinned | rearm | rearm | rearm | | | toggle | → Rest | goBack | alertPinned | start | | → Rest |
+| Peek | (cancels grace) | letGo | | | | → Pinned | → Rest | → Rest | alertPinned | | | → Rest |
+| Pinned | rearm | unheld | rearm / unheld (retreat) | | | toggle | → Rest | goBack | alertPinned | start | | → Rest |
 | Toast | rearm | rearm | rearm | | | → Pinned | toastEnd | toastEnd | alertToast | | | toastEnd |
 
 Empty cells: the event only updates the tracked facts.
@@ -117,9 +117,13 @@ alerted at its Registry `critical` priority, not a separate view. Every comparis
 priorities, never `cfg.priority(view)` of what is on screen.
 
 - From Hidden, Rest or Peek: the toast is shown and leaves no history.
-- Over Pinned (`alertPinned`): the toast interrupts only if its priority is *higher* and the user isn't
-  holding the island. The pinned view is pushed onto history, so it comes back afterwards. Otherwise the
-  alert is parked.
+- Over Pinned or Peek (`alertPinned`): the toast interrupts only if its priority is *higher* and the user
+  isn't holding the island. The pinned view is pushed onto history, so it comes back afterwards. Otherwise
+  the alert is parked (or dropped, if its view may not queue). Peek is held by the pointer, so an alert
+  waits there and is delivered when the peek ends (`toRest`): it no longer replaces the hub under the pointer.
+- A pinned view's hold ending (`unheld`, on `leave` and `retreat`): a parked alert that only the hold kept
+  back, one *higher* than the view, shows at once instead of after the view's countdown, with the view on
+  history. A parked alert that is not higher stays parked until the view ends.
 - Over a Toast (`alertToast`): the same view refreshes the countdown and keeps the *higher* of the two
   priorities (what it shows now includes the urgent thing). Equal or higher priority replaces the current
   toast, and the replaced toast is parked (with its priority) if it may queue. Lower priority is parked.

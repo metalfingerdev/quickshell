@@ -373,5 +373,46 @@ test("the hover intent survives the edge or the mode changing while hovered", ()
         assert.strictEqual(run(s, e).timer, s.timer, JSON.stringify(e))
 })
 
+console.log("alerts held back by the pointer")
+test("Peek under the pointer: an alert waits, the hub stays, and it shows once the pointer has gone", () => {
+    let s = run(M.initial(V.Compact, false), E.Hover, E.Expire)
+    assert.strictEqual(s.phase, P.Peek)
+    s = run(s, alert(V.Notifications, CRIT))
+    assert.strictEqual(s.phase, P.Peek); assert.strictEqual(s.view, V.Expanded); assert.strictEqual(s.queued, V.Notifications)
+    s = run(s, E.Leave, E.Expire)                                // the grace ends: home, and the alert is delivered
+    assert.strictEqual(s.phase, P.Toast); assert.strictEqual(s.view, V.Notifications); assert.strictEqual(s.prio, CRIT)
+})
+test("Peek under the pointer: an alert that may not queue is dropped, not shown over it", () => {
+    const s = run(M.initial(V.Compact, false), E.Hover, E.Expire, alert(V.Volume))
+    assert.strictEqual(s.view, V.Expanded); assert.strictEqual(s.queued, -1)
+})
+test("Peek with the pointer gone: a higher alert shows at once", () => {
+    const s = run(M.initial(V.Compact, false), E.Hover, E.Expire, E.Leave, alert(V.Notifications, CRIT))
+    assert.strictEqual(s.phase, P.Toast); assert.strictEqual(s.view, V.Notifications)
+})
+test("a parked critical alert shows when the pointer leaves the pinned view, and Back returns to it", () => {
+    let s = run(M.initial(V.Compact, false), open(V.Tabs), E.Hover, alert(V.Notifications, CRIT))
+    assert.strictEqual(s.phase, P.Pinned); assert.strictEqual(s.queued, V.Notifications)
+    s = run(s, E.Leave)
+    assert.strictEqual(s.phase, P.Toast); assert.strictEqual(s.view, V.Notifications); assert.strictEqual(s.prio, CRIT)
+    assert.strictEqual(s.queued, -1)
+    s = run(s, E.Expire)
+    assert.strictEqual(s.phase, P.Pinned); assert.strictEqual(s.view, V.Tabs)
+})
+test("the same when the pointer was at the edge, not on the island", () => {
+    let s = run(M.initial(V.Compact, false), open(V.Tabs), E.Reach, alert(V.Notifications, CRIT))
+    assert.strictEqual(s.phase, P.Pinned)
+    assert.strictEqual(run(s, E.Retreat).phase, P.Toast)
+})
+test("leaving one holding fact while another still holds shows nothing", () => {
+    const s = run(M.initial(V.Compact, false), open(V.Tabs), E.Hover, E.Reach, alert(V.Notifications, CRIT), E.Leave)
+    assert.strictEqual(s.phase, P.Pinned); assert.strictEqual(s.queued, V.Notifications)
+})
+test("an alert no higher than the pinned view stays parked when the pointer leaves", () => {
+    const s = run(M.initial(V.Compact, false), open(V.Tabs), E.Hover, alert(V.Notifications), E.Leave)
+    assert.strictEqual(s.phase, P.Pinned); assert.strictEqual(s.queued, V.Notifications)
+    assert.ok(s.timer && s.timer.kind === "hold")
+})
+
 console.log(`\n${pass} passed, ${fail} failed`)
 process.exit(fail ? 1 : 0)

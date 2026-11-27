@@ -63,14 +63,14 @@ Scope {
         function onAside() { Engine.close() }
     }
 
-    // Priority 1 and queue: false (Registry), so it never interrupts a view and is never kept. Not over
-    // Expanded either: at Peek any alert would replace it under the pointer.
+    // Priority 1 and queue: false (Registry), so it never interrupts a view and is never kept (nor the peeked
+    // Expanded: the machine parks or drops an alert that comes while the pointer holds Peek).
     Connections {
         target: Hyprland
         enabled: root.switcherToasts
         function onFocusedWorkspaceChanged() {
             const id = Hyprland.focusedWorkspace?.id ?? -1
-            if (id > 0 && !Engine.peeked) root.alert(Engine.View.Switcher)
+            if (id > 0) root.alert(Engine.View.Switcher)
         }
     }
 

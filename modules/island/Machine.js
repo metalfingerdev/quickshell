@@ -115,12 +115,24 @@ function deliver(s, e, cfg) {
     return cfg.known(v) ? toast(cleared, v, p, [], cfg) : rest(cleared, e, cfg)
 }
 
-// Alert while a Pinned view is open: only a higher priority may interrupt, and never while the
-// user is holding the island. Otherwise it waits (or is dropped).
+// Alert while a Pinned view is open, or while Peek is under the pointer: only a higher priority may
+// interrupt, and never while the user is holding the island. Otherwise it waits (or is dropped), and Peek
+// lets it through when the pointer has gone (toRest delivers it). Without this, any alert replaced the hub
+// peeked under the pointer, and the hub did not come back.
 function alertPinned(s, e, cfg) {
     if (!usable(e.view, cfg) || e.view === s.view) return s
     const p = prio(e, cfg)
     return p > s.prio && !holding(s) ? toToast(s, e, cfg) : park(s, e.view, p, cfg)
+}
+
+// The pointer or the edge let go of a pinned view: an alert that only the hover was holding back (higher
+// than the view, parked by alertPinned) shows now, as alertPinned would have shown it, instead of after the
+// view's countdown. The view goes onto history, so Back returns to it.
+function unheld(s, e, cfg) {
+    const r = rearm(s)
+    if (r.queued < 0 || holding(r) || r.queuedPrio <= r.prio || !cfg.known(r.queued)) return r
+    const v = r.queued, p = r.queuedPrio
+    return toast(set(r, { queued: -1, queuedPrio: -1 }), v, p, trail(r), cfg)
 }
 
 // Alert while a toast is showing: same view refreshes (keeping the higher priority: what it shows
@@ -208,16 +220,16 @@ table[Phase.Rest] = {
 table[Phase.Peek] = {
     [Event.Leave]:   letGo,
     [Event.Open]:    toPinned,
-    [Event.Alert]:   toToast,
+    [Event.Alert]:   alertPinned,
     [Event.Close]:   toRest,
     [Event.Back]:    toRest,
     [Event.Expire]:  toRest
 }
 table[Phase.Pinned] = {
     [Event.Hover]:   rearm,                // wanted() sees "holding" and drops the timer
-    [Event.Leave]:   rearm,                // ...and sees "not holding" and restarts it
+    [Event.Leave]:   unheld,               // ...and sees "not holding" and restarts it (or shows the alert it held back)
     [Event.Reach]:   rearm,
-    [Event.Retreat]: rearm,
+    [Event.Retreat]: unheld,
     [Event.Alert]:   alertPinned,
     [Event.Open]:    toggle,               // opening the open view closes it
     [Event.Close]:   toRest,
