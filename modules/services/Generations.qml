@@ -30,6 +30,33 @@ Singleton {
     readonly property var running: list.find(g => g.current) ?? null
     readonly property bool found: list.length > 0
 
+    // Cleaning up, by hand: the generations a cleanup of `days` would drop (0: every one but the running),
+    // and the cleanup itself as root, through the polkit prompt. Never on a timer: the rollback is the point.
+    property bool cleaning: false
+    function removable(days) {
+        const cut = now() - days * 86400
+        return list.filter(g => !g.current && (days === 0 || g.made < cut)).length
+    }
+    function clean(days) {
+        if (cleaning || ![0, 7, 14, 30].includes(days)) return
+        cleaning = true
+        Activities.start("cleanup", "Cleaning up generations")
+        const gc = days === 0 ? "-d" : "--delete-older-than " + days + "d"
+        // absolute paths: pkexec gives the command a bare PATH. The boot menu is rewritten so it drops them too.
+        cleaner.command = ["pkexec", "/run/current-system/sw/bin/sh", "-c",
+            "/run/current-system/sw/bin/nix-collect-garbage " + gc
+            + " && /nix/var/nix/profiles/system/bin/switch-to-configuration boot"]
+        cleaner.running = true
+    }
+    Process {
+        id: cleaner
+        onExited: code => {
+            root.cleaning = false
+            Activities.finish("cleanup", code === 0 ? "done" : "failed")
+            root.refresh()
+        }
+    }
+
     function now() { return Date.now() / 1000 }
     function ago(seconds) { return Read.ago(seconds, now()) }
     function refresh() {

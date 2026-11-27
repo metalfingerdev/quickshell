@@ -6,12 +6,14 @@ import qs.modules.parts
 
 // NixOS (Generations): every generation kept, and what one changed from the one before; and the
 // flake's inputs, how old each is and whether upstream has moved, with whatever keeps an edit to one
-// of the dotfiles' own clones from reaching the system. Nothing here changes the system.
+// of the dotfiles' own clones from reaching the system; and, by hand, cleaning old generations up
+// (never on a timer). Only Clean up changes the system, and it asks for the password first.
 Panel {
     id: root
 
     property string section: "generations"
     property var picked: null
+    property int keepDays: 14       // Clean up: generations older than this go; 0 is every one but the running
     readonly property var rows: picked ? Generations.changes[picked.id] ?? null : null
 
     implicitWidth: 640
@@ -39,6 +41,7 @@ Panel {
         ? (Generations.checking ? "Asking upstream…"
            : Generations.attention > 0 ? Generations.attention + " of " + Generations.inputs.length + " inputs want something"
            : Generations.inputs.length + " inputs" + (Generations.checkedAt > 0 ? ", checked " + Generations.ago(Generations.checkedAt) : ""))
+        : root.section === "cleanup" ? Generations.cleaning ? "Cleaning up…" : Generations.list.length + " generations kept"
         : Generations.running ? "Running generation " + Generations.running.id + ", NixOS " + Generations.running.version.split(" ")[0]
         : "Every system kept"
     actions: Pill {
@@ -50,12 +53,13 @@ Panel {
         shortcut: "c"
         onClicked: Generations.check(true)
     }
-    keys: [["⏎", root.section === "generations" ? "what changed" : "upstream"], ["G U", "section"], ["⌫", "back"]]
+    keys: [["⏎", root.section === "generations" ? "what changed" : root.section === "updates" ? "upstream" : "choose"], ["G U L", "section"], ["⌫", "back"]]
 
     Segmented {
         width: parent.width
         options: [{ key: "generations", label: "Generations", shortcut: "g" },
-                  { key: "updates", label: "Updates", shortcut: "u" }]
+                  { key: "updates", label: "Updates", shortcut: "u" },
+                  { key: "cleanup", label: "Clean up", shortcut: "l" }]
         current: root.section
         onPicked: key => root.section = key
     }
@@ -148,9 +152,54 @@ Panel {
         }
     }
 
+    // Clean up: what a cleanup drops, chosen by age. It removes the older generations and their packages
+    // and rewrites the boot menu, so there is no rolling back to them: hence a choice, and a prompt.
+    Flow {
+        visible: root.section === "cleanup"
+        width: parent.width
+        spacing: Config.spaceS
+
+        Repeater {
+            model: [{ days: 7, text: "Older than 7 days" }, { days: 14, text: "Older than 14 days" },
+                    { days: 30, text: "Older than 30 days" }, { days: 0, text: "All but the running one" }]
+
+            Chip {
+                required property var modelData
+                text: modelData.text + "  ·  " + Generations.removable(modelData.days)
+                selected: root.keepDays === modelData.days
+                onClicked: root.keepDays = modelData.days
+            }
+        }
+    }
+    Rectangle {
+        visible: root.section === "cleanup"
+        width: parent.width
+        height: note.implicitHeight + 2 * Config.spaceM
+        radius: Config.innerRadius
+        color: Config.tile
+
+        Label {
+            id: note
+            anchors { left: parent.left; right: parent.right; margins: Config.spaceM; verticalCenter: parent.verticalCenter }
+            wrapMode: Text.Wrap
+            color: Config.dim
+            text: Generations.removable(root.keepDays) === 0 ? "Nothing to clean up with this choice."
+                : Generations.removable(root.keepDays) + " generation(s) go, with the packages only they use, and the boot menu "
+                  + "drops them: there is no going back to them. The running one stays."
+        }
+    }
+    Pill {
+        visible: root.section === "cleanup"
+        kind: "filled"
+        icon: "cleaning_services"
+        text: Generations.cleaning ? "Cleaning up…" : "Clean now"
+        enabled: !Generations.cleaning && Generations.removable(root.keepDays) > 0
+        onClicked: Generations.clean(root.keepDays)
+    }
+
     EmptyState {
         width: parent.width
-        visible: root.section === "generations" ? !Generations.found : Generations.inputs.length === 0
+        visible: root.section === "generations" ? !Generations.found : root.section === "updates" && Generations.inputs.length === 0
         icon: root.section === "generations" ? "history" : "folder_off"
         title: root.section === "generations" ? "No generations to read" : "No flake.lock in " + Generations.flake
         hint: root.section === "generations" ? "They are the links in /nix/var/nix/profiles, on NixOS."
