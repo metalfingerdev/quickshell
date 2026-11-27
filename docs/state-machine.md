@@ -32,13 +32,13 @@
 ## Events
 
 Pointer and mode events (`hover` `leave` `reach` `retreat` `mode`) first update the holding facts and
-`autoHide` in **every** phase (`track()`), and then the phase may react. The others are `peek` `unpeek`
+`autoHide` in every phase (`track()`), and then the phase may react. The others are `peek` `unpeek`
 `open` `close` `back` `alert` `key` `expire`.
 
 Hover holds, the keyboard restarts:
 
-- **Hover** pauses a countdown for as long as the pointer is on the island, and leaving starts it again.
-- **`peek` / `unpeek`** are the peek key's press and release: they show the rest view while the key is
+- Hover pauses a countdown for as long as the pointer is on the island, and leaving starts it again.
+- `peek` / `unpeek` are the peek key's press and release: they show the rest view while the key is
   held. From Hidden, `peek` reveals Rest (`reveal()`); at Rest it holds it there (`keep()`). Either way
   it sets `peeking`, which holds the linger the way `hovered` does. `unpeek` (`release()`) clears it
   and, in auto-hide mode, hides at once, unless the pointer is still on the island or at the edge (then
@@ -47,10 +47,10 @@ Hover holds, the keyboard restarts:
   that was pressed in another phase can't cut a linger short. `enter()` clears `peeking` on every
   phase change, so a release that never arrives can't hold anything afterwards. The key is ignored
   while Peek, Pinned or Toast.
-- **`key`** is any keystroke in the island. It only matters while Pinned: `start()` gives a fresh
+- `key` is any keystroke in the island. It only matters while Pinned: `start()` gives a fresh
   countdown from the top (still none while hovered). The peek view has no keyboard and no countdown: it
   lives exactly as long as the hover.
-- **The top edge isn't the surface.** `reach`/`retreat` reveal and hold the island; only `hover` expands
+- The top edge isn't the surface. `reach`/`retreat` reveal and hold the island; only `hover` expands
   it. `Bar` sends `hover` only below the top `hotZone` pixels, so in notch style, where the surface
   touches the edge, reaching for the edge still only shows the clock. Coming down from the edge sends
   `hover` and `retreat` in either order, so `rearm()` leaves a running hover intent alone while hovered.
@@ -59,11 +59,11 @@ Hover holds, the keyboard restarts:
 
 | Phase \ Event | hover | leave | reach/retreat | peek | unpeek | open | close | back | alert | key | mode | expire |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| **Hidden** | | | reach → Rest | reveal → Rest | | → Pinned | | | → Toast | | unhide | |
-| **Rest** | intent | rearm | rearm | keep | release (→ Hidden) | → Pinned | | | → Toast | | retime | lapse |
-| **Peek** | (cancels grace) | letGo | | | | → Pinned | → Rest | → Rest | → Toast | | | → Rest |
-| **Pinned** | rearm | rearm | rearm | | | toggle | → Rest | goBack | alertPinned | start | | → Rest |
-| **Toast** | rearm | rearm | rearm | | | → Pinned | toastEnd | toastEnd | alertToast | | | toastEnd |
+| Hidden | | | reach → Rest | reveal → Rest | | → Pinned | | | → Toast | | unhide | |
+| Rest | intent | rearm | rearm | keep | release (→ Hidden) | → Pinned | | | → Toast | | retime | lapse |
+| Peek | (cancels grace) | letGo | | | | → Pinned | → Rest | → Rest | → Toast | | | → Rest |
+| Pinned | rearm | rearm | rearm | | | toggle | → Rest | goBack | alertPinned | start | | → Rest |
+| Toast | rearm | rearm | rearm | | | → Pinned | toastEnd | toastEnd | alertToast | | | toastEnd |
 
 Empty cells: the event only updates the tracked facts.
 
@@ -75,7 +75,7 @@ same as `close`. Alerts of the rest view are ignored (`usable()`).
 There is one rule (`wanted()`): a timer runs only in a timed phase (Rest, Pinned, Toast), with `ms > 0`,
 while nothing is holding.
 
-- `start()` applies the rule with a **new** timer object, so the countdown restarts. `enter()` uses it, so
+- `start()` applies the rule with a new timer object, so the countdown restarts. `enter()` uses it, so
   every phase change (including a refreshed toast, or a different view with the same timeout) counts down
   from the top. A keystroke while Pinned calls it directly.
 - `rearm()` applies the rule after a holding fact may have changed. If the timer that is already running is
@@ -86,9 +86,9 @@ while nothing is holding.
 
 Two other timers are set directly:
 
-- **hover intent** (Rest, `hoverMs`, kind `intent`): `lapse()` tells it apart from the linger timer by
+- hover intent (Rest, `hoverMs`, kind `intent`): `lapse()` tells it apart from the linger timer by
   checking `hovered`.
-- **grace** (Peek, `graceMs`, kind `grace`): started by `letGo()` when the pointer leaves the peek. A new
+- grace (Peek, `graceMs`, kind `grace`): started by `letGo()` when the pointer leaves the peek. A new
   `hover` cancels it in `track()`.
 
 Because `rearm()` compares `kind`, an intent or grace timer is never mistaken for the countdown just
@@ -100,7 +100,7 @@ because the durations match.
   history, so pinning a toast still returns to what it interrupted. Opening from anything else, Peek
   included, starts with an empty history (`trail()`): Peek lives under the pointer, so Back never returns to it.
 - `back` (Backspace, the mouse's back button, a view's back arrow) pops the top entry and restores it as
-  **Pinned**, with its anchor: the view that was open before. If the history is empty, back closes the island.
+  Pinned, with its anchor: the view that was open before. If the history is empty, back closes the island.
 - `close` (Escape, a click outside) goes straight to Rest, history and all. On a toast it only ends the
   toast (`toastEnd`), back to what it interrupted: `Triggers.settle()` relies on that.
 
@@ -108,7 +108,7 @@ because the durations match.
 
 Each Registry entry has `priority` and optionally `queue: true`.
 
-**Priority belongs to the alert, not the view.** An `alert` event may carry its own `priority`. Without
+Priority belongs to the alert, not the view. An `alert` event may carry its own `priority`. Without
 one, it gets `cfg.priority(view)`. Whatever enters the screen records its priority in `prio`. History
 entries and the queue carry it too, so an urgent alert stays urgent while it waits and when Back
 restores it. `open` is the user's choice, not an alert, so a pinned view always has the view's own
@@ -116,19 +116,19 @@ priority. This way one view can be urgent sometimes: a critical notification is 
 alerted at its Registry `critical` priority, not a separate view. Every comparison below uses these
 priorities, never `cfg.priority(view)` of what is on screen.
 
-- **From Hidden, Rest or Peek**: the toast is shown and leaves no history.
-- **Over Pinned** (`alertPinned`): the toast interrupts only if its priority is *higher* and the user isn't
+- From Hidden, Rest or Peek: the toast is shown and leaves no history.
+- Over Pinned (`alertPinned`): the toast interrupts only if its priority is *higher* and the user isn't
   holding the island. The pinned view is pushed onto history, so it comes back afterwards. Otherwise the
   alert is parked.
-- **Over a Toast** (`alertToast`): the same view refreshes the countdown and keeps the *higher* of the two
+- Over a Toast (`alertToast`): the same view refreshes the countdown and keeps the *higher* of the two
   priorities (what it shows now includes the urgent thing). Equal or higher priority replaces the current
   toast, and the replaced toast is parked (with its priority) if it may queue. Lower priority is parked.
-- **Parking** (`park`) keeps one slot. Only views with `queue: true` are kept. The highest priority wins,
+- Parking (`park`) keeps one slot. Only views with `queue: true` are kept. The highest priority wins,
   and the newer alert wins a tie. The same view parked again keeps the higher priority. A view that
   reaches the screen any other way leaves the queue (`enter()`), so it can't show twice.
-- **Delivery**: every route back to Rest (`toRest`, `toastEnd`) shows the parked alert first. A delivered
+- Delivery: every route back to Rest (`toRest`, `toastEnd`) shows the parked alert first. A delivered
   toast returns to Rest, not to whatever was open before.
-- **When a toast ends** (`toastEnd`): go back through history if there is one, else deliver the parked
+- When a toast ends (`toastEnd`): go back through history if there is one, else deliver the parked
   alert, else go to Hidden (auto-hide) or Rest.
 
 ## Watching it live

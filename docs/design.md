@@ -7,19 +7,19 @@ patterns where they are clearer (whole-scheme colour circles, accent section tit
 
 ## Principles
 
-- **Nothing on the bare glass.** The island can be any material at any opacity, even none, over any wallpaper.
+- Nothing on the bare glass. The island can be any material at any opacity, even none, over any wallpaper.
   Everything on it sits in a container: a tile (`Config.tile`) under anything you read or press, `Config.raised`
   for what sits on a tile (an icon's circle, a slider's track, a control inside a `Card`). Never tile on tile:
   inside a container, step up. Both follow "Cards and controls" (`Config.surfaceAlpha`).
-- **One tint.** The accent (`primary`) marks what can be acted on or is on: a switch, a selection, a heading.
+- One tint. The accent (`primary`) marks what can be acted on or is on: a switch, a selection, a heading.
   Meaning has its own colours (`good`, `warn`, `bad`).
-- **Concentric corners.** A radius inside another is the outer one minus the padding between them
+- Concentric corners. A radius inside another is the outer one minus the padding between them
   (`Config.radius` > `cardRadius` > `innerRadius` > `smallRadius`); capsules where a shape is low.
-- **Progressive disclosure.** A panel shows the common case. The rest is one level down, as a registered view
+- Progressive disclosure. A panel shows the common case. The rest is one level down, as a registered view
   (Back and IPC work), never more rows or a section swapped inside a view.
-- **Honest.** A control shows what it will really do: a colour circle is the scheme it makes, as drawn
+- Honest. A control shows what it will really do: a colour circle is the scheme it makes, as drawn
   (`Config.readable`); when something set elsewhere wins (a colour set by hand), the view says so.
-- **Motion that settles.** The island's own curve, never overshooting. Reduce motion removes it.
+- Motion that settles. The island's own curve, never overshooting. Reduce motion removes it.
 
 ## Containers
 

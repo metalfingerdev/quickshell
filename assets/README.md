@@ -1,6 +1,6 @@
 # Assets
 
-The island's own pictures, used where nothing else is set:
+The island's own pictures, used when nothing else is set:
 
 | File | Used for |
 |------|----------|
@@ -10,5 +10,5 @@ The island's own pictures, used where nothing else is set:
 | `wallpapers/lockscreen.webp` | its still, on battery saver |
 | `avatar.gif` | the lock screen's profile picture when none is set |
 
-All are Marin Kitagawa fan art from the owner's collection; the artists are unknown and **copyright is not
-cleared**. Replace them if you publish a fork.
+All of them are Marin Kitagawa fan art from the owner's collection. The artists are unknown and the copyright
+is not cleared. Replace them if you publish a fork.

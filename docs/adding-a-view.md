@@ -24,14 +24,14 @@ Item {
 
 The contract:
 
-- **Size**: set `implicitWidth` and `implicitHeight`. The island morphs to that size. You can bind them to
+- Size: set `implicitWidth` and `implicitHeight`. The island morphs to that size. You can bind them to
   content (for example `layout.implicitHeight + 24`), and the island follows when they change.
-- **Layout**: the Loader is always the view's final size, so lay out against your own bounds. Don't react to
+- Layout: the Loader is always the view's final size, so lay out against your own bounds. Don't react to
   the surface's animated size.
-- **Clicks**: call `Engine` methods directly. To open a view next to the clicked element, pass the scene x.
+- Clicks: call `Engine` methods directly. To open a view next to the clicked element, pass the scene x.
   `Pill.clicked(sceneX)` already provides it: `onClicked: x => Engine.open(Engine.View.MyView, x)`.
   Only a mouse click has an x. Pressed from the keyboard, a Pill sends `-1`, so the view opens centred.
-- **Style**: Material 3. Take every colour, font and size from `Config` (`import qs.modules.components`):
+- Style: Material 3. Take every colour, font and size from `Config` (`import qs.modules.components`):
   the roles `Config.surface`, `container`, `high`, `primary` / `primaryInk` (text on primary),
   `secondary` / `secondaryInk`, `text`, `dim`, `outline`, and `Config.font`, `Config.body`,
   `Config.title`, `Config.radius`, ... so the view follows the palette. Never hard-code a colour.
@@ -47,7 +47,7 @@ The contract:
   may share a singleton's name (`Config.qml`, `Wallpaper.qml`, ...): views see their own folder first,
   and it would hide the singleton (hence `views/Wallpapers.qml`). A QML property can't be named `onSomething` (QML reads it as a signal handler and it
   stays black), hence `primaryInk`.
-- **Keyboard**: nothing to do for the basics. A pinned view gets the keyboard (the peek view doesn't:
+- Keyboard: nothing to do for the basics. A pinned view gets the keyboard (the peek view doesn't:
   it only lives under the pointer), and `ViewLoader` gives it default keys: Tab moves through focusable items (every control is
   one), arrows move to the nearest one that way, Enter/Space press the focused one, Escape and
   Backspace go back. Give a control a `shortcut: "x"` (Pill, QuickTile, Tile, ListEntry, Chip, a
@@ -60,18 +60,18 @@ The contract:
   defaults. Put `focus: true` on the item that should start focused (otherwise it's the first focusable
   one). Set `activeFocusOnTab: false` on items Tab should skip. See `views/Launcher.qml`: the field keeps
   focus, and Up/Down move a selection instead.
-- **Timeout**: hover pauses a pinned view's countdown, and each keystroke restarts it. Keys your view
+- Timeout: hover pauses a pinned view's countdown, and each keystroke restarts it. Keys your view
   accepts don't reach `ViewLoader`, so report them yourself: put
   `Keys.onPressed: event => { Engine.key(); event.accepted = false }` on the item that takes them (the
   launcher's field does).
-- **One instance**: the view is loaded on the active screen only, so it exists once even with several
+- One instance: the view is loaded on the active screen only, so it exists once even with several
   monitors.
 
 ## 2. Add an enum value
 
 In `Engine.qml`, add `MyView` to `enum View`. Add it at the end so existing values keep their numbers.
 
-**Restart the shell after changing the enum** (`qs kill -p .`, then start it again). A hot reload keeps the
+Restart the shell after changing the enum (`qs kill -p .`, then start it again). A hot reload keeps the
 old enum, so the new name is `undefined` until a restart. `Registry.get()` rejects non-numbers, so until
 then the view is ignored, not stuck. Changes to `parts/` need a restart as well: a hot reload keeps those
 types.
@@ -97,21 +97,21 @@ Add an entry to `Registry.qml`:
 
 One view per _thing_, not per variant. Don't add a second view just to change urgency or layout:
 
-- **Urgency**: give the entry a `critical` priority, and have the trigger pass
+- Urgency: give the entry a `critical` priority, and have the trigger pass
   `Registry.priority(view, critical)` to `Engine.alert(view, priority)`.
-- **Layout**: a view can check the phase. `views/Notification.qml` shows popups as a Toast and the
+- Layout: a view can check the phase. `views/Notification.qml` shows popups as a Toast and the
   notification center when Pinned (`Engine.pinned`). Clicking a toast to pin it then opens its full form.
 
 Unknown views are ignored by the machine (`cfg.known`), so a view without a Registry entry can't be opened.
 
 ## 4. Make it reachable
 
-- **From another view**: `Engine.open(Engine.View.MyView, x)`
-- **From IPC**: nothing more to do once it is registered
-- **As a toast from a system event**: add a `Connections` block in `Triggers.qml` that calls
+- From another view: `Engine.open(Engine.View.MyView, x)`
+- From IPC: nothing more to do once it is registered
+- As a toast from a system event: add a `Connections` block in `Triggers.qml` that calls
   `root.alert(Engine.View.MyView)`. Triggers only report events. Priority, timing and queueing come from the
   Registry entry.
-- **As the hover peek**: set `Engine.peekView`.
+- As the hover peek: set `Engine.peekView`.
 
 ## Toast checklist
 

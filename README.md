@@ -1,11 +1,11 @@
 # island
 
-A Dynamic-Island-style top bar for [Quickshell](https://quickshell.outfoxxed.me/). The island is a single
-rounded surface that morphs between views (a clock, a hub, detail panels, toasts), driven by
-a small pure state machine. It is drawn in Material 3, the way Android's quick settings are: tonal
-surfaces, pill tiles with an icon circle, thick pill sliders, segmented buttons, sentence-case type.
+A Dynamic-Island-style top bar for [Quickshell](https://quickshell.outfoxxed.me/). The island is one
+rounded surface that morphs between views (a clock, a hub, detail panels, toasts), driven by a small
+pure state machine. It is drawn in Material 3, like Android's quick settings: tonal surfaces, pill tiles
+with an icon circle, thick pill sliders, segmented buttons and sentence-case type.
 
-How you move through it:
+Moving through it:
 
 ```
 Compact (rest) ──pointer on the island──► Expanded (only while it's there)
@@ -20,12 +20,11 @@ Backspace, the mouse's back button, ← ──► the view that was open before
 Escape, a click outside, a timer      ──► home (the clock)
 ```
 
-> **Status:** prototype. The morphing surface (pill or notch, on Hyprland's frosted glass), hover/peek,
-> pinning, back-history, auto-hide, IPC, multi-monitor, and every view work: the hub (tabs), the
-> dashboard, launcher, network, bluetooth, media, the volume mixer, notifications, workspace overview,
-> clock, battery, power, theme and wallpaper, settings, plus toasts (volume, brightness, notifications, battery,
-> workspace switch) and privacy dots.
-> What is still open: [docs/roadmap.md](docs/roadmap.md).
+Status: prototype. These work: the morphing surface (pill or notch, on Hyprland's frosted glass),
+hover/peek, pinning, back-history, auto-hide, IPC and multi-monitor. So does every view: the hub (tabs),
+dashboard, launcher, network, bluetooth, media, volume mixer, notifications, workspace overview, clock,
+battery, power, theme and wallpaper, and settings. Toasts (volume, brightness, notifications, battery,
+workspace switch) and privacy dots work too. What is still open is in [docs/roadmap.md](docs/roadmap.md).
 
 ## Running
 
@@ -33,8 +32,9 @@ Escape, a click outside, a timer      ──► home (the clock)
 qs -p /path/to/this/folder
 ```
 
-`shell.qml` is the entry point. It creates one `Ipc`, one `Triggers`, and one `Bar` per screen, plus
-the lock screen (`Lock`, locked with `qs ipc call lock screen`) and the `ActivateLinux` text in each corner.
+`shell.qml` is the entry point. It creates one `Ipc`, one `Triggers` and one `Bar` per screen. It also
+creates the lock screen (`Lock`, locked with `qs ipc call lock screen`) and the `ActivateLinux` text in
+each corner.
 
 ## Tests
 
@@ -52,11 +52,11 @@ their answers with (Open-Meteo, the agenda, generations, the task board's cards)
 them on every push (`.github/workflows/tests.yml`), the keyboard test with Qt from nixpkgs.
 
 In the session the shell runs as the `quickshell` systemd user service (nixos-dotfiles,
-`modules/features/quickshell`), which starts it again if it crashes; Super+R restarts it.
+`modules/features/quickshell`), which restarts it if it crashes. Super+R also restarts it.
 
 ## Layout
 
-Every file opens with a comment saying what it is and why; this is the map.
+Every file opens with a comment saying what it is and why. This is the map:
 
 ```
 shell.qml           entry point: services, one Bar per screen, the lock
@@ -84,7 +84,7 @@ modules/
 
 ## From the environment
 
-The island is complete on its own. One value comes from nixos-dotfiles, on the `quickshell` service:
+The island works on its own. One value comes from nixos-dotfiles, on the `quickshell` service:
 
 | Variable | Read by | What it is |
 |---|---|---|
@@ -92,8 +92,9 @@ The island is complete on its own. One value comes from nixos-dotfiles, on the `
 
 `ISLAND_DRY=1` keeps `Glass.qml` from sending anything to Hyprland, for test instances.
 
-What it offers follows what's installed: the agent tiles, actions and process need `nilo-agent` and `crush`
-(nixos-dotfiles' `agent` bundle), and Hibernate needs logind's yes (`CanHibernate`: a swap to hibernate into).
+What it offers depends on what's installed. The agent tiles, actions and process need `nilo-agent` and
+`crush` (nixos-dotfiles' `agent` bundle). Hibernate needs logind to answer yes to `CanHibernate`, which
+means a swap to hibernate into.
 
 ## How it fits together
 
@@ -111,11 +112,11 @@ Bar: Loader shows Registry.get(view).url
 
 - [docs/architecture.md](docs/architecture.md): the layers, and how the proxy/surface morph works
 - [docs/state-machine.md](docs/state-machine.md): phases, events, timers, history and the alert queue
-- [docs/adding-a-view.md](docs/adding-a-view.md): step-by-step guide to adding a view or toast
+- [docs/adding-a-view.md](docs/adding-a-view.md): how to add a view or toast
 - [docs/ipc.md](docs/ipc.md): command-line control
 - [docs/roadmap.md](docs/roadmap.md): known issues and next steps
 
-## Configuration at a glance
+## Configuration
 
 | Where | Property | Default | Meaning |
 |---|---|---|---|

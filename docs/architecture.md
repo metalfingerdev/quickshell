@@ -43,18 +43,18 @@ on one screen only.
 
 Each `Bar` creates two layer-shell `PanelWindow`s:
 
-1. **spacer**: a full-width strip at the top.
+1. spacer: a full-width strip at the top.
    - With auto-hide off, it exists on the active screen only. It is `space` px tall and reserves that
      space (`ExclusionMode.Auto`), so tiled windows stay below the island. Input passes through it.
-   - With auto-hide on, it exists on **every** screen. It is `hotZone` px tall, reserves nothing, and its
+   - With auto-hide on, it exists on every screen. It is `hotZone` px tall, reserves nothing, and its
      input mask is the strip. Hovering the strip sends `Engine.edge(true/false, screen)`
      (`Reach`/`Retreat`), which can also move the island to that screen.
    - It is on `WlrLayer.Overlay` too, so the hot zone works over a fullscreen window.
-2. **overlay**: full-screen, on `WlrLayer.Overlay` (so it shows over fullscreen windows), namespace
+2. overlay: full-screen, on `WlrLayer.Overlay` (so it shows over fullscreen windows), namespace
    `glass:island`, active screen only, reserves nothing. Its input mask follows the phase:
-   - normally only the **proxy** rect, so the rest of the screen stays clickable;
-   - the **whole screen** while a view is Pinned: a click anywhere outside the island closes it;
-   - **nothing** while Hidden: the strip handle is only a hint, the spacer's hot zone reveals.
+   - normally only the proxy rect, so the rest of the screen stays clickable;
+   - the whole screen while a view is Pinned: a click anywhere outside the island closes it;
+   - nothing while Hidden: the strip handle is only a hint, the spacer's hot zone reveals.
    - Keyboard: while `Engine.pinned` the overlay takes
      exclusive keyboard focus (`WlrKeyboardFocus.Exclusive`). See [Keyboard and hover](#keyboard-and-hover).
 
@@ -65,7 +65,7 @@ Loader item ──implicit size──► proxy (invisible, snaps instantly, the 
                                  └──► sx/sy/sw/sh (eased) ──► surface (visible)
 ```
 
-- **proxy** is an invisible `Item` placed at the island's *final* rect:
+- proxy is an invisible `Item` placed at the island's *final* rect:
   - size = the loaded view's `implicitWidth/Height`, held across view swaps so it never collapses to 0
   - x = `abscissa(width, anchor)`: centred on the click x (or the screen), clamped to `edgePad`.
     `anchor` is `Engine.anchorX`, but taken only when the swap loads the view it belongs to (see View swaps)
@@ -81,9 +81,9 @@ Loader item ──implicit size──► proxy (invisible, snaps instantly, the 
 - The Behaviors are enabled only while `armed`, so the same assignment jumps instead of animating.
   `disarm(ms)` turns them off for a while: 500 ms at startup (so the
   window going from 0 to its real size doesn't animate in) and 150 ms when a Bar becomes the active one.
-- **surface** is the visible `Rectangle`, drawn at `sx/sy/sw/sh` with `clip: true`. Its corners come
+- surface is the visible `Rectangle`, drawn at `sx/sy/sw/sh` with `clip: true`. Its corners come
   from `Config`: `min(height / 2, Config.radius)` (so low shapes are capsules), and a square top in notch style, where two
-  **anti-corners** (Shapes outside the surface, from the same animated rect) curve it into the screen
+  anti-corners (Shapes outside the surface, from the same animated rect) curve it into the screen
   edge. The glass is Hyprland's: its colour is `Config.island`, the surface at the windows' opacity
   (`decoration.active_opacity`, read by `Desktops.windowOpacity`), and hypr/modules/look.lua's `glass` layer rule
   blurs the overlay (namespace `glass:island`) under whatever isn't transparent.
@@ -91,31 +91,31 @@ Loader item ──implicit size──► proxy (invisible, snaps instantly, the 
   full view, the Registry's `opens` (the workspace dots open the overview, the volume and brightness
   toasts the dashboard), or else its own view, Pinned; the clock (Compact, at rest) and Expanded (the
   peek) pin the hub, `Tabs`. Elsewhere it does nothing.
-- **Panels**, after Apple's (docs/design.md): a `Header` navigation bar, content on fills of the text colour at low
+- Panels, after Apple's (docs/design.md): a `Header` navigation bar, content on fills of the text colour at low
   alpha (`Config.fill1`..`fill4`, so they hold on any opacity), ListSection platters, all on the island's glass (`Config.island`, under hyprglass when the plugin is loaded:
   hypr/modules/plugins.lua, `services/Glass.qml`).
-- **Locking**: `Session.covering` (set by `lock/Lock.qml`) makes the proxy the whole screen, the input mask
+- Locking: `Session.covering` (set by `lock/Lock.qml`) makes the proxy the whole screen, the input mask
   the whole screen and the keyboard exclusive, so the island grows over everything and takes every input;
   the session lock engages once it has (a lock someone asked for), or at once (idle, logind before sleep).
   It stays under the lock, so unlocking (the picture fades to black first) shows the island shrinking back.
   A lock the compositor never confirms gives the screen back after 3 s.
-- **Opacity and glass**: the surface is `Config.island`, the palette's surface at `Config.islandAlpha` (the
+- Opacity and glass: the surface is `Config.island`, the palette's surface at `Config.islandAlpha` (the
   windows' opacity, or the island's own from Settings, down to 0.02 so the glass still has a shape). The
   `glass` layer rule's `ignore_alpha` and hyprglass's `mask_threshold` are 0.01 for that.
   `services/Glass.qml` sets Hyprland's blur level, the windows' opacity and hyprglass at runtime, and again
   after a config reload.
-- **Settings**: `services/Prefs.qml` owns `~/.config/island/settings.json`, from the table in
+- Settings: `services/Prefs.qml` owns `~/.config/island/settings.json`, from the table in
   `PrefsSchema.js` (key, target object, property, kind). shell.qml names the target objects, so Prefs imports
   none of the island or lock modules. Numbers the shell derives (radii, the notch's gap, the shadow) live in
   `Config.tuning`, and colour roles in `Config.roles`: a key there wins, a missing one is derived. A derived value
   is never assigned over. `Config.keepReadable` off stops every adjustment of a colour.
-- **Shadow**: a `RectangularShadow` from the same animated rect, close and light at Rest, wider and deeper
+- Shadow: a `RectangularShadow` from the same animated rect, close and light at Rest, wider and deeper
   once the island opens. Bar draws it because Hyprland only shadows windows, not layers, in a window of its
   own on the top layer (namespace `quickshell:shadow`, no input), under the island's overlay: in the overlay
   its soft alpha would take the glass. It fades out as the island goes see-through, and isn't there over a
   fullscreen window.
-- **Privacy dots** sit beside the surface while `Privacy.microphone` / `Privacy.camera` is true.
-- The **Loader** inside the surface (`ViewLoader.qml`) is always the view's *final* size. As the surface grows, it reveals
+- Privacy dots sit beside the surface while `Privacy.microphone` / `Privacy.camera` is true.
+- The Loader inside the surface (`ViewLoader.qml`) is always the view's *final* size. As the surface grows, it reveals
   the content instead of squashing it. It is centred horizontally (or pinned to its final screen position
   when `pinView` is true).
 
@@ -156,7 +156,7 @@ island was pinned, the release arms a 300 ms window in which a move away from it
 through `Desktops` in that window (a `closeThen` action, say) cancels it.
 
 A `HoverHandler` on the overlay's root item reports `Engine.hover(on)` while the pointer is inside the
-**proxy** rect, the same final rect the input mask uses, not the moving surface, so what counts as on
+proxy rect, the same final rect the input mask uses, not the moving surface, so what counts as on
 the island doesn't shift while it animates. It's on the root item
 because Qt stops hover at the first sibling that takes it, while ancestors always get it.
 
