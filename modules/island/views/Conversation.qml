@@ -29,12 +29,15 @@ Item {
     implicitHeight: peek ? peekCard.height + 16 : column.implicitHeight + 2 * pad
 
     // the model loads while you get to the question (as Nilo does while you type)
-    Component.onCompleted: { Agent.refresh(); if (!Engine.toast) { Agent.warm(); Agent.fresh = false } }
+    Component.onCompleted: {
+        Agent.refresh()
+        if (!Engine.toast) { Agent.warm(); Agent.fresh = false }
+        if (Agent.access !== "chat") Agent.loadRepos()
+    }
 
     // With a card waiting, the first Enter only arms it and the second allows (as Nilo's): a question
     // typed and sent the moment the card comes up can't say yes to it.
     property string armed: ""
-    Component.onCompleted: if (Agent.access !== "chat") Agent.loadRepos()
     Connections {
         target: Agent
         function onAskingChanged() { root.armed = "" }
