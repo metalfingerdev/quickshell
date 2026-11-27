@@ -5,18 +5,16 @@ import qs.modules.components
 IpcHandler {
     target: "island"
 
-    // A view opened from here is almost always a keybind: the keyboard is in use, so focus rings
-    // and shortcut keycaps show from the start (the pointer moving hides them again).
+    // A view opened from here is almost always a keybind, but focus rings and keycaps still wait for a
+    // navigation key (ViewLoader): opening says nothing about whether the keys will be used.
     function open(name: string): void {
         const e = Registry.byName(name)
         if (!e) return
-        Config.focusVisible = true
         Engine.open(e.view)
     }
 
     // The Control Centre, in Edit: add, take off and move its modules
     function editControls(): void {
-        Config.focusVisible = true
         Engine.editControls = true
         Engine.open(Engine.View.Dashboard)
     }
@@ -25,7 +23,6 @@ IpcHandler {
     // Already open, it switches there.
     function launch(filter: string): void {
         if (!["all", "apps", "files", "actions", "clipboard", "emoji"].includes(filter)) return
-        Config.focusVisible = true
         Engine.launcherFilter = filter
         if (Engine.pinned && Engine.view === Engine.View.Launcher) Engine.launcherAsked(filter)
         else Engine.open(Engine.View.Launcher)
@@ -36,7 +33,6 @@ IpcHandler {
     function cycle(name: string, delta: int): void {
         const e = Registry.byName(name)
         if (!e) return
-        Config.focusVisible = true
         Held.cycle(e.view, delta)
     }
 

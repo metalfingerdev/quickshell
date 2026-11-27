@@ -13,47 +13,43 @@ Loader {
     signal activity()
     signal navigated()
 
-    // focus that lands this soon after a load is the view settling (the window activating
-    // included), not the user moving it
-    property double loadedAt: 0
-    readonly property int settleMs: 400
-
     focus: true
 
     // One handler, not Keys.onTabPressed etc.: Qt skips onPressed for a key that has its own handler,
     // and every key that reaches here must count as activity.
     Keys.onPressed: event => {
         activity()
-        navigated()
+        // Hints and focus rings follow navigation keys only, as the web's :focus-visible does: a click
+        // or Hyprland handing over keyboard focus moves focus too, and must not show them. Typing into
+        // a field isn't navigation either.
         switch (event.key) {
-        case Qt.Key_Tab:     step(true);  break
-        case Qt.Key_Backtab: step(false); break
-        case Qt.Key_Right:   if (!nudge(1)) move(1, 0);   break
-        case Qt.Key_Left:    if (!nudge(-1)) move(-1, 0); break
-        case Qt.Key_Down:    move(0, 1);  break
-        case Qt.Key_Up:      move(0, -1); break
-        case Qt.Key_Escape:    cancel(); break
-        case Qt.Key_Backspace: back(); break
+        case Qt.Key_Tab:     navigated(); step(true);  break
+        case Qt.Key_Backtab: navigated(); step(false); break
+        case Qt.Key_Right:   navigated(); if (!nudge(1)) move(1, 0);   break
+        case Qt.Key_Left:    navigated(); if (!nudge(-1)) move(-1, 0); break
+        case Qt.Key_Down:    navigated(); move(0, 1);  break
+        case Qt.Key_Up:      navigated(); move(0, -1); break
+        case Qt.Key_Escape:    navigated(); cancel(); break
+        case Qt.Key_Backspace: navigated(); back(); break
         case Qt.Key_Return:
-        case Qt.Key_Enter:   event.accepted = press(false); break
-        case Qt.Key_Space:   event.accepted = press(true);  break
+        case Qt.Key_Enter:   navigated(); event.accepted = press(false); break
+        case Qt.Key_Space:   navigated(); event.accepted = press(true);  break
         default: {
             const plain = !(event.modifiers & (Qt.ControlModifier | Qt.AltModifier | Qt.MetaModifier))
             event.accepted = plain && shortcut(event.text)
+            if (event.accepted) navigated()
         }
         }
     }
 
-    // Tab on a Pill never gets here: Qt's own activeFocusOnTab navigation takes it. Focus moving
-    // inside the view is the user too, so it counts as activity as well.
+    // Focus moving inside the view is the user too, so it counts as activity, but not as navigation:
+    // a click lands here as well.
     Window.onActiveFocusItemChanged: {
         if (!inView(Window.activeFocusItem)) return
         activity()
-        if (Date.now() - loadedAt > settleMs) navigated()
     }
 
     onLoaded: {
-        loadedAt = Date.now()
         if (!focusedInside(item)) step(true)
     }
 
