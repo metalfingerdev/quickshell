@@ -50,6 +50,36 @@ Singleton {
         return "battery_" + Math.max(0, Math.min(6, Math.floor(percent / 15))) + "_bar"
     }
 
+    // The charge limit: where the firmware stops charging, `charge_control_end_threshold` (ThinkPads, ASUS,
+    // Frameworks and others have it; no file, no toggle). Only root may write it, so it goes through pkexec
+    // as Generations' cleanup does. Many firmwares forget it at a reboot, and the island doesn't set it at start.
+    property int limit: 100
+    property int limitTo: 80                       // what the toggle sets
+    property bool limitAvailable: false
+    property bool limitBusy: false
+    readonly property bool limited: limitAvailable && limit < 100
+    readonly property string limitFile: battery === "" ? "" : battery + "/charge_control_end_threshold"
+
+    function setLimit(percent) {
+        if (!limitAvailable || limitBusy) return
+        limitBusy = true
+        // an absolute sh: pkexec gives the command a bare PATH
+        limiter.command = ["pkexec", "/run/current-system/sw/bin/sh", "-c", "echo " + Math.max(20, Math.min(100, Math.round(percent))) + " > " + limitFile]
+        limiter.running = true
+    }
+    function toggleLimit() { setLimit(limited ? 100 : limitTo) }
+    Process {
+        id: limiter
+        onExited: { root.limitBusy = false; limitRead.reload() }
+    }
+    FileView {
+        id: limitRead
+        path: root.limitFile
+        printErrors: false
+        onLoaded: { const n = parseInt(text()); root.limitAvailable = !isNaN(n); if (!isNaN(n)) root.limit = n }
+        onLoadFailed: root.limitAvailable = false
+    }
+
     signal warn(bool critical)
 
     function duration(minutes) {

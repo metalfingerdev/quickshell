@@ -68,7 +68,7 @@ Item {
                         anchors.verticalCenter: parent.verticalCenter
                         height: 40
                         enabled: Glass.available
-                        options: [{ key: "blur", label: "Blur", icon: "blur_on" }, { key: "glass", label: "Liquid glass", icon: "water_drop" }]
+                        options: [{ key: "blur", label: "Blur", icon: "blur_on", shortcut: "b" }, { key: "glass", label: "Liquid glass", icon: "water_drop", shortcut: "g" }]
                         current: root.liquid ? "glass" : "blur"
                         onPicked: key => Glass.enabled = key === "glass"
                     }
@@ -185,7 +185,7 @@ Item {
 
         KeyHints {
             width: parent.width
-            keys: [["← →", "adjust"], ["⌫", "back"], ["Esc", "close"]]
+            keys: [["← →", "adjust"], ["B G", "material"], ["⌫", "back"], ["Esc", "close"]]
         }
     }
 }

@@ -138,6 +138,24 @@ Item {
             }
         }
 
+        // only on hardware with `charge_control_end_threshold`; asks for the password, as it needs root
+        ListSection {
+            visible: Engine.pinned && Energy.limitAvailable
+            width: parent.width
+
+            ListEntry {
+                flat: true
+                lit: Energy.limited
+                enabled: !Energy.limitBusy
+                icon: "battery_saver"
+                title: "Charge limit"
+                subtitle: Energy.limitBusy ? "Waiting for the password…"
+                        : Energy.limited ? "Stops charging at " + Energy.limit + "%" : "Charges to full"
+                shortcut: "l"
+                onClicked: Energy.toggleLimit()
+            }
+        }
+
         BrightnessSlider {
             visible: Engine.pinned && Backlight.available
             width: parent.width
@@ -172,7 +190,7 @@ Item {
         KeyHints {
             visible: Engine.pinned
             width: parent.width
-            keys: Backlight.available ? [["[ ]", "brightness"], ["⌫", "back"]] : [["⌫", "back"]]
+            keys: [].concat(Backlight.available ? [["[ ]", "brightness"]] : [], Energy.limitAvailable ? [["L", "charge limit"]] : [], [["⌫", "back"]])
         }
     }
 }

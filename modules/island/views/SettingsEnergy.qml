@@ -112,6 +112,7 @@ Item {
                 width: parent.width
                 visible: Toggles.has("systemd-inhibit")
                 title: "Caffeine: stay awake for now"
+                shortcut: "c"
                 icon: "coffee"
                 checked: Toggles.caffeine
                 onFlipped: on => Toggles.caffeine = on
@@ -120,7 +121,7 @@ Item {
 
         KeyHints {
             width: parent.width
-            keys: [["← →", "wait"], ["⌫", "back"], ["Esc", "close"]]
+            keys: [["← →", "wait"], ["C", "caffeine"], ["⌫", "back"], ["Esc", "close"]]
         }
     }
 }

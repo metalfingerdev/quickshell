@@ -38,13 +38,14 @@ Item {
             SectionLabel { text: "Popups stay"; topPadding: Config.spaceS }
             Segmented {
                 width: parent.width
-                options: [{ key: "short", label: "5 s" }, { key: "normal", label: "10 s" }, { key: "long", label: "20 s" }]
+                options: [{ key: "short", label: "5 s", shortcut: "1" }, { key: "normal", label: "10 s", shortcut: "2" }, { key: "long", label: "20 s", shortcut: "3" }]
                 current: Notifier.popupLength
                 onPicked: key => Notifier.popupLength = key
             }
             SettingTile {
                 width: parent.width
                 title: "Do not disturb"
+                shortcut: "d"
                 icon: "do_not_disturb_on"
                 checked: Notifier.dnd
                 onFlipped: on => Notifier.dnd = on
@@ -52,6 +53,7 @@ Item {
             SettingTile {
                 width: parent.width
                 title: "Sounds"
+                shortcut: "s"
                 icon: "volume_up"
                 checked: Sounds.enabled
                 onFlipped: on => Sounds.enabled = on
@@ -61,6 +63,7 @@ Item {
             SettingTile {
                 width: parent.width
                 title: "Volume, brightness, microphone"
+                shortcut: "l"
                 icon: "tune"
                 checked: Config.levelToasts
                 onFlipped: on => Config.levelToasts = on
@@ -68,6 +71,7 @@ Item {
             SettingTile {
                 width: parent.width
                 title: "Switching workspace"
+                shortcut: "w"
                 icon: "view_carousel"
                 checked: Config.switcherToasts
                 onFlipped: on => Config.switcherToasts = on
@@ -76,7 +80,7 @@ Item {
 
         KeyHints {
             width: parent.width
-            keys: [["⏎", "switch"], ["⌫", "back"], ["Esc", "close"]]
+            keys: [["⏎", "switch"], ["1–3", "popup time"], ["D S L W", "a switch"], ["⌫", "back"], ["Esc", "close"]]
         }
     }
 }
