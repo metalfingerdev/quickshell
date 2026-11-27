@@ -17,6 +17,18 @@ FocusScope {
     implicitWidth: 240
     implicitHeight: list.implicitHeight + 2 * Config.spaceXs
 
+    // `z` only orders a menu among its own siblings: placed inside a Card, it was drawn under the next Card
+    // (a later sibling of the Card that holds it). While open, every parent up to the view is lifted past
+    // its siblings, and put back after, so a menu can sit anywhere in a view.
+    property var lifted: []
+    function lift(on) {
+        for (const [item, z] of lifted.splice(0)) if (item) item.z = z
+        if (!on) return
+        for (let p = root.parent; p; p = p.parent) { lifted.push([p, p.z]); p.z = 100 }
+    }
+    onOpenChanged: lift(open)
+    Component.onDestruction: lift(false)
+
     function close() { open = false }
     Keys.onEscapePressed: event => { close(); event.accepted = true }
 
