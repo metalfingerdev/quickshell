@@ -34,6 +34,13 @@ ShellRoot {
     readonly property bool dry: Quickshell.env("GREETER_DRY") === "1"
     // By shellPath, as the island's lock does: a URL resolved against this file outside its own folder
     // doesn't reach the picture (Quickshell intercepts the config's URLs)
+    // What the island copied here for it (Settings, Lock screen: Login screen): config.json says which
+    // pictures, and the name, shape and softness. Missing or broken, the shipped ones show.
+    readonly property string dir: "/var/lib/island-greeter"
+    FileView { id: cfgFile; path: root.dir + "/config.json"; blockLoading: true; printErrors: false }
+    readonly property var conf: { try { return JSON.parse(cfgFile.text()) } catch (e) { return {} } }
+    readonly property string person: conf.name || user
+    readonly property real softness: typeof conf.blur === "number" ? conf.blur : 1
     function asset(name) { return "file://" + Quickshell.shellPath("../assets/" + name) }
 
     property bool asking: false         // PAM wants an answer
@@ -224,12 +231,17 @@ ShellRoot {
                 AnimatedImage {
                     id: gif
                     anchors.fill: parent
-                    source: root.asset("wallpapers/greeter.gif")
+                    // your picture, else the shipped one when yours is empty or can't be loaded
+                    property string broken: ""
+                    readonly property string mine: root.conf.background ?? ""
+                    source: mine !== "" && mine !== broken ? "file://" + root.dir + "/" + mine : root.asset("wallpapers/greeter.gif")
                     fillMode: Image.PreserveAspectCrop
                     asynchronous: true
                     cache: false            // its frames are tens of megabytes: read as it plays, not kept
                     playing: root.playGif && status === Image.Ready
                     onStatusChanged: {
+                        // not right away: a missing file errors while `source` is being set
+                        if (status === Image.Error && mine !== "" && mine !== broken) Qt.callLater(() => broken = mine)
                         if (face.index !== 0) return
                         root.gifReady = status === Image.Ready
                         if (status === Image.Error) console.warn("greeter: the picture didn't load:", source)
@@ -242,7 +254,7 @@ ShellRoot {
                     layer.enabled: root.veil * root.ui > 0
                     layer.effect: MultiEffect {
                         blurEnabled: true
-                        blur: root.veil * root.ui
+                        blur: root.veil * root.ui * root.softness
                         blurMax: 64
                         brightness: -0.18 * root.veil * root.ui
                     }
@@ -288,13 +300,13 @@ ShellRoot {
                         anchors.horizontalCenter: parent.horizontalCenter
                         width: 96 * face.u
                         height: width
-                        radius: width / 2
+                        radius: root.conf.shape === "square" ? 14 * face.u : width / 2
                         color: root.glass
 
                         Text {
                             anchors.centerIn: parent
                             visible: avatar.status !== Image.Ready
-                            text: root.user.charAt(0).toUpperCase()
+                            text: root.person.charAt(0).toUpperCase()
                             color: root.ink
                             font.family: root.font
                             font.pixelSize: 38 * face.u
@@ -303,7 +315,10 @@ ShellRoot {
                         AnimatedImage {
                             id: avatar
                             anchors.fill: parent
-                            source: root.asset("avatar.gif")
+                            property string broken: ""
+                            readonly property string mine: root.conf.avatar ?? ""
+                            source: mine !== "" && mine !== broken ? "file://" + root.dir + "/" + mine : root.asset("avatar.gif")
+                            onStatusChanged: if (status === Image.Error && mine !== "" && mine !== broken) Qt.callLater(() => broken = mine)
                             fillMode: Image.PreserveAspectCrop
                             asynchronous: true
                             cache: false
@@ -313,7 +328,7 @@ ShellRoot {
                     Item { width: 1; height: 14 * face.u }
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
-                        text: root.user
+                        text: root.person
                         color: root.ink
                         font.family: root.font
                         font.pixelSize: 17 * face.u

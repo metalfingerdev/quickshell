@@ -104,6 +104,47 @@ Item {
                 onMoved: v => LockConfig.blur = v
             }
 
+            // The login screen, before you are in: its own pictures, the shipped ones when empty. Name,
+            // shape and softness are the lock's. Copied for it to read: it can't open your home.
+            SectionLabel { visible: LockConfig.greeterAvailable; text: "Login screen"; topPadding: Config.spaceS }
+            LockPicture {
+                visible: LockConfig.greeterAvailable
+                setting: "greeterImage"
+                icon: Config.symbol.wallpaper
+                placeholder: "Login background: the default picture"
+
+                Pill {
+                    implicitHeight: 38
+                    kind: "text"
+                    icon: "lock"
+                    iconSize: 20
+                    onClicked: { root.pathError = ""; LockConfig.greeterImage = LockConfig.image }
+                }
+            }
+            LockPicture {
+                visible: LockConfig.greeterAvailable
+                setting: "greeterAvatar"
+                icon: "person"
+                placeholder: "Login profile picture: the default"
+
+                Pill {
+                    implicitHeight: 38
+                    kind: "text"
+                    icon: "lock"
+                    iconSize: 20
+                    onClicked: { root.pathError = ""; LockConfig.greeterAvatar = LockConfig.avatar }
+                }
+            }
+
+            Label {
+                visible: LockConfig.greeterAvailable
+                width: parent.width
+                wrapMode: Text.Wrap
+                text: "The lock button takes the lock screen's picture. Both are copied for the login screen, which can't open your home."
+                color: Config.dim
+                font.pixelSize: Config.small
+            }
+
             SectionLabel { text: "Who"; topPadding: Config.spaceS }
             Field {
                 text: LockConfig.name
